@@ -40,7 +40,34 @@ func DefaultWeights(x int) []float64 {
 	}
 }
 
-type TPESampler struct{}
+var _ goptuna.Sampler = &TPESampler{}
+
+type TPESampler struct {
+	ConsiderPrior     bool
+	PriorWeights      float64
+	ConsiderMagicClip bool
+	ConsiderEndpoints bool
+	NStartupTrials    int
+	NEICandidates     int
+	Gamma             FuncGamma
+	Weights           FuncWeights
+	random_sampler    *goptuna.RandomSearchSampler
+}
+
+func NewTPESampler() *TPESampler {
+	sampler := &TPESampler{
+		ConsiderPrior:     true,
+		PriorWeights:      1.0,
+		ConsiderMagicClip: true,
+		ConsiderEndpoints: false,
+		NStartupTrials:    10,
+		NEICandidates:     24,
+		Gamma:             DefaultGamma,
+		Weights:           DefaultWeights,
+		random_sampler:    goptuna.NewRandomSearchSampler(),
+	}
+	return sampler
+}
 
 func (s *TPESampler) Sample(*goptuna.Study, goptuna.FrozenTrial, string, interface{}) (float64, error) {
 	panic("implement me")

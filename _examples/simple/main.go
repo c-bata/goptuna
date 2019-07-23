@@ -31,7 +31,7 @@ func main() {
 	study, err := goptuna.CreateStudy(
 		"goptuna-example",
 		goptuna.NewInMemoryStorage(),
-		&goptuna.RandomSearchSampler{},
+		goptuna.NewRandomSearchSampler(),
 		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionSetLogger(logger),
 	)

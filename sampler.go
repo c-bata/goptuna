@@ -16,6 +16,10 @@ var _ Sampler = &RandomSearchSampler{}
 // RandomSearchSampler for random search
 type RandomSearchSampler struct{}
 
+func NewRandomSearchSampler() *RandomSearchSampler {
+	return &RandomSearchSampler{}
+}
+
 func (s *RandomSearchSampler) Sample(
 	study *Study,
 	trial FrozenTrial,
