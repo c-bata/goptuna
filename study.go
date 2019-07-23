@@ -23,6 +23,14 @@ type Study struct {
 	logger    *zap.Logger
 }
 
+func (s *Study) GetTrials() ([]FrozenTrial, error) {
+	return s.storage.GetAllTrials(s.id)
+}
+
+func (s *Study) Direction() StudyDirection {
+	return s.direction
+}
+
 func (s *Study) Report(trialID string, value float64) error {
 	return s.storage.SetTrialValue(trialID, value)
 }

@@ -10,6 +10,7 @@ type Storage interface {
 	CreateNewStudyID(name string) (string, error)
 	CreateNewTrialID(studyID string) (string, error)
 	GetTrial(trialID string) (FrozenTrial, error)
+	GetAllTrials(studyID string) ([]FrozenTrial, error)
 	GetBestTrial(studyID string) (FrozenTrial, error)
 	SetTrialValue(trialID string, value float64) error
 	SetTrialParam(trialID string, paramName string, paramValueInternal float64) error
@@ -49,6 +50,18 @@ type InMemoryStorage struct {
 
 	direction StudyDirection
 	trials    map[string]FrozenTrial
+}
+
+func (s *InMemoryStorage) GetAllTrials(studyID string) ([]FrozenTrial, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	trials := make([]FrozenTrial, 0, len(s.trials))
+
+	for k := range s.trials {
+		trials = append(trials, s.trials[k])
+	}
+	return trials, nil
 }
 
 func (s *InMemoryStorage) SetTrialParam(trialID string, paramName string, paramValueInternal float64) error {

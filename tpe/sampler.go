@@ -72,3 +72,36 @@ func NewTPESampler() *TPESampler {
 func (s *TPESampler) Sample(*goptuna.Study, goptuna.FrozenTrial, string, interface{}) (float64, error) {
 	panic("implement me")
 }
+
+func getObservationPairs(study goptuna.Study, paramName string) ([][]float64, error) {
+	var sign float64 = 1
+	if study.Direction() == goptuna.StudyDirectionMaximize {
+		sign = -1
+	}
+
+	pairs := make([][]float64, 0, 8)
+	trials, err := study.GetTrials()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, trial := range trials {
+		ir, ok := trial.ParamsInIR[paramName]
+		if !ok {
+			continue
+		}
+
+		var first, second, third float64
+		first = ir
+		if trial.State == goptuna.TrialStateComplete {
+			second = math.Inf(-1)
+			third = sign * trial.Value
+		} else if trial.State == goptuna.TrialStatePruned {
+			panic("still be unreachable")
+		} else {
+			continue
+		}
+		pairs = append(pairs, []float64{first, second, third})
+	}
+	return pairs, nil
+}
