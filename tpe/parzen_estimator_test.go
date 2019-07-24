@@ -1,8 +1,10 @@
-package tpe
+package tpe_test
 
 import (
 	"reflect"
 	"testing"
+
+	"github.com/c-bata/goptuna/tpe"
 )
 
 func TestNewParzenEstimatorShapeCheck(t *testing.T) {
@@ -10,7 +12,7 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 		mus    []float64
 		low    float64
 		high   float64
-		params ParzenEstimatorParams
+		params tpe.ParzenEstimatorParams
 	}
 	tests := []struct {
 		name string
@@ -22,11 +24,11 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 				mus:  []float64{},
 				low:  -1.0,
 				high: 1.0,
-				params: ParzenEstimatorParams{
+				params: tpe.ParzenEstimatorParams{
 					ConsiderPrior:     true,
 					ConsiderMagicClip: true,
 					ConsiderEndpoints: true,
-					Weights:           DefaultWeights,
+					Weights:           tpe.DefaultWeights,
 					PriorWeight:       1.0,
 				},
 			},
@@ -37,11 +39,11 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 				mus:  []float64{},
 				low:  -1.0,
 				high: 1.0,
-				params: ParzenEstimatorParams{
+				params: tpe.ParzenEstimatorParams{
 					ConsiderPrior:     false,
 					ConsiderMagicClip: true,
 					ConsiderEndpoints: true,
-					Weights:           DefaultWeights,
+					Weights:           tpe.DefaultWeights,
 					PriorWeight:       1.0,
 				},
 			},
@@ -52,11 +54,11 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 				mus:  []float64{},
 				low:  -1.0,
 				high: 1.0,
-				params: ParzenEstimatorParams{
+				params: tpe.ParzenEstimatorParams{
 					ConsiderPrior:     true,
 					ConsiderMagicClip: false,
 					ConsiderEndpoints: true,
-					Weights:           DefaultWeights,
+					Weights:           tpe.DefaultWeights,
 					PriorWeight:       1.0,
 				},
 			},
@@ -67,11 +69,11 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 				mus:  []float64{},
 				low:  -1.0,
 				high: 1.0,
-				params: ParzenEstimatorParams{
+				params: tpe.ParzenEstimatorParams{
 					ConsiderPrior:     true,
 					ConsiderMagicClip: true,
 					ConsiderEndpoints: false,
-					Weights:           DefaultWeights,
+					Weights:           tpe.DefaultWeights,
 					PriorWeight:       1.0,
 				},
 			},
@@ -82,11 +84,11 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 				mus:  []float64{0.4},
 				low:  -1.0,
 				high: 1.0,
-				params: ParzenEstimatorParams{
+				params: tpe.ParzenEstimatorParams{
 					ConsiderPrior:     true,
 					ConsiderMagicClip: true,
 					ConsiderEndpoints: true,
-					Weights:           DefaultWeights,
+					Weights:           tpe.DefaultWeights,
 					PriorWeight:       1.0,
 				},
 			},
@@ -97,11 +99,11 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 				mus:  []float64{0.4},
 				low:  -1.0,
 				high: 1.0,
-				params: ParzenEstimatorParams{
+				params: tpe.ParzenEstimatorParams{
 					ConsiderPrior:     false,
 					ConsiderMagicClip: true,
 					ConsiderEndpoints: true,
-					Weights:           DefaultWeights,
+					Weights:           tpe.DefaultWeights,
 					PriorWeight:       1.0,
 				},
 			},
@@ -112,11 +114,11 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 				mus:  []float64{0.4},
 				low:  -1.0,
 				high: 1.0,
-				params: ParzenEstimatorParams{
+				params: tpe.ParzenEstimatorParams{
 					ConsiderPrior:     true,
 					ConsiderMagicClip: false,
 					ConsiderEndpoints: true,
-					Weights:           DefaultWeights,
+					Weights:           tpe.DefaultWeights,
 					PriorWeight:       1.0,
 				},
 			},
@@ -127,11 +129,11 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 				mus:  []float64{0.4},
 				low:  -1.0,
 				high: 1.0,
-				params: ParzenEstimatorParams{
+				params: tpe.ParzenEstimatorParams{
 					ConsiderPrior:     true,
 					ConsiderMagicClip: true,
 					ConsiderEndpoints: false,
-					Weights:           DefaultWeights,
+					Weights:           tpe.DefaultWeights,
 					PriorWeight:       1.0,
 				},
 			},
@@ -142,11 +144,11 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 				mus:  []float64{-0.4, 0.4},
 				low:  -1.0,
 				high: 1.0,
-				params: ParzenEstimatorParams{
+				params: tpe.ParzenEstimatorParams{
 					ConsiderPrior:     true,
 					ConsiderMagicClip: true,
 					ConsiderEndpoints: true,
-					Weights:           DefaultWeights,
+					Weights:           tpe.DefaultWeights,
 					PriorWeight:       1.0,
 				},
 			},
@@ -154,7 +156,7 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			estimator := NewParzenEstimator(tt.args.mus, tt.args.low, tt.args.high, tt.args.params)
+			estimator := tpe.NewParzenEstimator(tt.args.mus, tt.args.low, tt.args.high, tt.args.params)
 
 			actual := len(estimator.Weights)
 			expected := len(tt.args.mus)
@@ -173,7 +175,7 @@ func TestNewParzenEstimator(t *testing.T) {
 		mus    []float64
 		low    float64
 		high   float64
-		params ParzenEstimatorParams
+		params tpe.ParzenEstimatorParams
 	}
 	type expected struct {
 		weights []float64
@@ -191,11 +193,11 @@ func TestNewParzenEstimator(t *testing.T) {
 				mus:  []float64{},
 				low:  -1.0,
 				high: 1.0,
-				params: ParzenEstimatorParams{
+				params: tpe.ParzenEstimatorParams{
 					ConsiderPrior:     false,
 					ConsiderMagicClip: false,
 					ConsiderEndpoints: true,
-					Weights:           DefaultWeights,
+					Weights:           tpe.DefaultWeights,
 					PriorWeight:       1.0,
 				},
 			},
@@ -211,11 +213,11 @@ func TestNewParzenEstimator(t *testing.T) {
 				mus:  []float64{},
 				low:  -1.0,
 				high: 1.0,
-				params: ParzenEstimatorParams{
+				params: tpe.ParzenEstimatorParams{
 					ConsiderPrior:     true,
 					ConsiderMagicClip: false,
 					ConsiderEndpoints: true,
-					Weights:           DefaultWeights,
+					Weights:           tpe.DefaultWeights,
 					PriorWeight:       1.0,
 				},
 			},
@@ -231,11 +233,11 @@ func TestNewParzenEstimator(t *testing.T) {
 				mus:  []float64{0.4},
 				low:  -1.0,
 				high: 1.0,
-				params: ParzenEstimatorParams{
+				params: tpe.ParzenEstimatorParams{
 					ConsiderPrior:     true,
 					ConsiderMagicClip: false,
 					ConsiderEndpoints: true,
-					Weights:           DefaultWeights,
+					Weights:           tpe.DefaultWeights,
 					PriorWeight:       1.0,
 				},
 			},
@@ -251,11 +253,11 @@ func TestNewParzenEstimator(t *testing.T) {
 				mus:  []float64{-0.4},
 				low:  -1.0,
 				high: 1.0,
-				params: ParzenEstimatorParams{
+				params: tpe.ParzenEstimatorParams{
 					ConsiderPrior:     true,
 					ConsiderMagicClip: false,
 					ConsiderEndpoints: true,
-					Weights:           DefaultWeights,
+					Weights:           tpe.DefaultWeights,
 					PriorWeight:       1.0,
 				},
 			},
@@ -271,11 +273,11 @@ func TestNewParzenEstimator(t *testing.T) {
 				mus:  []float64{-0.4, 0.4},
 				low:  -1.0,
 				high: 1.0,
-				params: ParzenEstimatorParams{
+				params: tpe.ParzenEstimatorParams{
 					ConsiderPrior:     true,
 					ConsiderMagicClip: false,
 					ConsiderEndpoints: true,
-					Weights:           DefaultWeights,
+					Weights:           tpe.DefaultWeights,
 					PriorWeight:       1.0,
 				},
 			},
@@ -288,7 +290,7 @@ func TestNewParzenEstimator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			estimator := NewParzenEstimator(tt.args.mus, tt.args.low, tt.args.high, tt.args.params)
+			estimator := tpe.NewParzenEstimator(tt.args.mus, tt.args.low, tt.args.high, tt.args.params)
 
 			if !reflect.DeepEqual(estimator.Weights, tt.expected.weights) {
 				t.Errorf("NewParzenEstimator() Weights = %v, want %v", estimator.Weights, tt.expected.weights)

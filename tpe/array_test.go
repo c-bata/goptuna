@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test_linspace(t *testing.T) {
+func TestLinspace(t *testing.T) {
 	type args struct {
 		start    float64
 		stop     float64
@@ -82,8 +82,8 @@ func TestArgSort2DFloat64(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ArgSort2DFloat64(tt.args.lossVals); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ArgSort2DFloat64() = %v, want %v", got, tt.want)
+			if got := argSort2d(tt.args.lossVals); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("argSort2d() = %v, want %v", got, tt.want)
 			}
 		})
 	}

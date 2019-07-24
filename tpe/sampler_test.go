@@ -1,8 +1,10 @@
-package tpe
+package tpe_test
 
 import (
 	"reflect"
 	"testing"
+
+	"github.com/c-bata/goptuna/tpe"
 )
 
 func TestDefaultGamma(t *testing.T) {
@@ -27,7 +29,7 @@ func TestDefaultGamma(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := DefaultGamma(tt.args.x); got != tt.want {
+			if got := tpe.DefaultGamma(tt.args.x); got != tt.want {
 				t.Errorf("DefaultGamma() = %v, want %v", got, tt.want)
 			}
 		})
@@ -51,7 +53,7 @@ func TestHyperoptDefaultGamma(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := HyperoptDefaultGamma(tt.args.x); got != tt.want {
+			if got := tpe.HyperoptDefaultGamma(tt.args.x); got != tt.want {
 				t.Errorf("HyperoptDefaultGamma() = %v, want %v", got, tt.want)
 			}
 		})
@@ -88,7 +90,7 @@ func TestDefaultWeights(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := DefaultWeights(tt.args.x); !reflect.DeepEqual(got, tt.want) {
+			if got := tpe.DefaultWeights(tt.args.x); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("DefaultWeights() = %v, want %v", got, tt.want)
 			}
 		})

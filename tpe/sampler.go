@@ -35,10 +35,10 @@ func DefaultWeights(x int) []float64 {
 	if x == 0 {
 		return []float64{}
 	} else if x < 25 {
-		return ones(x)
+		return ones1d(x)
 	} else {
 		ramp := linspace(1.0/float64(x), 1.0, x-25, true)
-		flat := ones(25)
+		flat := ones1d(25)
 		return append(ramp, flat...)
 	}
 }
@@ -139,7 +139,7 @@ func (s *TPESampler) splitObservationPairs(
 	lossVals [][2]float64,
 ) ([]float64, []float64) {
 	nbelow := s.Gamma(len(configVals))
-	lossAscending := ArgSort2DFloat64(lossVals)
+	lossAscending := argSort2d(lossVals)
 
 	keepIdxs := genKeepIdxs(lossIdxs, lossAscending, nbelow, true)
 	below := genBelowOrAbove(keepIdxs, configIdxs, configVals)
@@ -224,7 +224,7 @@ func (s *TPESampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimat
 		paccept += highNormalCdf[i]*weights[i] - lowNormalCdf[i]
 	}
 
-	jacobian := ones(len(samples))
+	jacobian := ones1d(len(samples))
 	distance := make([][]float64, len(samples))
 	for i := range samples {
 		distance[i] = make([]float64, len(mus))

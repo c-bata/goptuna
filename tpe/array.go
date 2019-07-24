@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func ones(size int) []float64 {
+func ones1d(size int) []float64 {
 	ones := make([]float64, size)
 	for i := 0; i < size; i++ {
 		ones[i] = 1
@@ -60,7 +60,7 @@ func location(array []float64, key float64) int {
 	return i
 }
 
-func Searchsorted(array, values []float64) []int {
+func searchsorted(array, values []float64) []int {
 	var indexes []int
 	for _, val := range values {
 		indexes = append(indexes, location(array, val))
@@ -102,7 +102,7 @@ func clip(array []float64, min, max float64) {
 	}
 }
 
-func ArgSort2DFloat64(lossVals [][2]float64) []int {
+func argSort2d(lossVals [][2]float64) []int {
 	type sortable struct {
 		index   int
 		lossVal [2]float64
