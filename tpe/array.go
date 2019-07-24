@@ -1,6 +1,11 @@
 package tpe
 
-import "sort"
+import (
+	"errors"
+	"math/rand"
+	"sort"
+	"time"
+)
 
 func ones(size int) []float64 {
 	ones := make([]float64, size)
@@ -61,6 +66,30 @@ func Searchsorted(array, values []float64) []int {
 		indexes = append(indexes, location(array, val))
 	}
 	return indexes
+}
+
+func randomWeightedSelect(weights []int, totalWeight int) (int, error) {
+	// https://medium.com/@peterkellyonline/weighted-random-selection-3ff222917eb6
+	rand.Seed(time.Now().UnixNano())
+	r := rand.Intn(totalWeight)
+	for i, g := range weights {
+		r -= g
+		if r <= 0 {
+			return i, nil
+		}
+	}
+	return 0, errors.New("no item selected")
+}
+
+func argMaxApproxMultinomial(pvals []float64, precision float64) (int, error) {
+	tw := 0
+	weights := make([]int, len(pvals))
+	for i := range weights {
+		w := int(pvals[i] / precision)
+		tw += w
+		weights[i] = w
+	}
+	return randomWeightedSelect(weights, tw)
 }
 
 func clip(array []float64, min, max float64) {

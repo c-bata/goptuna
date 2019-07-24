@@ -2,6 +2,7 @@ package tpe
 
 import (
 	"math"
+	"math/rand"
 
 	"github.com/c-bata/goptuna"
 )
@@ -48,6 +49,7 @@ type TPESampler struct {
 	Gamma                 FuncGamma
 	ParzenEstimatorParams ParzenEstimatorParams
 
+	rng            *rand.Rand
 	random_sampler *goptuna.RandomSearchSampler
 }
 
@@ -63,6 +65,7 @@ func NewTPESampler() *TPESampler {
 			ConsiderEndpoints: false,
 			Weights:           DefaultWeights,
 		},
+		rng:            rand.New(rand.NewSource(0)),
 		random_sampler: goptuna.NewRandomSearchSampler(),
 	}
 	return sampler
@@ -146,7 +149,31 @@ func (s *TPESampler) splitObservationPairs(
 }
 
 func (s *TPESampler) sampleFromGMM(parzenEstimator *ParzenEstimator, low, high float64, size int) []float64 {
-	panic("not implemented yet")
+	weights := parzenEstimator.Weights
+	mus := parzenEstimator.Mus
+	sigmas := parzenEstimator.Sigmas
+	nsamples := size
+
+	if low < high {
+		panic("the low should be lower than the high")
+	}
+
+	samples := make([]float64, 0, nsamples)
+	for {
+		if len(samples) == nsamples {
+			break
+		}
+		active, err := argMaxApproxMultinomial(weights, 0.001)
+		if err != nil {
+			panic(err)
+		}
+		x := s.rng.NormFloat64()
+		draw := x*sigmas[active] + mus[active]
+		if low <= draw && draw < high {
+			samples = append(samples, draw)
+		}
+	}
+	return samples
 }
 
 func (s *TPESampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimator, low, high float64) []float64 {

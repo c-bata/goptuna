@@ -88,3 +88,9 @@ func TestArgSort2DFloat64(t *testing.T) {
 		})
 	}
 }
+
+//func TestApproximateMutlinomial(t *testing.T) {
+//	for i := 0; i < 10; i++ {
+//		fmt.Println(argMaxApproxMultinomial([]float64{0.1, 0.4, 0.5}, 0.001))
+//	}
+//}

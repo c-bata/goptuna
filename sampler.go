@@ -14,10 +14,14 @@ type Sampler interface {
 var _ Sampler = &RandomSearchSampler{}
 
 // RandomSearchSampler for random search
-type RandomSearchSampler struct{}
+type RandomSearchSampler struct {
+	rng *rand.Rand
+}
 
 func NewRandomSearchSampler() *RandomSearchSampler {
-	return &RandomSearchSampler{}
+	return &RandomSearchSampler{
+		rng: rand.New(rand.NewSource(0)),
+	}
 }
 
 func (s *RandomSearchSampler) Sample(
@@ -28,7 +32,7 @@ func (s *RandomSearchSampler) Sample(
 ) (float64, error) {
 	switch d := paramDistribution.(type) {
 	case UniformDistribution:
-		return rand.Float64()*(d.Max-d.Min) + d.Min, nil
+		return s.rng.Float64()*(d.Max-d.Min) + d.Min, nil
 	default:
 		return 0.0, errors.New("undefined distribution")
 	}
