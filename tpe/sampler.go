@@ -4,6 +4,8 @@ import (
 	"math"
 	"math/rand"
 
+	"gonum.org/v1/gonum/floats"
+
 	"github.com/c-bata/goptuna"
 )
 
@@ -176,8 +178,90 @@ func (s *TPESampler) sampleFromGMM(parzenEstimator *ParzenEstimator, low, high f
 	return samples
 }
 
+func (s *TPESampler) normalCDF(x float64, mu []float64, sigma []float64) []float64 {
+	l := len(mu)
+	results := make([]float64, l)
+	for i := 0; i < l; i++ {
+		denominator := x - mu[i]
+		numerator := math.Max(math.Sqrt(2)*sigma[i], EPS)
+		z := denominator / numerator
+		results[i] = 0.5 * (1 + math.Erf(z))
+	}
+	return results
+}
+
+func (s *TPESampler) logsumRows(x [][]float64) []float64 {
+	y := make([]float64, len(x))
+	for i := range x {
+		m := floats.Max(x[i])
+
+		s := 0.0
+		for j := range x[i] {
+			s += math.Log(math.Exp(x[i][j] - m))
+		}
+		y[i] = s + m
+	}
+	return y
+}
+
 func (s *TPESampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimator, low, high float64) []float64 {
-	panic("not implemented yet")
+	weights := parzenEstimator.Weights
+	mus := parzenEstimator.Mus
+	sigmas := parzenEstimator.Sigmas
+
+	if len(samples) == 0 {
+		return []float64{}
+	}
+
+	highNormalCdf := s.normalCDF(high, mus, sigmas)
+	lowNormalCdf := s.normalCDF(low, mus, sigmas)
+	if len(weights) != len(highNormalCdf) {
+		panic("the length should be the same with weights")
+	}
+
+	paccept := 0.0
+	for i := 0; i < len(highNormalCdf); i++ {
+		paccept += highNormalCdf[i]*weights[i] - lowNormalCdf[i]
+	}
+
+	jacobian := ones(len(samples))
+	distance := make([][]float64, len(samples))
+	for i := range samples {
+		distance[i] = make([]float64, len(mus))
+		for j := range mus {
+			distance[i][j] = samples[i] - mus[j]
+		}
+	}
+	mahalanobis := make([][]float64, len(distance))
+	for i := range distance {
+		mahalanobis[i] = make([]float64, len(distance[i]))
+		for j := range mus {
+			mahalanobis[i][j] = distance[i][j] / math.Pow(math.Max(sigmas[j], EPS), 2)
+		}
+	}
+	z := make([][]float64, len(distance))
+	for i := range distance {
+		z[i] = make([]float64, len(distance[i]))
+		for j := 0; j < len(distance[i]); j++ {
+			z[i][j] = math.Sqrt(2*math.Pi) * sigmas[j] * jacobian[i]
+		}
+	}
+	coefficient := make([][]float64, len(distance))
+	for i := range distance {
+		coefficient[i] = make([]float64, len(distance[i]))
+		for j := 0; j < len(distance[i]); j++ {
+			coefficient[i][j] = weights[j] / z[i][j] / paccept
+		}
+	}
+
+	y := make([][]float64, len(distance))
+	for i := range distance {
+		for j := range distance[i] {
+			y[i][j] = -0.5*mahalanobis[i][j] + math.Log(coefficient[i][j])
+		}
+	}
+
+	return s.logsumRows(y)
 }
 
 func (s *TPESampler) compare(samples []float64, logL []float64, logG []float64) []float64 {
