@@ -74,7 +74,9 @@ func NewTPESampler() *TPESampler {
 }
 
 func genKeepIdxs(
-	lossIdxs []int, lossAscending []int, n int, below bool) []int {
+	lossIdxs []int,
+	lossAscending []int,
+	n int, below bool) []int {
 	var l []int
 	if below {
 		l = lossAscending[:n]
@@ -82,23 +84,22 @@ func genKeepIdxs(
 		l = lossAscending[n:]
 	}
 
-	lossIdxSet := make([]int, 0)
-	for _, index := range l {
-		item := lossIdxs[index]
-
-		found := false
-		for _, j := range lossIdxSet {
-			if lossIdxSet[j] == item {
-				found = true
-				break
+	set := make([]int, 0, len(l))
+	isExist := func(l []int, item int) bool {
+		for i := range l {
+			if l[i] == item {
+				return true
 			}
 		}
-		if !found {
-			continue
-		}
-		lossIdxSet = append(lossIdxSet, item)
+		return false
 	}
-	return lossIdxSet
+	for _, index := range l {
+		item := lossIdxs[index]
+		if !isExist(set, item) {
+			set = append(set, item)
+		}
+	}
+	return set
 }
 
 func genBelowOrAbove(
@@ -354,12 +355,12 @@ func (s *TPESampler) Sample(
 	for i := 0; i < n; i++ {
 		lossVals[i] = [2]float64{observationPairs[i][1], observationPairs[i][2]}
 	}
-	belowParamValues, adoveParamValues := s.splitObservationPairs(
+	belowParamValues, aboveParamValues := s.splitObservationPairs(
 		configIdxs, configVals, lossIdxs, lossVals)
 
 	switch d := paramDistribution.(type) {
 	case goptuna.UniformDistribution:
-		return s.sampleUniform(d, belowParamValues, adoveParamValues), nil
+		return s.sampleUniform(d, belowParamValues, aboveParamValues), nil
 	}
 	return 0, goptuna.ErrUnexpectedDistribution
 }
