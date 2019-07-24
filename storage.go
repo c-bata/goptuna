@@ -32,10 +32,11 @@ var _ Storage = &InMemoryStorage{}
 const InMemoryStorageStudyId = "in_memory_storage_study_id"
 
 var (
-	ErrInvalidStudyID    = errors.New("invalid study id")
-	ErrInvalidTrialID    = errors.New("invalid trial id")
-	ErrTrialIsNotUpdated = errors.New("trial cannot be updated")
-	ErrNoCompletedTrials = errors.New("no trials are completed yet")
+	ErrInvalidStudyID         = errors.New("invalid study id")
+	ErrInvalidTrialID         = errors.New("invalid trial id")
+	ErrTrialIsNotUpdated      = errors.New("trial cannot be updated")
+	ErrNoCompletedTrials      = errors.New("no trials are completed yet")
+	ErrUnexpectedDistribution = errors.New("unexpected distribution")
 )
 
 func NewInMemoryStorage() *InMemoryStorage {
