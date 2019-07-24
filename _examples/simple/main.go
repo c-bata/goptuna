@@ -5,9 +5,8 @@ import (
 	"math"
 	"os"
 
-	"github.com/c-bata/goptuna/tpe"
-
 	"github.com/c-bata/goptuna"
+	"github.com/c-bata/goptuna/tpe"
 	"go.uber.org/zap"
 )
 
@@ -20,7 +19,7 @@ func objective(trial goptuna.Trial) (float64, error) {
 	if err != nil {
 		return 0.0, err
 	}
-	return math.Pow(x1-1, 2) + math.Pow(x2-2, 2) + 1, nil
+	return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
 }
 
 func main() {
@@ -53,7 +52,7 @@ func main() {
 	if err != nil {
 		logger.Fatal("failed to get best params", zap.Error(err))
 	}
-	logger.Info("best value",
-		zap.Float64("value", v),
-		zap.String("suggested", fmt.Sprintf("%#v", params)))
+	fmt.Println("Result:")
+	fmt.Println("- best value", v)
+	fmt.Println("- best param", params)
 }
