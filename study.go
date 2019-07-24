@@ -85,7 +85,7 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 			if trial, err := s.storage.GetTrial(trialID); err == nil {
 				s.logger.Debug("Finished trial",
 					zap.String("trialID", trialID),
-					zap.Int("state", int(trial.State)),
+					zap.String("state", trial.State.String()),
 					zap.Float64("value", trial.Value),
 					zap.String("paramsInIR", fmt.Sprintf("%v", trial.ParamsInIR)))
 			}
