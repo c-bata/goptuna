@@ -16,11 +16,12 @@ const (
 )
 
 type Study struct {
-	id        string
-	storage   Storage
-	sampler   Sampler
-	direction StudyDirection
-	logger    *zap.Logger
+	id                 string
+	storage            Storage
+	sampler            Sampler
+	direction          StudyDirection
+	logger             *zap.Logger
+	ignoreObjectiveErr bool
 }
 
 func (s *Study) GetTrials() ([]FrozenTrial, error) {
@@ -45,10 +46,16 @@ func (s *Study) runTrial(objective FuncObjective) (string, error) {
 		study: s,
 		id:    trialID,
 	}
-	evaluation, err := objective(trial)
-	if err != nil {
-		saveErr := s.storage.SetTrialState(trialID, TrialStateFail)
-		return trialID, saveErr
+	evaluation, objerr := objective(trial)
+	if objerr != nil {
+		saveerr := s.storage.SetTrialState(trialID, TrialStateFail)
+		if saveerr != nil {
+			return trialID, saveerr
+		}
+
+		if !s.ignoreObjectiveErr {
+			return trialID, fmt.Errorf("objective: %s", objerr)
+		}
 	}
 
 	if err = s.storage.SetTrialValue(trialID, evaluation); err != nil {
@@ -79,8 +86,7 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 				s.logger.Debug("Finished trial",
 					zap.String("trialID", trialID),
 					zap.Int("state", int(trial.State)),
-					zap.Float64("value", trial.Value),
-					zap.String("paramsInIR", fmt.Sprintf("%#v", trial.ParamsInIR)))
+					zap.Float64("value", trial.Value))
 			}
 		}
 	}
@@ -115,9 +121,12 @@ func CreateStudy(
 		return nil, err
 	}
 	study := &Study{
-		id:      studyID,
-		storage: storage,
-		sampler: sampler,
+		id:                 studyID,
+		storage:            storage,
+		sampler:            sampler,
+		direction:          StudyDirectionMinimize,
+		logger:             nil,
+		ignoreObjectiveErr: false,
 	}
 
 	for _, opt := range opts {
@@ -140,6 +149,13 @@ func StudyOptionSetDirection(direction StudyDirection) StudyOption {
 func StudyOptionSetLogger(logger *zap.Logger) StudyOption {
 	return func(s *Study) error {
 		s.logger = logger
+		return nil
+	}
+}
+
+func StudyOptionIgnoreObjectiveErr(ignore bool) StudyOption {
+	return func(s *Study) error {
+		s.ignoreObjectiveErr = ignore
 		return nil
 	}
 }

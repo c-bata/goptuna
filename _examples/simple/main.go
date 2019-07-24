@@ -5,6 +5,8 @@ import (
 	"math"
 	"os"
 
+	"github.com/c-bata/goptuna/tpe"
+
 	"github.com/c-bata/goptuna"
 	"go.uber.org/zap"
 )
@@ -31,7 +33,7 @@ func main() {
 	study, err := goptuna.CreateStudy(
 		"goptuna-example",
 		goptuna.NewInMemoryStorage(),
-		goptuna.NewRandomSearchSampler(),
+		tpe.NewTPESampler(),
 		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionSetLogger(logger),
 	)
@@ -49,7 +51,7 @@ func main() {
 	}
 	params, err := study.GetBestParams()
 	if err != nil {
-		logger.Fatal("failed to get best value", zap.Error(err))
+		logger.Fatal("failed to get best params", zap.Error(err))
 	}
 	logger.Info("best value",
 		zap.Float64("value", v),
