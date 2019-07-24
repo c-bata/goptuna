@@ -53,13 +53,6 @@ func main() {
 }
 ```
 
-## TODO
-
-* [ ] Parallel distributed optimization
-* [ ] Support web assembly
-* [ ] Support all distributions
-* [ ] Optuna-compatible RDB storage backend
-
 ## License
 
 This software is licensed under the MIT license, see [LICENSE](./LICENSE) for more information.
