@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/c-bata/goptuna"
-	"github.com/c-bata/goptuna/tpe"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +18,7 @@ func objective(trial goptuna.Trial) (float64, error) {
 	if err != nil {
 		return 0.0, err
 	}
-	return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
+	return math.Pow(x1-2.5, 2) + math.Pow(x2+5, 2), nil
 }
 
 func main() {
@@ -31,8 +30,6 @@ func main() {
 
 	study, err := goptuna.CreateStudy(
 		"goptuna-example",
-		goptuna.NewInMemoryStorage(),
-		tpe.NewTPESampler(),
 		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionSetLogger(logger),
 	)
@@ -40,7 +37,7 @@ func main() {
 		logger.Fatal("failed to create study", zap.Error(err))
 	}
 
-	if err = study.Optimize(objective, 100); err != nil {
+	if err = study.Optimize(objective, 50); err != nil {
 		logger.Fatal("failed to optimize", zap.Error(err))
 	}
 

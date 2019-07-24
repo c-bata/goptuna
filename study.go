@@ -113,14 +113,14 @@ func (s *Study) GetBestParams() (map[string]float64, error) {
 
 func CreateStudy(
 	name string,
-	storage Storage,
-	sampler Sampler,
 	opts ...StudyOption,
 ) (*Study, error) {
+	storage := NewInMemoryStorage()
 	studyID, err := storage.CreateNewStudyID(name)
 	if err != nil {
 		return nil, err
 	}
+	sampler := NewRandomSearchSampler()
 	study := &Study{
 		id:                 studyID,
 		storage:            storage,
@@ -150,6 +150,20 @@ func StudyOptionSetDirection(direction StudyDirection) StudyOption {
 func StudyOptionSetLogger(logger *zap.Logger) StudyOption {
 	return func(s *Study) error {
 		s.logger = logger
+		return nil
+	}
+}
+
+func StudyOptionStorage(storage Storage) StudyOption {
+	return func(s *Study) error {
+		s.storage = storage
+		return nil
+	}
+}
+
+func StudyOptionSampler(sampler Sampler) StudyOption {
+	return func(s *Study) error {
+		s.sampler = sampler
 		return nil
 	}
 }
