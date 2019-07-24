@@ -12,13 +12,12 @@ type ParzenEstimatorParams struct {
 	ConsiderEndpoints bool
 	Weights           FuncWeights
 	PriorWeight       float64 // optional
-	PriorWeightIsSet  bool    // for PriorWeight
 }
 
 type ParzenEstimator struct {
 	Weights []float64
 	Mus     []float64
-	Sigma   []float64
+	Sigmas  []float64
 	Params  ParzenEstimatorParams
 }
 
@@ -68,7 +67,7 @@ func (e *ParzenEstimator) calculate(
 		lowSortedMusHigh = append([]float64{low}, lowSortedMusHigh...)
 
 		l := len(lowSortedMusHigh)
-		sigma := make([]float64, l)
+		sigma = make([]float64, l)
 		for i := 0; i < l-2; i++ {
 			sigma[i+1] = math.Max(lowSortedMusHigh[i+1]-lowSortedMusHigh[i], lowSortedMusHigh[i+2]-lowSortedMusHigh[i+1])
 		}
@@ -84,7 +83,7 @@ func (e *ParzenEstimator) calculate(
 	if considerPrior {
 		sortedWeights = make([]float64, 0, len(sortedMus))
 		sortedWeights = append(sortedWeights, choice(unsortedWeights, order[:priorPos])...)
-		sortedWeights[priorPos] = priorWeight
+		sortedWeights = append(sortedWeights, priorWeight)
 		sortedWeights = append(sortedWeights, choice(unsortedWeights, order[priorPos:])...)
 	} else {
 		sortedWeights = choice(unsortedWeights, order)
@@ -113,7 +112,7 @@ func NewParzenEstimator(mus []float64, low, high float64, params ParzenEstimator
 	estimator := &ParzenEstimator{
 		Weights: nil,
 		Mus:     nil,
-		Sigma:   nil,
+		Sigmas:  nil,
 		Params:  params,
 	}
 
@@ -121,6 +120,6 @@ func NewParzenEstimator(mus []float64, low, high float64, params ParzenEstimator
 		params.ConsiderMagicClip, params.ConsiderEndpoints, params.Weights)
 	estimator.Weights = sWeights
 	estimator.Mus = sMus
-	estimator.Sigma = sigma
+	estimator.Sigmas = sigma
 	return estimator
 }

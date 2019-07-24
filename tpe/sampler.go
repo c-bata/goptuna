@@ -32,7 +32,7 @@ func DefaultWeights(x int) []float64 {
 	if x == 0 {
 		return []float64{}
 	} else if x < 25 {
-		return ones(25)
+		return ones(x)
 	} else {
 		ramp := linspace(1.0/float64(x), 1.0, x-25, true)
 		flat := ones(25)
