@@ -30,6 +30,49 @@ func linspace(start, stop float64, num int, endPoint bool) []float64 {
 	return r
 }
 
+func choice(array []float64, idxs []int) []float64 {
+	results := make([]float64, len(idxs))
+	for i, idx := range idxs {
+		results[i] = array[idx]
+	}
+	return results
+}
+
+func location(array []float64, key float64) int {
+	i := 0
+	size := len(array)
+	for {
+		mid := (i + size) / 2
+		if i == size {
+			break
+		}
+		if array[mid] < key {
+			i = mid + 1
+		} else {
+			size = mid
+		}
+	}
+	return i
+}
+
+func Searchsorted(array, values []float64) []int {
+	var indexes []int
+	for _, val := range values {
+		indexes = append(indexes, location(array, val))
+	}
+	return indexes
+}
+
+func clip(array []float64, min, max float64) {
+	for i := range array {
+		if array[i] < min {
+			array[i] = min
+		} else if array[i] > max {
+			array[i] = max
+		}
+	}
+}
+
 func ArgSort2DFloat64(lossVals [][2]float64) []int {
 	type sortable struct {
 		index   int
