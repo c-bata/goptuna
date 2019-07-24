@@ -18,9 +18,9 @@ type FuncWeights func(int) []float64
 func DefaultGamma(x int) int {
 	a := int(math.Ceil(0.1 * float64(x)))
 	if a > 25 {
-		return a
+		return 25
 	}
-	return 25
+	return a
 }
 
 func HyperoptDefaultGamma(x int) int {
@@ -156,7 +156,7 @@ func (s *TPESampler) sampleFromGMM(parzenEstimator *ParzenEstimator, low, high f
 	sigmas := parzenEstimator.Sigmas
 	nsamples := size
 
-	if low < high {
+	if low > high {
 		panic("the low should be lower than the high")
 	}
 
@@ -235,27 +235,28 @@ func (s *TPESampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimat
 	mahalanobis := make([][]float64, len(distance))
 	for i := range distance {
 		mahalanobis[i] = make([]float64, len(distance[i]))
-		for j := range mus {
+		for j := range distance[i] {
 			mahalanobis[i][j] = distance[i][j] / math.Pow(math.Max(sigmas[j], EPS), 2)
 		}
 	}
 	z := make([][]float64, len(distance))
 	for i := range distance {
 		z[i] = make([]float64, len(distance[i]))
-		for j := 0; j < len(distance[i]); j++ {
+		for j := range distance[i] {
 			z[i][j] = math.Sqrt(2*math.Pi) * sigmas[j] * jacobian[i]
 		}
 	}
 	coefficient := make([][]float64, len(distance))
 	for i := range distance {
 		coefficient[i] = make([]float64, len(distance[i]))
-		for j := 0; j < len(distance[i]); j++ {
+		for j := range distance[i] {
 			coefficient[i][j] = weights[j] / z[i][j] / paccept
 		}
 	}
 
 	y := make([][]float64, len(distance))
 	for i := range distance {
+		y[i] = make([]float64, len(distance[i]))
 		for j := range distance[i] {
 			y[i][j] = -0.5*mahalanobis[i][j] + math.Log(coefficient[i][j])
 		}

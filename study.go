@@ -86,7 +86,8 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 				s.logger.Debug("Finished trial",
 					zap.String("trialID", trialID),
 					zap.Int("state", int(trial.State)),
-					zap.Float64("value", trial.Value))
+					zap.Float64("value", trial.Value),
+					zap.String("paramsInIR", fmt.Sprintf("%v", trial.ParamsInIR)))
 			}
 		}
 	}
