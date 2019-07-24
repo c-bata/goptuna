@@ -181,7 +181,41 @@ func (s *TPESampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimat
 }
 
 func (s *TPESampler) compare(samples []float64, logL []float64, logG []float64) []float64 {
-	panic("not implemented yet")
+	if len(samples) > 0 {
+		if len(logL) != len(logG) {
+			panic("the size of the log_l and log_g should be same")
+		}
+		score := make([]float64, len(logL))
+		for i := range score {
+			score[i] = logL[i] - logG[i]
+		}
+		if len(samples) != len(score) {
+			panic("the size of the samples and score should be same")
+		}
+
+		argMax := func(s []float64) int {
+			max := s[0]
+			maxIdx := 0
+			for i := range s {
+				if i == 0 {
+					continue
+				}
+				if s[i] > max {
+					max = s[i]
+					maxIdx = i
+				}
+			}
+			return maxIdx
+		}
+		best := argMax(score)
+		results := make([]float64, len(samples))
+		for i := range results {
+			results[i] = samples[best]
+		}
+		return results
+	} else {
+		return []float64{}
+	}
 }
 
 func (s *TPESampler) sampleNumerical(low, high float64, below, above []float64) float64 {
