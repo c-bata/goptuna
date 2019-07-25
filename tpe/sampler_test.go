@@ -17,14 +17,19 @@ func TestDefaultGamma(t *testing.T) {
 		want int
 	}{
 		{
-			name: "test case 1",
+			name: "test case 5",
 			args: args{x: 5},
-			want: 25,
+			want: 1,
 		},
 		{
-			name: "test case 2",
+			name: "test case 100",
+			args: args{x: 100},
+			want: 10,
+		},
+		{
+			name: "test case 255",
 			args: args{x: 255},
-			want: 26,
+			want: 25,
 		},
 	}
 	for _, tt := range tests {

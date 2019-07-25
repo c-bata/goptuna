@@ -4,7 +4,8 @@ import (
 	"errors"
 	"math/rand"
 	"sort"
-	"time"
+
+	"gonum.org/v1/gonum/floats"
 )
 
 func ones1d(size int) []float64 {
@@ -68,28 +69,17 @@ func searchsorted(array, values []float64) []int {
 	return indexes
 }
 
-func randomWeightedSelect(weights []int, totalWeight int) (int, error) {
-	// https://medium.com/@peterkellyonline/weighted-random-selection-3ff222917eb6
-	rand.Seed(time.Now().UnixNano())
-	r := rand.Intn(totalWeight)
-	for i, g := range weights {
-		r -= g
-		if r <= 0 {
+func argMaxMultinomial(pvals []float64) (int, error) {
+	x := make([]float64, len(pvals))
+	floats.CumSum(x, pvals)
+
+	r := rand.Float64()
+	for i := range x {
+		if x[i] > r {
 			return i, nil
 		}
 	}
-	return 0, errors.New("no item selected")
-}
-
-func argMaxApproxMultinomial(pvals []float64, precision float64) (int, error) {
-	tw := 0
-	weights := make([]int, len(pvals))
-	for i := range weights {
-		w := int(pvals[i] / precision)
-		tw += w
-		weights[i] = w
-	}
-	return randomWeightedSelect(weights, tw)
+	return 0, errors.New("invalid pvals")
 }
 
 func clip(array []float64, min, max float64) {

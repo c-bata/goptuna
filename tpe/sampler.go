@@ -166,7 +166,7 @@ func (s *TPESampler) sampleFromGMM(parzenEstimator *ParzenEstimator, low, high f
 		if len(samples) == nsamples {
 			break
 		}
-		active, err := argMaxApproxMultinomial(weights, 0.001)
+		active, err := argMaxMultinomial(weights)
 		if err != nil {
 			panic(err)
 		}
