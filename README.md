@@ -19,7 +19,7 @@ You can integrate Goptuna in wide variety of Go projects because of its portabil
 $ go get -u github.com/c-bata/goptuna
 ```
 
-## Basic usage
+## Usage
 
 Goptuna supports Define-By-Run style user API like Optuna.
 It makes the modularity high, and the user can dynamically construct the search spaces.
@@ -66,6 +66,8 @@ func main() {
 
 <summary>Parallel optimization</summary>
 
+[full source code](./_examples/concurrency/main.go).
+
 Goptuna can easily implement parallel optimization using goroutine.
 
 ```go
@@ -99,6 +101,8 @@ func main() {
 <details>
 
 <summary>Notification system</summary>
+
+[full source code](./_examples/trialnotify/main.go).
 
 You can receive notification of each trials via channel.
 It can be used for logging and any notification systems.
