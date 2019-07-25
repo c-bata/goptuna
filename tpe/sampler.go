@@ -3,6 +3,7 @@ package tpe
 import (
 	"math"
 	"math/rand"
+	"sync"
 
 	"github.com/c-bata/goptuna"
 	"gonum.org/v1/gonum/floats"
@@ -51,6 +52,7 @@ type Sampler struct {
 	params                ParzenEstimatorParams
 	rng                   *rand.Rand
 	randomSampler         *goptuna.RandomSearchSampler
+	mu                    sync.Mutex
 }
 
 func NewSampler(opts ...SamplerOption) *Sampler {
@@ -331,6 +333,9 @@ func (s *Sampler) Sample(
 	paramName string,
 	paramDistribution interface{},
 ) (float64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	observationPairs, err := getObservationPairs(study, paramName)
 	if err != nil {
 		return 0, err

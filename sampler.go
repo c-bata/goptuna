@@ -3,6 +3,7 @@ package goptuna
 import (
 	"errors"
 	"math/rand"
+	"sync"
 )
 
 // Sampler returns the next search points
@@ -16,6 +17,7 @@ var _ Sampler = &RandomSearchSampler{}
 // RandomSearchSampler for random search
 type RandomSearchSampler struct {
 	rng *rand.Rand
+	mu  sync.Mutex
 }
 
 type RandomSearchSamplerOption func(sampler *RandomSearchSampler)
@@ -42,6 +44,8 @@ func (s *RandomSearchSampler) Sample(
 	paramName string,
 	paramDistribution interface{},
 ) (float64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	switch d := paramDistribution.(type) {
 	case UniformDistribution:
 		return s.rng.Float64()*(d.Max-d.Min) + d.Min, nil
