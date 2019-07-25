@@ -18,10 +18,22 @@ type RandomSearchSampler struct {
 	rng *rand.Rand
 }
 
-func NewRandomSearchSampler() *RandomSearchSampler {
-	return &RandomSearchSampler{
+type RandomSearchSamplerOption func(sampler *RandomSearchSampler)
+
+func RandomSearchSamplerOptionSeed(seed int64) RandomSearchSamplerOption {
+	return func(sampler *RandomSearchSampler) {
+		sampler.rng = rand.New(rand.NewSource(seed))
+	}
+}
+
+func NewRandomSearchSampler(opts ...RandomSearchSamplerOption) *RandomSearchSampler {
+	s := &RandomSearchSampler{
 		rng: rand.New(rand.NewSource(0)),
 	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }
 
 func (s *RandomSearchSampler) Sample(
