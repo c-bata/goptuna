@@ -17,22 +17,32 @@ func objective(trial goptuna.Trial) (float64, error) {
 }
 
 func main() {
+	trialchan := make(chan goptuna.FrozenTrial, 8)
 	study, _ := goptuna.CreateStudy(
 		"goptuna-example",
 		goptuna.StudyOptionSampler(tpe.NewSampler()),
+		goptuna.StudyOptionIgnoreObjectiveErr(true),
+		goptuna.StudyOptionSetTrialNotifyChannel(trialchan),
 	)
 
 	var wg sync.WaitGroup
-	for i := 0; i < 5; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			err := study.Optimize(objective, 100)
-			if err != nil {
-				log.Println("error", err)
-			}
-		}()
-	}
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		err := study.Optimize(objective, 100)
+		if err != nil {
+			log.Println("error", err)
+		}
+		close(trialchan)
+	}()
+
+	go func() {
+		defer wg.Done()
+		for t := range trialchan {
+			log.Println("trial", t)
+		}
+	}()
+
 	wg.Wait()
 
 	v, _ := study.GetBestValue()

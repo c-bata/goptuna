@@ -37,7 +37,7 @@ generate: ## Run go generate
 
 .PHONY: build
 build: ## Build example command lines.
-	./_example/build.sh
+	./_examples/build.sh
 
 .PHONY: help
 help: ## Show help text
