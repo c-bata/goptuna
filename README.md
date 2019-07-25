@@ -66,8 +66,6 @@ func main() {
 
 <summary>Parallel optimization</summary>
 
-[full source code](./_examples/concurrency/main.go).
-
 Goptuna can easily implement parallel optimization using goroutine.
 
 ```go
@@ -76,35 +74,33 @@ package main
 import ...
 
 func main() {
-	study, _ := goptuna.CreateStudy(...)
+    study, _ := goptuna.CreateStudy(...)
 
-	var wg sync.WaitGroup
-	for i := 0; i < 5; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			err := study.Optimize(objective, 100)
-			if err != nil {
-				log.Println("error", err)
-			}
-		}()
-	}
-	wg.Wait()
-
-    v, _ := study.GetBestValue()
-    fmt.Println("best evaluation value:", v)
+    var wg sync.WaitGroup
+    for i := 0; i < 5; i++ {
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            err := study.Optimize(objective, 100)
+            if err != nil {
+                log.Println("error", err)
+            }
+        }()
+    }
+    wg.Wait()
+    ...
 }
 ```
+
+[full source code](./_examples/concurrency/main.go)
 
 </details>
 
 <details>
 
-<summary>Notification system</summary>
+<summary>Receive notifications of each trials</summary>
 
-[full source code](./_examples/trialnotify/main.go).
-
-You can receive notification of each trials via channel.
+You can receive notifications of each trials via channel.
 It can be used for logging and any notification systems.
 
 ```go
@@ -113,32 +109,32 @@ package main
 import ...
 
 func main() {
-	trialchan := make(chan goptuna.FrozenTrial, 8)
-	study, _ := goptuna.CreateStudy(
-		...
-		goptuna.StudyOptionIgnoreObjectiveErr(true),
-		goptuna.StudyOptionSetTrialNotifyChannel(trialchan),
-	)
+    trialchan := make(chan goptuna.FrozenTrial, 8)
+    study, _ := goptuna.CreateStudy(
+        ...
+        goptuna.StudyOptionIgnoreObjectiveErr(true),
+        goptuna.StudyOptionSetTrialNotifyChannel(trialchan),
+    )
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		study.Optimize(objective, 100)
-		close(trialchan)
-	}()
-	go func() {
-		defer wg.Done()
-		for t := range trialchan {
-			log.Println("trial", t)
-		}
-	}()
-	wg.Wait()
-
-    v, _ := study.GetBestValue()
-    fmt.Println("best evaluation value:", v)
+    var wg sync.WaitGroup
+    wg.Add(2)
+    go func() {
+        defer wg.Done()
+        study.Optimize(objective, 100)
+        close(trialchan)
+    }()
+    go func() {
+        defer wg.Done()
+        for t := range trialchan {
+            log.Println("trial", t)
+        }
+    }()
+    wg.Wait()
+    ...
 }
 ```
+
+[full source code](./_examples/trialnotify/main.go)
 
 </details>
 
