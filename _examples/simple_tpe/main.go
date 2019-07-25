@@ -31,7 +31,7 @@ func main() {
 
 	study, err := goptuna.CreateStudy(
 		"goptuna-example",
-		goptuna.StudyOptionSampler(tpe.NewTPESampler()),
+		goptuna.StudyOptionSampler(tpe.NewSampler()),
 		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionSetLogger(logger),
 	)

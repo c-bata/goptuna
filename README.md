@@ -5,7 +5,8 @@
 
 
 Experimental Black-box optimization library, inspired by [optuna](https://github.com/pfnet/optuna).
-This library helps the parameter tuning of the systems built with Go. Currently two algorithms are implemented:
+This library is not only for machine learning but also we can use the parameter tuning of the systems built with Go.
+Currently two algorithms are implemented:
 
 * Random Search
 * Tree of Parzen Estimators (TPE)
@@ -47,7 +48,7 @@ func main() {
 
     study, _ := goptuna.CreateStudy(
         "goptuna-example",
-        goptuna.StudyOptionSampler(tpe.NewTPESampler()),
+        goptuna.StudyOptionSampler(tpe.NewSampler()),
         goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
         goptuna.StudyOptionSetLogger(logger),
     )

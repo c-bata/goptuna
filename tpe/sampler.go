@@ -4,9 +4,8 @@ import (
 	"math"
 	"math/rand"
 
-	"gonum.org/v1/gonum/floats"
-
 	"github.com/c-bata/goptuna"
+	"gonum.org/v1/gonum/floats"
 )
 
 const EPS = 1e-12
@@ -43,32 +42,35 @@ func DefaultWeights(x int) []float64 {
 	}
 }
 
-var _ goptuna.Sampler = &TPESampler{}
+var _ goptuna.Sampler = &Sampler{}
 
-type TPESampler struct {
-	NStartupTrials        int
-	NEICandidates         int
-	Gamma                 FuncGamma
-	ParzenEstimatorParams ParzenEstimatorParams
-
-	rng            *rand.Rand
-	random_sampler *goptuna.RandomSearchSampler
+type Sampler struct {
+	numberOfStartupTrials int
+	numberOfEICandidates  int
+	gamma                 FuncGamma
+	params                ParzenEstimatorParams
+	rng                   *rand.Rand
+	randomSampler         *goptuna.RandomSearchSampler
 }
 
-func NewTPESampler() *TPESampler {
-	sampler := &TPESampler{
-		NStartupTrials: 10,
-		NEICandidates:  24,
-		Gamma:          DefaultGamma,
-		ParzenEstimatorParams: ParzenEstimatorParams{
+func NewSampler(opts ...SamplerOption) *Sampler {
+	sampler := &Sampler{
+		numberOfStartupTrials: 10,
+		numberOfEICandidates:  24,
+		gamma:                 DefaultGamma,
+		params: ParzenEstimatorParams{
 			ConsiderPrior:     true,
 			PriorWeight:       1.0,
 			ConsiderMagicClip: true,
 			ConsiderEndpoints: false,
 			Weights:           DefaultWeights,
 		},
-		rng:            rand.New(rand.NewSource(0)),
-		random_sampler: goptuna.NewRandomSearchSampler(),
+		rng:           rand.New(rand.NewSource(0)),
+		randomSampler: goptuna.NewRandomSearchSampler(),
+	}
+
+	for _, opt := range opts {
+		opt(sampler)
 	}
 	return sampler
 }
@@ -133,13 +135,13 @@ func genBelowOrAbove(
 	return results
 }
 
-func (s *TPESampler) splitObservationPairs(
+func (s *Sampler) splitObservationPairs(
 	configIdxs []int,
 	configVals []float64,
 	lossIdxs []int,
 	lossVals [][2]float64,
 ) ([]float64, []float64) {
-	nbelow := s.Gamma(len(configVals))
+	nbelow := s.gamma(len(configVals))
 	lossAscending := argSort2d(lossVals)
 
 	keepIdxs := genKeepIdxs(lossIdxs, lossAscending, nbelow, true)
@@ -151,7 +153,7 @@ func (s *TPESampler) splitObservationPairs(
 	return below, above
 }
 
-func (s *TPESampler) sampleFromGMM(parzenEstimator *ParzenEstimator, low, high float64, size int) []float64 {
+func (s *Sampler) sampleFromGMM(parzenEstimator *ParzenEstimator, low, high float64, size int) []float64 {
 	weights := parzenEstimator.Weights
 	mus := parzenEstimator.Mus
 	sigmas := parzenEstimator.Sigmas
@@ -179,7 +181,7 @@ func (s *TPESampler) sampleFromGMM(parzenEstimator *ParzenEstimator, low, high f
 	return samples
 }
 
-func (s *TPESampler) normalCDF(x float64, mu []float64, sigma []float64) []float64 {
+func (s *Sampler) normalCDF(x float64, mu []float64, sigma []float64) []float64 {
 	l := len(mu)
 	results := make([]float64, l)
 	for i := 0; i < l; i++ {
@@ -191,7 +193,7 @@ func (s *TPESampler) normalCDF(x float64, mu []float64, sigma []float64) []float
 	return results
 }
 
-func (s *TPESampler) logsumRows(x [][]float64) []float64 {
+func (s *Sampler) logsumRows(x [][]float64) []float64 {
 	y := make([]float64, len(x))
 	for i := range x {
 		m := floats.Max(x[i])
@@ -205,7 +207,7 @@ func (s *TPESampler) logsumRows(x [][]float64) []float64 {
 	return y
 }
 
-func (s *TPESampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimator, low, high float64) []float64 {
+func (s *Sampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimator, low, high float64) []float64 {
 	weights := parzenEstimator.Weights
 	mus := parzenEstimator.Mus
 	sigmas := parzenEstimator.Sigmas
@@ -266,7 +268,7 @@ func (s *TPESampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimat
 	return s.logsumRows(y)
 }
 
-func (s *TPESampler) compare(samples []float64, logL []float64, logG []float64) []float64 {
+func (s *Sampler) compare(samples []float64, logL []float64, logG []float64) []float64 {
 	if len(samples) > 0 {
 		if len(logL) != len(logG) {
 			panic("the size of the log_l and log_g should be same")
@@ -304,26 +306,26 @@ func (s *TPESampler) compare(samples []float64, logL []float64, logG []float64) 
 	}
 }
 
-func (s *TPESampler) sampleNumerical(low, high float64, below, above []float64) float64 {
-	size := s.NEICandidates
-	parzenEstimatorBelow := NewParzenEstimator(below, low, high, s.ParzenEstimatorParams)
+func (s *Sampler) sampleNumerical(low, high float64, below, above []float64) float64 {
+	size := s.numberOfEICandidates
+	parzenEstimatorBelow := NewParzenEstimator(below, low, high, s.params)
 	sampleBelow := s.sampleFromGMM(parzenEstimatorBelow, low, high, size)
 	logLikelihoodsBelow := s.gmmLogPDF(sampleBelow, parzenEstimatorBelow, low, high)
 
-	parzenEstimatorAbove := NewParzenEstimator(above, low, high, s.ParzenEstimatorParams)
+	parzenEstimatorAbove := NewParzenEstimator(above, low, high, s.params)
 	sampleAbove := s.sampleFromGMM(parzenEstimatorAbove, low, high, size)
 	logLikelihoodsAbove := s.gmmLogPDF(sampleAbove, parzenEstimatorAbove, low, high)
 
 	return s.compare(sampleBelow, logLikelihoodsBelow, logLikelihoodsAbove)[0]
 }
 
-func (s *TPESampler) sampleUniform(distribution goptuna.UniformDistribution, below, above []float64) float64 {
+func (s *Sampler) sampleUniform(distribution goptuna.UniformDistribution, below, above []float64) float64 {
 	low := distribution.Min
 	high := distribution.Max
 	return s.sampleNumerical(low, high, below, above)
 }
 
-func (s *TPESampler) Sample(
+func (s *Sampler) Sample(
 	study *goptuna.Study,
 	trial goptuna.FrozenTrial,
 	paramName string,
@@ -335,8 +337,8 @@ func (s *TPESampler) Sample(
 	}
 	n := len(observationPairs)
 
-	if n < s.NStartupTrials {
-		return s.random_sampler.Sample(study, trial, paramName, paramDistribution)
+	if n < s.numberOfStartupTrials {
+		return s.randomSampler.Sample(study, trial, paramName, paramDistribution)
 	}
 
 	configIdxs := make([]int, n)

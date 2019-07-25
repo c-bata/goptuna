@@ -24,7 +24,7 @@ func almostEqualFloat641D(a, b []float64, e float64) bool {
 	return true
 }
 
-func TestTPESampler_splitObservationPairs(t *testing.T) {
+func TestSampler_splitObservationPairs(t *testing.T) {
 	type fields struct {
 		NStartupTrials        int
 		NEICandidates         int
@@ -76,20 +76,20 @@ func TestTPESampler_splitObservationPairs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &TPESampler{
-				NStartupTrials:        tt.fields.NStartupTrials,
-				NEICandidates:         tt.fields.NEICandidates,
-				Gamma:                 tt.fields.Gamma,
-				ParzenEstimatorParams: tt.fields.ParzenEstimatorParams,
+			s := &Sampler{
+				numberOfStartupTrials: tt.fields.NStartupTrials,
+				numberOfEICandidates:  tt.fields.NEICandidates,
+				gamma:                 tt.fields.Gamma,
+				params:                tt.fields.ParzenEstimatorParams,
 				rng:                   tt.fields.rng,
-				random_sampler:        tt.fields.random_sampler,
+				randomSampler:         tt.fields.random_sampler,
 			}
 			gotBelow, gotAbove := s.splitObservationPairs(tt.args.configIdxs, tt.args.configVals, tt.args.lossIdxs, tt.args.lossVals)
 			if !almostEqualFloat641D(gotBelow, tt.wantBelow, 1e-4) {
-				t.Errorf("TPESampler.splitObservationPairs() gotBelow = %v, want %v", gotBelow, tt.wantBelow)
+				t.Errorf("Sampler.splitObservationPairs() gotBelow = %v, want %v", gotBelow, tt.wantBelow)
 			}
 			if !almostEqualFloat641D(gotAbove, tt.wantAbove, 1e-4) {
-				t.Errorf("TPESampler.splitObservationPairs() gotAbove = %v, want %v", gotAbove, tt.wantAbove)
+				t.Errorf("Sampler.splitObservationPairs() gotAbove = %v, want %v", gotAbove, tt.wantAbove)
 			}
 		})
 	}
