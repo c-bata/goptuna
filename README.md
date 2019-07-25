@@ -64,9 +64,10 @@ func main() {
 
 <details>
 
-<summary>Parallel optimization</summary>
+<summary>Parallel optimization with multiple goroutine workers</summary>
 
-Goptuna can easily implement parallel optimization using goroutine.
+``Optimize`` method of ``goptuna.Study`` object is designed as the goroutine safe.
+So you can easily optimize your objective function using multiple goroutine workers.
 
 ```go
 package main
