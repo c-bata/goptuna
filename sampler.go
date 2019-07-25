@@ -49,6 +49,8 @@ func (s *RandomSearchSampler) Sample(
 	switch d := paramDistribution.(type) {
 	case UniformDistribution:
 		return s.rng.Float64()*(d.Max-d.Min) + d.Min, nil
+	case IntUniformDistribution:
+		return float64(s.rng.Intn(d.High-d.Low) + d.Low), nil
 	default:
 		return 0.0, errors.New("undefined distribution")
 	}
