@@ -12,14 +12,8 @@ import (
 )
 
 func objective(trial goptuna.Trial) (float64, error) {
-	x1, err := trial.SuggestUniform("x1", -10, 10)
-	if err != nil {
-		return 0.0, err
-	}
-	x2, err := trial.SuggestUniform("x2", -10, 10)
-	if err != nil {
-		return 0.0, err
-	}
+	x1, _ := trial.SuggestUniform("x1", -10, 10)
+	x2, _ := trial.SuggestUniform("x2", -10, 10)
 	return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
 }
 
@@ -36,32 +30,30 @@ func main() {
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	for i := 0; i < 5; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := study.Optimize(objective, 100)
+			if err != nil {
+				log.Println("error", err)
+			}
+		}()
+	}
+
+	var wgnotify sync.WaitGroup
+	wgnotify.Add(1)
 	go func() {
-		defer wg.Done()
-		err := study.Optimize(objective, 100)
-		if err != nil {
-			log.Println("error", err)
-		}
-		close(trialchan)
-	}()
-	go func() {
-		defer wg.Done()
+		defer wgnotify.Done()
 		for t := range trialchan {
 			log.Println("trial", t)
 		}
 	}()
 
 	wg.Wait()
-	v, err := study.GetBestValue()
-	if err != nil {
-		log.Fatal("failed to get best value", zap.Error(err))
-	}
+	close(trialchan)
+	wgnotify.Wait()
+
 	params, err := study.GetBestParams()
-	if err != nil {
-		log.Fatal("failed to get best params", zap.Error(err))
-	}
-	fmt.Println("Result:")
-	fmt.Println("- best value", v)
-	fmt.Println("- best param", params)
+	fmt.Println("best params", params, err)
 }

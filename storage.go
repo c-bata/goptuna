@@ -47,15 +47,15 @@ func NewInMemoryStorage() *InMemoryStorage {
 }
 
 type InMemoryStorage struct {
-	mu sync.Mutex
+	mu sync.RWMutex
 
 	direction StudyDirection
 	trials    map[string]FrozenTrial
 }
 
 func (s *InMemoryStorage) GetAllTrials(studyID string) ([]FrozenTrial, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	trials := make([]FrozenTrial, 0, len(s.trials))
 
@@ -146,8 +146,8 @@ func (s *InMemoryStorage) GetBestTrial(studyID string) (FrozenTrial, error) {
 	if !s.checkStudyID(studyID) {
 		return FrozenTrial{}, ErrInvalidStudyID
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	var bestTrial FrozenTrial
 	var bestTrialIsSet bool
@@ -193,14 +193,14 @@ func (s *InMemoryStorage) GetStudyDirection(studyID string) (StudyDirection, err
 	if !s.checkStudyID(studyID) {
 		return StudyDirectionMinimize, ErrInvalidStudyID
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	return s.direction, nil
 }
 
 func (s *InMemoryStorage) GetTrial(trialID string) (FrozenTrial, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.trials[trialID], nil
 }

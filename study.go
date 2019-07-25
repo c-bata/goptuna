@@ -2,6 +2,7 @@ package goptuna
 
 import (
 	"fmt"
+	"sync"
 
 	"go.uber.org/zap"
 )
@@ -23,6 +24,7 @@ type Study struct {
 	logger             *zap.Logger
 	ignoreObjectiveErr bool
 	trialNotifyChan    chan FrozenTrial
+	mu                 sync.RWMutex
 }
 
 func (s *Study) GetTrials() ([]FrozenTrial, error) {
@@ -71,6 +73,32 @@ func (s *Study) runTrial(objective FuncObjective) (string, error) {
 	return trialID, nil
 }
 
+func (s *Study) notifyFinishedTrial(trialID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.trialNotifyChan == nil && s.logger == nil {
+		return nil
+	}
+
+	trial, err := s.storage.GetTrial(trialID)
+	if err != nil {
+		return err
+	}
+
+	if s.trialNotifyChan != nil {
+		s.trialNotifyChan <- trial
+	}
+	if s.logger != nil {
+		s.logger.Info("Finished trial",
+			zap.String("trialID", trialID),
+			zap.String("state", trial.State.String()),
+			zap.Float64("value", trial.Value),
+			zap.String("paramsInIR", fmt.Sprintf("%v", trial.ParamsInIR)))
+	}
+	return nil
+}
+
 func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 	evaluateCnt := 0
 	for {
@@ -83,22 +111,9 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 			return err
 		}
 
-		if s.trialNotifyChan != nil || s.logger != nil {
-			trial, err := s.storage.GetTrial(trialID)
-			if err != nil {
-				return err
-			}
-
-			if s.trialNotifyChan != nil {
-				s.trialNotifyChan <- trial
-			}
-			if s.logger != nil {
-				s.logger.Info("Finished trial",
-					zap.String("trialID", trialID),
-					zap.String("state", trial.State.String()),
-					zap.Float64("value", trial.Value),
-					zap.String("paramsInIR", fmt.Sprintf("%v", trial.ParamsInIR)))
-			}
+		err = s.notifyFinishedTrial(trialID)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
