@@ -19,7 +19,7 @@ You can integrate Goptuna in wide variety of Go projects because of its portabil
 $ go get -u github.com/c-bata/goptuna
 ```
 
-## Basic
+## Basic usage
 
 Goptuna supports Define-By-Run style user API like Optuna.
 It makes the modularity high, and the user can dynamically construct the search spaces.
@@ -60,36 +60,21 @@ func main() {
 }
 ```
 
-## Advanced usages
+**Advanced usages**
 
-### Parallel optimization
+<details>
+
+<summary>Parallel optimization</summary>
 
 Goptuna can easily implement parallel optimization using goroutine.
 
 ```go
 package main
 
-import (
-	"fmt"
-	"log"
-	"math"
-	"sync"
-
-	"github.com/c-bata/goptuna"
-	"github.com/c-bata/goptuna/tpe"
-)
-
-func objective(trial goptuna.Trial) (float64, error) {
-	x1, _ := trial.SuggestUniform("x1", -10, 10)
-	x2, _ := trial.SuggestUniform("x2", -10, 10)
-	return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
-}
+import ...
 
 func main() {
-	study, _ := goptuna.CreateStudy(
-		"goptuna-example",
-		goptuna.StudyOptionSampler(tpe.NewSampler()),
-	)
+	study, _ := goptuna.CreateStudy(...)
 
 	var wg sync.WaitGroup
 	for i := 0; i < 5; i++ {
@@ -105,12 +90,15 @@ func main() {
 	wg.Wait()
 
     v, _ := study.GetBestValue()
-    params, _ := study.GetBestParams()
-    fmt.Println("result:", v, params)
+    fmt.Println("best evaluation value:", v)
 }
 ```
 
-### Notification system
+</details>
+
+<details>
+
+<summary>Notification system</summary>
 
 You can receive notification of each trials via channel.
 It can be used for logging and any notification systems.
@@ -118,27 +106,12 @@ It can be used for logging and any notification systems.
 ```go
 package main
 
-import (
-	"fmt"
-	"log"
-	"math"
-	"sync"
-
-	"github.com/c-bata/goptuna"
-	"github.com/c-bata/goptuna/tpe"
-)
-
-func objective(trial goptuna.Trial) (float64, error) {
-	x1, _ := trial.SuggestUniform("x1", -10, 10)
-	x2, _ := trial.SuggestUniform("x2", -10, 10)
-	return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
-}
+import ...
 
 func main() {
 	trialchan := make(chan goptuna.FrozenTrial, 8)
 	study, _ := goptuna.CreateStudy(
-		"goptuna-example",
-		goptuna.StudyOptionSampler(tpe.NewSampler()),
+		...
 		goptuna.StudyOptionIgnoreObjectiveErr(true),
 		goptuna.StudyOptionSetTrialNotifyChannel(trialchan),
 	)
@@ -158,12 +131,12 @@ func main() {
 	}()
 	wg.Wait()
 
-	v, _ := study.GetBestValue()
-	params, _ := study.GetBestParams()
-	fmt.Println("best value:", v)
-	fmt.Println("best params:", params)
+    v, _ := study.GetBestValue()
+    fmt.Println("best evaluation value:", v)
 }
 ```
+
+</details>
 
 ## License
 
