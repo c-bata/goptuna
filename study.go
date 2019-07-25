@@ -22,6 +22,7 @@ type Study struct {
 	direction          StudyDirection
 	logger             *zap.Logger
 	ignoreObjectiveErr bool
+	trialNotifyChan    chan FrozenTrial
 }
 
 func (s *Study) GetTrials() ([]FrozenTrial, error) {
@@ -81,8 +82,17 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 		if err != nil {
 			return err
 		}
-		if s.logger != nil {
-			if trial, err := s.storage.GetTrial(trialID); err == nil {
+
+		if s.trialNotifyChan != nil || s.logger != nil {
+			trial, err := s.storage.GetTrial(trialID)
+			if err != nil {
+				return err
+			}
+
+			if s.trialNotifyChan != nil {
+				s.trialNotifyChan <- trial
+			}
+			if s.logger != nil {
 				s.logger.Info("Finished trial",
 					zap.String("trialID", trialID),
 					zap.String("state", trial.State.String()),
@@ -171,6 +181,13 @@ func StudyOptionSampler(sampler Sampler) StudyOption {
 func StudyOptionIgnoreObjectiveErr(ignore bool) StudyOption {
 	return func(s *Study) error {
 		s.ignoreObjectiveErr = ignore
+		return nil
+	}
+}
+
+func StudyOptionSetTrialNotifyChannel(notify chan FrozenTrial) StudyOption {
+	return func(s *Study) error {
+		s.trialNotifyChan = notify
 		return nil
 	}
 }
