@@ -155,7 +155,7 @@ func (s *Sampler) splitObservationPairs(
 	return below, above
 }
 
-func (s *Sampler) sampleFromGMM(parzenEstimator *ParzenEstimator, low, high float64, size int) []float64 {
+func (s *Sampler) sampleFromGMM(parzenEstimator *ParzenEstimator, low, high float64, size int, q float64) []float64 {
 	weights := parzenEstimator.Weights
 	mus := parzenEstimator.Mus
 	sigmas := parzenEstimator.Sigmas
@@ -180,6 +180,11 @@ func (s *Sampler) sampleFromGMM(parzenEstimator *ParzenEstimator, low, high floa
 			samples = append(samples, draw)
 		}
 	}
+	if q > 0 {
+		for i := range samples {
+			samples[i] = math.Round(samples[i]/q) * q
+		}
+	}
 	return samples
 }
 
@@ -200,16 +205,16 @@ func (s *Sampler) logsumRows(x [][]float64) []float64 {
 	for i := range x {
 		m := floats.Max(x[i])
 
-		s := 0.0
+		sum := 0.0
 		for j := range x[i] {
-			s += math.Log(math.Exp(x[i][j] - m))
+			sum += math.Log(math.Exp(x[i][j] - m))
 		}
-		y[i] = s + m
+		y[i] = sum + m
 	}
 	return y
 }
 
-func (s *Sampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimator, low, high float64) []float64 {
+func (s *Sampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimator, low, high float64, q float64) []float64 {
 	weights := parzenEstimator.Weights
 	mus := parzenEstimator.Mus
 	sigmas := parzenEstimator.Sigmas
@@ -229,45 +234,77 @@ func (s *Sampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimator,
 		paccept += highNormalCdf[i]*weights[i] - lowNormalCdf[i]
 	}
 
-	jacobian := ones1d(len(samples))
-	distance := make([][]float64, len(samples))
-	for i := range samples {
-		distance[i] = make([]float64, len(mus))
-		for j := range mus {
-			distance[i][j] = samples[i] - mus[j]
+	if q > 0 {
+		probabilities := make([]float64, len(samples))
+		if len(weights) != len(mus) || len(weights) != len(sigmas) {
+			panic("should be the same length of weights, mus and sigmas")
 		}
-	}
-	mahalanobis := make([][]float64, len(distance))
-	for i := range distance {
-		mahalanobis[i] = make([]float64, len(distance[i]))
-		for j := range distance[i] {
-			mahalanobis[i][j] = distance[i][j] / math.Pow(math.Max(sigmas[j], EPS), 2)
-		}
-	}
-	z := make([][]float64, len(distance))
-	for i := range distance {
-		z[i] = make([]float64, len(distance[i]))
-		for j := range distance[i] {
-			z[i][j] = math.Sqrt(2*math.Pi) * sigmas[j] * jacobian[i]
-		}
-	}
-	coefficient := make([][]float64, len(distance))
-	for i := range distance {
-		coefficient[i] = make([]float64, len(distance[i]))
-		for j := range distance[i] {
-			coefficient[i][j] = weights[j] / z[i][j] / paccept
-		}
-	}
+		for i := range weights {
+			w := weights[i]
+			mu := mus[i]
+			sigma := sigmas[i]
+			upperBound := make([]float64, len(samples))
+			lowerBound := make([]float64, len(samples))
+			for i := range upperBound {
+				upperBound[i] = math.Min(samples[i]+q/2.0, high)
+				lowerBound[i] = math.Max(samples[i]-q/2.0, low)
 
-	y := make([][]float64, len(distance))
-	for i := range distance {
-		y[i] = make([]float64, len(distance[i]))
-		for j := range distance[i] {
-			y[i][j] = -0.5*mahalanobis[i][j] + math.Log(coefficient[i][j])
-		}
-	}
+			}
 
-	return s.logsumRows(y)
+			incAmt := make([]float64, len(samples))
+			for j := range upperBound {
+				incAmt[j] = w * s.normalCDF(upperBound[j], []float64{mu}, []float64{sigma})[0]
+				incAmt[j] -= w * s.normalCDF(lowerBound[j], []float64{mu}, []float64{sigma})[0]
+			}
+			for j := range probabilities {
+				probabilities[j] += incAmt[j]
+			}
+		}
+		returnValue := make([]float64, len(samples))
+		for i := range probabilities {
+			returnValue[i] = math.Log(probabilities[i]+EPS) + math.Log(paccept+EPS)
+		}
+		return returnValue
+	} else {
+		jacobian := ones1d(len(samples))
+		distance := make([][]float64, len(samples))
+		for i := range samples {
+			distance[i] = make([]float64, len(mus))
+			for j := range mus {
+				distance[i][j] = samples[i] - mus[j]
+			}
+		}
+		mahalanobis := make([][]float64, len(distance))
+		for i := range distance {
+			mahalanobis[i] = make([]float64, len(distance[i]))
+			for j := range distance[i] {
+				mahalanobis[i][j] = distance[i][j] / math.Pow(math.Max(sigmas[j], EPS), 2)
+			}
+		}
+		z := make([][]float64, len(distance))
+		for i := range distance {
+			z[i] = make([]float64, len(distance[i]))
+			for j := range distance[i] {
+				z[i][j] = math.Sqrt(2*math.Pi) * sigmas[j] * jacobian[i]
+			}
+		}
+		coefficient := make([][]float64, len(distance))
+		for i := range distance {
+			coefficient[i] = make([]float64, len(distance[i]))
+			for j := range distance[i] {
+				coefficient[i][j] = weights[j] / z[i][j] / paccept
+			}
+		}
+
+		y := make([][]float64, len(distance))
+		for i := range distance {
+			y[i] = make([]float64, len(distance[i]))
+			for j := range distance[i] {
+				y[i][j] = -0.5*mahalanobis[i][j] + math.Log(coefficient[i][j])
+			}
+		}
+		return s.logsumRows(y)
+	}
 }
 
 func (s *Sampler) compare(samples []float64, logL []float64, logG []float64) []float64 {
@@ -308,15 +345,15 @@ func (s *Sampler) compare(samples []float64, logL []float64, logG []float64) []f
 	}
 }
 
-func (s *Sampler) sampleNumerical(low, high float64, below, above []float64) float64 {
+func (s *Sampler) sampleNumerical(low, high float64, below, above []float64, q float64) float64 {
 	size := s.numberOfEICandidates
 	parzenEstimatorBelow := NewParzenEstimator(below, low, high, s.params)
-	sampleBelow := s.sampleFromGMM(parzenEstimatorBelow, low, high, size)
-	logLikelihoodsBelow := s.gmmLogPDF(sampleBelow, parzenEstimatorBelow, low, high)
+	sampleBelow := s.sampleFromGMM(parzenEstimatorBelow, low, high, size, q)
+	logLikelihoodsBelow := s.gmmLogPDF(sampleBelow, parzenEstimatorBelow, low, high, q)
 
 	parzenEstimatorAbove := NewParzenEstimator(above, low, high, s.params)
-	sampleAbove := s.sampleFromGMM(parzenEstimatorAbove, low, high, size)
-	logLikelihoodsAbove := s.gmmLogPDF(sampleAbove, parzenEstimatorAbove, low, high)
+	sampleAbove := s.sampleFromGMM(parzenEstimatorAbove, low, high, size, q)
+	logLikelihoodsAbove := s.gmmLogPDF(sampleAbove, parzenEstimatorAbove, low, high, q)
 
 	return s.compare(sampleBelow, logLikelihoodsBelow, logLikelihoodsAbove)[0]
 }
@@ -324,7 +361,14 @@ func (s *Sampler) sampleNumerical(low, high float64, below, above []float64) flo
 func (s *Sampler) sampleUniform(distribution goptuna.UniformDistribution, below, above []float64) float64 {
 	low := distribution.Min
 	high := distribution.Max
-	return s.sampleNumerical(low, high, below, above)
+	return s.sampleNumerical(low, high, below, above, 0)
+}
+
+func (s *Sampler) sampleInt(distribution goptuna.IntUniformDistribution, below, above []float64) float64 {
+	q := 1.0
+	low := float64(distribution.Low) - 0.5*q
+	high := float64(distribution.High) + 0.5*q
+	return s.sampleNumerical(low, high, below, above, q)
 }
 
 func (s *Sampler) Sample(
@@ -368,6 +412,8 @@ func (s *Sampler) Sample(
 	switch d := paramDistribution.(type) {
 	case goptuna.UniformDistribution:
 		return s.sampleUniform(d, belowParamValues, aboveParamValues), nil
+	case goptuna.IntUniformDistribution:
+		return s.sampleInt(d, belowParamValues, aboveParamValues), nil
 	}
 	return 0, goptuna.ErrUnexpectedDistribution
 }
