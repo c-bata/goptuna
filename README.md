@@ -4,12 +4,24 @@
 [![GoDoc](https://godoc.org/github.com/c-bata/goptuna?status.svg)](https://godoc.org/github.com/c-bata/goptuna) 
 
 
-Experimental Black-box optimization library written in pure Go, inspired by [optuna](https://github.com/pfnet/optuna).
-This library helps the parameter tuning of the systems built with Go.
+Experimental Black-box optimization library, inspired by [optuna](https://github.com/pfnet/optuna).
+This library helps the parameter tuning of the systems built with Go. Currently two algorithms are implemented:
 
-## Example
+* Random Search
+* Tree of Parzen Estimators (TPE)
 
-Goptuna supports define-by-run style user API.
+## Installation
+
+You can integrate Goptuna in wide variety of Go projects because of its portability of pure Go.
+
+```console
+$ go get -u github.com/c-bata/goptuna
+```
+
+## Usage
+
+Goptuna supports Define-By-Run style user API like Optuna.
+It makes the modularity high, and the user can dynamically construct the search spaces.
 
 ```go
 package main
@@ -24,14 +36,8 @@ import (
 )
 
 func objective(trial goptuna.Trial) (float64, error) {
-    x1, err := trial.SuggestUniform("x1", -10, 10)
-    if err != nil {
-        return 0.0, err
-    }
-    x2, err := trial.SuggestUniform("x2", -10, 10)
-    if err != nil {
-        return 0.0, err
-    }
+    x1, _ := trial.SuggestUniform("x1", -10, 10)
+    x2, _ := trial.SuggestUniform("x2", -10, 10)
     return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
 }
 
