@@ -20,7 +20,7 @@ type RandomSearchSampler struct {
 	mu  sync.Mutex
 }
 
-// RandomSearchSamplerOption is a function to set change the optionn.
+// RandomSearchSamplerOption is a type of function to set change the option.
 type RandomSearchSamplerOption func(sampler *RandomSearchSampler)
 
 // RandomSearchSamplerOptionSeed sets seed number.

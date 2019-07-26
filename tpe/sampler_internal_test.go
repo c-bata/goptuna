@@ -31,7 +31,7 @@ func TestSampler_splitObservationPairs(t *testing.T) {
 		Gamma                 FuncGamma
 		ParzenEstimatorParams ParzenEstimatorParams
 		rng                   *rand.Rand
-		random_sampler        *goptuna.RandomSearchSampler
+		randomSampler         *goptuna.RandomSearchSampler
 	}
 	type args struct {
 		configIdxs []int
@@ -82,7 +82,7 @@ func TestSampler_splitObservationPairs(t *testing.T) {
 				gamma:                 tt.fields.Gamma,
 				params:                tt.fields.ParzenEstimatorParams,
 				rng:                   tt.fields.rng,
-				randomSampler:         tt.fields.random_sampler,
+				randomSampler:         tt.fields.randomSampler,
 			}
 			gotBelow, gotAbove := s.splitObservationPairs(tt.args.configIdxs, tt.args.configVals, tt.args.lossIdxs, tt.args.lossVals)
 			if !almostEqualFloat641D(gotBelow, tt.wantBelow, 1e-4) {

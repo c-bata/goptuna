@@ -6,6 +6,7 @@ import (
 	"gonum.org/v1/gonum/floats"
 )
 
+// ParzenEstimatorParams holds the parameters of ParzenEstimator
 type ParzenEstimatorParams struct {
 	ConsiderPrior     bool
 	ConsiderMagicClip bool
@@ -14,6 +15,7 @@ type ParzenEstimatorParams struct {
 	PriorWeight       float64 // optional
 }
 
+// ParzenEstimator is a surrogate model for TPE>
 type ParzenEstimator struct {
 	Weights []float64
 	Mus     []float64
@@ -99,7 +101,7 @@ func (e *ParzenEstimator) calculate(
 	if considerMagicClip {
 		minSigma = 1.0 * (high - low) / math.Min(100.0, 1.0+float64(len(sortedMus)))
 	} else {
-		minSigma = EPS
+		minSigma = eps
 	}
 	clip(sigma, minSigma, maxSigma)
 	if considerPrior {
@@ -108,6 +110,7 @@ func (e *ParzenEstimator) calculate(
 	return sortedWeights, sortedMus, sigma
 }
 
+// NewParzenEstimator returns the parzen estimator object.
 func NewParzenEstimator(mus []float64, low, high float64, params ParzenEstimatorParams) *ParzenEstimator {
 	estimator := &ParzenEstimator{
 		Weights: nil,

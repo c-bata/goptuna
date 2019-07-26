@@ -9,12 +9,15 @@ import (
 	"gonum.org/v1/gonum/floats"
 )
 
-const EPS = 1e-12
+const eps = 1e-12
 
+// FuncGamma is a type of gamma function.
 type FuncGamma func(int) int
 
+// FuncWeights is a type of weights function.
 type FuncWeights func(int) []float64
 
+// DefaultGamma is a default gamma function.
 func DefaultGamma(x int) int {
 	a := int(math.Ceil(0.1 * float64(x)))
 	if a > 25 {
@@ -23,6 +26,7 @@ func DefaultGamma(x int) int {
 	return a
 }
 
+// HyperoptDefaultGamma is a default gamma function of Hyperopt.
 func HyperoptDefaultGamma(x int) int {
 	a := int(math.Ceil(0.25 * float64(x)))
 	if a > 25 {
@@ -31,6 +35,7 @@ func HyperoptDefaultGamma(x int) int {
 	return 25
 }
 
+// DefaultWeights is a default weights function.
 func DefaultWeights(x int) []float64 {
 	if x == 0 {
 		return []float64{}
@@ -45,6 +50,7 @@ func DefaultWeights(x int) []float64 {
 
 var _ goptuna.Sampler = &Sampler{}
 
+// Sampler returns the next search points by using TPE.
 type Sampler struct {
 	numberOfStartupTrials int
 	numberOfEICandidates  int
@@ -55,6 +61,7 @@ type Sampler struct {
 	mu                    sync.Mutex
 }
 
+// NewSampler returns the TPE sampler.
 func NewSampler(opts ...SamplerOption) *Sampler {
 	sampler := &Sampler{
 		numberOfStartupTrials: 10,
@@ -193,7 +200,7 @@ func (s *Sampler) normalCDF(x float64, mu []float64, sigma []float64) []float64 
 	results := make([]float64, l)
 	for i := 0; i < l; i++ {
 		denominator := x - mu[i]
-		numerator := math.Max(math.Sqrt(2)*sigma[i], EPS)
+		numerator := math.Max(math.Sqrt(2)*sigma[i], eps)
 		z := denominator / numerator
 		results[i] = 0.5 * (1 + math.Erf(z))
 	}
@@ -262,49 +269,48 @@ func (s *Sampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimator,
 		}
 		returnValue := make([]float64, len(samples))
 		for i := range probabilities {
-			returnValue[i] = math.Log(probabilities[i]+EPS) + math.Log(paccept+EPS)
+			returnValue[i] = math.Log(probabilities[i]+eps) + math.Log(paccept+eps)
 		}
 		return returnValue
-	} else {
-		jacobian := ones1d(len(samples))
-		distance := make([][]float64, len(samples))
-		for i := range samples {
-			distance[i] = make([]float64, len(mus))
-			for j := range mus {
-				distance[i][j] = samples[i] - mus[j]
-			}
-		}
-		mahalanobis := make([][]float64, len(distance))
-		for i := range distance {
-			mahalanobis[i] = make([]float64, len(distance[i]))
-			for j := range distance[i] {
-				mahalanobis[i][j] = distance[i][j] / math.Pow(math.Max(sigmas[j], EPS), 2)
-			}
-		}
-		z := make([][]float64, len(distance))
-		for i := range distance {
-			z[i] = make([]float64, len(distance[i]))
-			for j := range distance[i] {
-				z[i][j] = math.Sqrt(2*math.Pi) * sigmas[j] * jacobian[i]
-			}
-		}
-		coefficient := make([][]float64, len(distance))
-		for i := range distance {
-			coefficient[i] = make([]float64, len(distance[i]))
-			for j := range distance[i] {
-				coefficient[i][j] = weights[j] / z[i][j] / paccept
-			}
-		}
-
-		y := make([][]float64, len(distance))
-		for i := range distance {
-			y[i] = make([]float64, len(distance[i]))
-			for j := range distance[i] {
-				y[i][j] = -0.5*mahalanobis[i][j] + math.Log(coefficient[i][j])
-			}
-		}
-		return s.logsumRows(y)
 	}
+	jacobian := ones1d(len(samples))
+	distance := make([][]float64, len(samples))
+	for i := range samples {
+		distance[i] = make([]float64, len(mus))
+		for j := range mus {
+			distance[i][j] = samples[i] - mus[j]
+		}
+	}
+	mahalanobis := make([][]float64, len(distance))
+	for i := range distance {
+		mahalanobis[i] = make([]float64, len(distance[i]))
+		for j := range distance[i] {
+			mahalanobis[i][j] = distance[i][j] / math.Pow(math.Max(sigmas[j], eps), 2)
+		}
+	}
+	z := make([][]float64, len(distance))
+	for i := range distance {
+		z[i] = make([]float64, len(distance[i]))
+		for j := range distance[i] {
+			z[i][j] = math.Sqrt(2*math.Pi) * sigmas[j] * jacobian[i]
+		}
+	}
+	coefficient := make([][]float64, len(distance))
+	for i := range distance {
+		coefficient[i] = make([]float64, len(distance[i]))
+		for j := range distance[i] {
+			coefficient[i][j] = weights[j] / z[i][j] / paccept
+		}
+	}
+
+	y := make([][]float64, len(distance))
+	for i := range distance {
+		y[i] = make([]float64, len(distance[i]))
+		for j := range distance[i] {
+			y[i][j] = -0.5*mahalanobis[i][j] + math.Log(coefficient[i][j])
+		}
+	}
+	return s.logsumRows(y)
 }
 
 func (s *Sampler) compare(samples []float64, logL []float64, logG []float64) []float64 {
@@ -340,9 +346,8 @@ func (s *Sampler) compare(samples []float64, logL []float64, logG []float64) []f
 			results[i] = samples[best]
 		}
 		return results
-	} else {
-		return []float64{}
 	}
+	return []float64{}
 }
 
 func (s *Sampler) sampleNumerical(low, high float64, below, above []float64, q float64) float64 {
@@ -371,6 +376,7 @@ func (s *Sampler) sampleInt(distribution goptuna.IntUniformDistribution, below, 
 	return s.sampleNumerical(low, high, below, above, q)
 }
 
+// Sample a parameter for a given distribution.
 func (s *Sampler) Sample(
 	study *goptuna.Study,
 	trial goptuna.FrozenTrial,
