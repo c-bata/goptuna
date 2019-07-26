@@ -62,8 +62,7 @@ type IntUniformDistribution struct {
 
 // ToInternalRepr to convert external representation of a parameter value into internal representation.
 func (d *IntUniformDistribution) ToInternalRepr(xr interface{}) float64 {
-	x := xr.(int)
-	return float64(x)
+	return xr.(float64)
 }
 
 // ToExternalRepr to convert internal representation of a parameter value into external representation.
