@@ -81,7 +81,8 @@ import ...
 func main() {
     study, _ := goptuna.CreateStudy(...)
 
-    var eg errgroup.Group
+    eg, ctx := errgroup.WithContext(context.Background())
+    study.WithContext(ctx)
     for i := 0; i < 5; i++ {
         eg.Go(func() error {
             return study.Optimize(objective, 100)

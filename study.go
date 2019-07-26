@@ -1,6 +1,7 @@
 package goptuna
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -25,6 +26,7 @@ type Study struct {
 	ignoreObjectiveErr bool
 	trialNotifyChan    chan FrozenTrial
 	mu                 sync.RWMutex
+	ctx                context.Context
 }
 
 func (s *Study) GetTrials() ([]FrozenTrial, error) {
@@ -37,6 +39,12 @@ func (s *Study) Direction() StudyDirection {
 
 func (s *Study) Report(trialID string, value float64) error {
 	return s.storage.SetTrialValue(trialID, value)
+}
+
+func (s *Study) WithContext(ctx context.Context) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.ctx = ctx
 }
 
 func (s *Study) runTrial(objective FuncObjective) (string, error) {
@@ -106,6 +114,16 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 			break
 		}
 		evaluateCnt++
+
+		if s.ctx != nil {
+			select {
+			case <-s.ctx.Done():
+				return s.ctx.Err()
+			default:
+				// do nothing
+			}
+		}
+
 		trialID, err := s.runTrial(objective)
 		if err != nil {
 			return err
