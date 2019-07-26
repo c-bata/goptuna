@@ -144,25 +144,16 @@ func main() {
 
 ## Links
 
-Articles:
-
-* [Practical bayesian optimization in Go using Goptuna](https://medium.com/@c_bata_/practical-bayesian-optimization-in-go-using-goptuna-edf97195fcb5)
-* [Goptunaを使ったGo言語におけるベイズ最適化の活用 (Japanese)](https://adtech.cyberagent.io/research/archives/2437)
-
-Papers:
+References:
 
 * TPE: [James S. Bergstra, Remi Bardenet, Yoshua Bengio, and Balázs Kégl. Algorithms for hyper-parameter optimization. In Advances in Neural Information Processing Systems 25. 2011.](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)
 * Optuna: [Takuya Akiba, Shotaro Sano, Toshihiko Yanase, Takeru Ohta, Masanori Koyama. 2019. Optuna: A Next-generation Hyperparameter Optimization Framework. In The 25th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD ’19), August 4–8, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
 
 Status:
 
-* [godoc](http://godoc.org/github.com/c-bata/goptuna)
-* [gocover.io - goptuna](https://gocover.io/github.com/c-bata/goptuna)
-* [goreportcard](https://goreportcard.com/report/github.com/c-bata/goptuna)
-
-Similar projects:
-
-* [go-bayesopt: A library for doing Bayesian Optimization using Gaussian Processes (blackbox optimizer) in Go/Golang.](https://github.com/d4l3k/go-bayesopt)
+* [godoc.org](http://godoc.org/github.com/c-bata/goptuna)
+* [gocover.io](https://gocover.io/github.com/c-bata/goptuna)
+* [goreportcard.com](https://goreportcard.com/report/github.com/c-bata/goptuna)
 
 ## License
 
