@@ -8,15 +8,20 @@ import (
 	"go.uber.org/zap"
 )
 
+// FuncObjective is a type of objective function
 type FuncObjective func(trial Trial) (float64, error)
 
+// StudyDirection represents the direction of the optimization
 type StudyDirection string
 
 const (
+	// StudyDirectionMaximize maximizes objective function value
 	StudyDirectionMaximize StudyDirection = "maximize"
+	// StudyDirectionMinimize minimizes objective function value
 	StudyDirectionMinimize StudyDirection = "minimize"
 )
 
+// Study corresponds to an optimization task, i.e., a set of trials.
 type Study struct {
 	id                 string
 	storage            Storage
@@ -29,18 +34,22 @@ type Study struct {
 	ctx                context.Context
 }
 
+// GetTrials returns all trials in this study.
 func (s *Study) GetTrials() ([]FrozenTrial, error) {
 	return s.storage.GetAllTrials(s.id)
 }
 
+// Direction returns the direction of objective function value
 func (s *Study) Direction() StudyDirection {
 	return s.direction
 }
 
+// Report reports an objective function value
 func (s *Study) Report(trialID string, value float64) error {
 	return s.storage.SetTrialValue(trialID, value)
 }
 
+// WithContext sets a context and it might cancel the execution of Optimize.
 func (s *Study) WithContext(ctx context.Context) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -107,6 +116,7 @@ func (s *Study) notifyFinishedTrial(trialID string) error {
 	return nil
 }
 
+// Optimize optimizes an objective function.
 func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 	evaluateCnt := 0
 	for {
@@ -137,6 +147,7 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 	return nil
 }
 
+// GetBestValue return the best objective value
 func (s *Study) GetBestValue() (float64, error) {
 	trial, err := s.storage.GetBestTrial(s.id)
 	if err != nil {
@@ -145,6 +156,7 @@ func (s *Study) GetBestValue() (float64, error) {
 	return trial.Value, nil
 }
 
+// GetBestParams return parameters of the best trial
 func (s *Study) GetBestParams() (map[string]float64, error) {
 	// TODO: avoid using internal representation value
 	trial, err := s.storage.GetBestTrial(s.id)
@@ -154,6 +166,7 @@ func (s *Study) GetBestParams() (map[string]float64, error) {
 	return trial.ParamsInIR, nil
 }
 
+// CreateStudy creates a new Study object.
 func CreateStudy(
 	name string,
 	opts ...StudyOption,
@@ -181,8 +194,10 @@ func CreateStudy(
 	return study, nil
 }
 
+// StudyOption to pass the custom option
 type StudyOption func(study *Study) error
 
+// StudyOptionSetDirection change the direction of optimize
 func StudyOptionSetDirection(direction StudyDirection) StudyOption {
 	return func(s *Study) error {
 		s.direction = direction
@@ -190,6 +205,7 @@ func StudyOptionSetDirection(direction StudyDirection) StudyOption {
 	}
 }
 
+// StudyOptionSetLogger sets zap.Logger.
 func StudyOptionSetLogger(logger *zap.Logger) StudyOption {
 	return func(s *Study) error {
 		s.logger = logger
@@ -197,6 +213,7 @@ func StudyOptionSetLogger(logger *zap.Logger) StudyOption {
 	}
 }
 
+// StudyOptionStorage sets the storage object.
 func StudyOptionStorage(storage Storage) StudyOption {
 	return func(s *Study) error {
 		s.storage = storage
@@ -204,6 +221,7 @@ func StudyOptionStorage(storage Storage) StudyOption {
 	}
 }
 
+// StudyOptionSampler sets the sampler object.
 func StudyOptionSampler(sampler Sampler) StudyOption {
 	return func(s *Study) error {
 		s.sampler = sampler
@@ -211,6 +229,8 @@ func StudyOptionSampler(sampler Sampler) StudyOption {
 	}
 }
 
+// StudyOptionIgnoreObjectiveErr sets the option to ignore error returned from objective function
+// If true, Optimize method continues to run new trial.
 func StudyOptionIgnoreObjectiveErr(ignore bool) StudyOption {
 	return func(s *Study) error {
 		s.ignoreObjectiveErr = ignore
@@ -218,6 +238,7 @@ func StudyOptionIgnoreObjectiveErr(ignore bool) StudyOption {
 	}
 }
 
+// StudyOptionSetTrialNotifyChannel to subscribe the finished trials.
 func StudyOptionSetTrialNotifyChannel(notify chan FrozenTrial) StudyOption {
 	return func(s *Study) error {
 		s.trialNotifyChan = notify

@@ -96,7 +96,7 @@ func DistributionToJSON(distribution interface{}) ([]byte, error) {
 	case IntUniformDistribution:
 		ir.Name = "IntUniformDistribution"
 	default:
-		return nil, ErrUnexpectedDistribution
+		return nil, ErrUnknownDistribution
 	}
 	ir.Attrs = distribution
 	return json.Marshal(&ir)
@@ -132,5 +132,5 @@ func JSONToDistribution(jsonBytes []byte) (interface{}, error) {
 		err = json.Unmarshal(dbytes, &y)
 		return y, err
 	}
-	return nil, ErrUnexpectedDistribution
+	return nil, ErrUnknownDistribution
 }

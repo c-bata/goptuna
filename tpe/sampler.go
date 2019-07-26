@@ -415,7 +415,7 @@ func (s *Sampler) Sample(
 	case goptuna.IntUniformDistribution:
 		return s.sampleInt(d, belowParamValues, aboveParamValues), nil
 	}
-	return 0, goptuna.ErrUnexpectedDistribution
+	return 0, goptuna.ErrUnknownDistribution
 }
 
 func getObservationPairs(study *goptuna.Study, paramName string) ([][3]float64, error) {

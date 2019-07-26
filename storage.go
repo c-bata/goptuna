@@ -6,6 +6,9 @@ import (
 	"sync"
 )
 
+// Storage interface abstract a backend database and provide library
+// internal interfaces to read/write history of studies and trials.
+// This interface is not supposed to be directly accessed by library users.
 type Storage interface {
 	CreateNewStudyID(name string) (string, error)
 	CreateNewTrialID(studyID string) (string, error)
@@ -30,16 +33,22 @@ type FrozenTrial struct {
 
 var _ Storage = &InMemoryStorage{}
 
-const InMemoryStorageStudyId = "in_memory_storage_study_id"
+const inMemoryStudyID = "in_memory_storage_study_id"
 
 var (
-	ErrInvalidStudyID         = errors.New("invalid study id")
-	ErrInvalidTrialID         = errors.New("invalid trial id")
-	ErrTrialIsNotUpdated      = errors.New("trial cannot be updated")
-	ErrNoCompletedTrials      = errors.New("no trials are completed yet")
-	ErrUnexpectedDistribution = errors.New("unexpected distribution")
+	// ErrInvalidStudyID represents invalid study id.
+	ErrInvalidStudyID = errors.New("invalid study id")
+	// ErrInvalidTrialID represents invalid trial id.
+	ErrInvalidTrialID = errors.New("invalid trial id")
+	// ErrTrialIsNotUpdated represents trial cannot be updated.
+	ErrTrialIsNotUpdated = errors.New("trial cannot be updated")
+	// ErrNoCompletedTrials represents no trials are completed yet.
+	ErrNoCompletedTrials = errors.New("no trials are completed yet")
+	// ErrUnknownDistribution returns the distribution is unknown.
+	ErrUnknownDistribution = errors.New("unknown distribution")
 )
 
+// NewInMemoryStorage returns new memory storage.
 func NewInMemoryStorage() *InMemoryStorage {
 	return &InMemoryStorage{
 		direction: StudyDirectionMinimize,
@@ -47,6 +56,7 @@ func NewInMemoryStorage() *InMemoryStorage {
 	}
 }
 
+// InMemoryStorage stores data in memory of the Go process.
 type InMemoryStorage struct {
 	mu sync.RWMutex
 
@@ -54,6 +64,7 @@ type InMemoryStorage struct {
 	trials    map[string]FrozenTrial
 }
 
+// GetAllTrials returns the all trials.
 func (s *InMemoryStorage) GetAllTrials(studyID string) ([]FrozenTrial, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -66,6 +77,7 @@ func (s *InMemoryStorage) GetAllTrials(studyID string) ([]FrozenTrial, error) {
 	return trials, nil
 }
 
+// SetTrialParam sets the sampled parameters of trial.
 func (s *InMemoryStorage) SetTrialParam(trialID string, paramName string, paramValueInternal float64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -85,6 +97,7 @@ func (s *InMemoryStorage) SetTrialParam(trialID string, paramName string, paramV
 	return nil
 }
 
+// SetTrialState sets the state of trial.
 func (s *InMemoryStorage) SetTrialState(trialID string, state TrialState) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -101,6 +114,7 @@ func (s *InMemoryStorage) SetTrialState(trialID string, state TrialState) error 
 	return nil
 }
 
+// SetTrialValue sets the value of trial.
 func (s *InMemoryStorage) SetTrialValue(trialID string, value float64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -117,14 +131,16 @@ func (s *InMemoryStorage) SetTrialValue(trialID string, value float64) error {
 	return nil
 }
 
+// CreateNewStudyID creates study and returns studyID.
 func (s *InMemoryStorage) CreateNewStudyID(name string) (string, error) {
-	return InMemoryStorageStudyId, nil
+	return inMemoryStudyID, nil
 }
 
 func (s *InMemoryStorage) checkStudyID(studyID string) bool {
-	return studyID == InMemoryStorageStudyId
+	return studyID == inMemoryStudyID
 }
 
+// CreateNewTrialID creates trial and returns trialID.
 func (s *InMemoryStorage) CreateNewTrialID(studyID string) (string, error) {
 	if !s.checkStudyID(studyID) {
 		return "", ErrInvalidStudyID
@@ -143,6 +159,7 @@ func (s *InMemoryStorage) CreateNewTrialID(studyID string) (string, error) {
 	return trialID, nil
 }
 
+// GetBestTrial returns the best trial.
 func (s *InMemoryStorage) GetBestTrial(studyID string) (FrozenTrial, error) {
 	if !s.checkStudyID(studyID) {
 		return FrozenTrial{}, ErrInvalidStudyID
@@ -179,6 +196,7 @@ func (s *InMemoryStorage) GetBestTrial(studyID string) (FrozenTrial, error) {
 	return bestTrial, nil
 }
 
+// SetStudyDirection sets study direction of the objective.
 func (s *InMemoryStorage) SetStudyDirection(studyID string, direction StudyDirection) error {
 	if !s.checkStudyID(studyID) {
 		return ErrInvalidStudyID
@@ -190,6 +208,7 @@ func (s *InMemoryStorage) SetStudyDirection(studyID string, direction StudyDirec
 	return nil
 }
 
+// GetStudyDirection returns study direction of the objective.
 func (s *InMemoryStorage) GetStudyDirection(studyID string) (StudyDirection, error) {
 	if !s.checkStudyID(studyID) {
 		return StudyDirectionMinimize, ErrInvalidStudyID
@@ -200,6 +219,7 @@ func (s *InMemoryStorage) GetStudyDirection(studyID string) (StudyDirection, err
 	return s.direction, nil
 }
 
+// GetTrial returns Trial.
 func (s *InMemoryStorage) GetTrial(trialID string) (FrozenTrial, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
