@@ -19,6 +19,7 @@ type Storage interface {
 	SetStudyDirection(studyID string, direction StudyDirection) error
 }
 
+// FrozenTrial holds the status and results of a Trial.
 type FrozenTrial struct {
 	ID         string             `json:"trial_id"`
 	StudyID    string             `json:"study_id"`
