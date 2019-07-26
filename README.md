@@ -4,12 +4,14 @@
 [![GoDoc](https://godoc.org/github.com/c-bata/goptuna?status.svg)](https://godoc.org/github.com/c-bata/goptuna) 
 
 
-Experimental Black-box optimization library, inspired by [optuna](https://github.com/pfnet/optuna).
-This library is not only for machine learning but also we can use the parameter tuning of the systems built with Go.
+Bayesian optimization library for black-box functions, inspired by [Optuna](https://github.com/pfnet/optuna).
+This library is not only for hyperparameter tuning of machine learning models but also
+we can use the parameter tuning of the systems like server middleware (e.g. Controlling the number of goroutines of your server)
+as much as we can design objective function.
 Currently two algorithms are implemented:
 
 * Random Search
-* Tree of Parzen Estimators (TPE)
+* Tree-structured Parzen Estimators (TPE)
 
 ## Installation
 
@@ -77,18 +79,15 @@ import ...
 func main() {
     study, _ := goptuna.CreateStudy(...)
 
-    var wg sync.WaitGroup
+    eg, _ := errgroup.WithContext(context.Background())
     for i := 0; i < 5; i++ {
-        wg.Add(1)
-        go func() {
-            defer wg.Done()
-            err := study.Optimize(objective, 100)
-            if err != nil {
-                log.Println("error", err)
-            }
-        }()
+        eg.Go(func() error {
+            return study.Optimize(objective, 100)
+        })
     }
-    wg.Wait()
+    if err := eg.Wait(); err != nil {
+        os.Exit(1)
+    }
     ...
 }
 ```
