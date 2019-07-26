@@ -87,9 +87,7 @@ func main() {
             return study.Optimize(objective, 100)
         })
     }
-    if err := eg.Wait(); err != nil {
-        os.Exit(1)
-    }
+    if err := eg.Wait(); err != nil { ... }
     ...
 }
 ```
@@ -122,7 +120,7 @@ func main() {
     wg.Add(2)
     go func() {
         defer wg.Done()
-        study.Optimize(objective, 100)
+        err = study.Optimize(objective, 100)
         close(trialchan)
     }()
     go func() {
@@ -132,6 +130,7 @@ func main() {
         }
     }()
     wg.Wait()
+    if err != nil { ... }
     ...
 }
 ```
