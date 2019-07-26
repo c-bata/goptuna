@@ -15,6 +15,8 @@ Currently two algorithms are implemented:
 * Tree-structured Parzen Estimators (TPE)
     * [James S. Bergstra, Remi Bardenet, Yoshua Bengio, and Balázs Kégl. Algorithms for hyper-parameter optimization. In Advances in Neural Information Processing Systems 25. 2011.](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)
 
+See the blog post for more details: [Practical bayesian optimization in Go using Goptuna](https://medium.com/@c_bata_/practical-bayesian-optimization-in-go-using-goptuna-edf97195fcb5).
+
 ## Installation
 
 You can integrate Goptuna in wide variety of Go projects because of its portability of pure Go.
