@@ -102,6 +102,42 @@ func TestDistributionToExternalRepresentation(t *testing.T) {
 	}
 }
 
+func TestDistributionSingle(t *testing.T) {
+	tests := []struct {
+		name         string
+		distribution goptuna.Distribution
+		want         bool
+	}{
+		{
+			name:         "uniform distribution true",
+			distribution: &goptuna.UniformDistribution{Low: 0.5, High: 0.5},
+			want:         true,
+		},
+		{
+			name:         "uniform distribution false",
+			distribution: &goptuna.UniformDistribution{Low: 0.5, High: 5.5},
+			want:         false,
+		},
+		{
+			name:         "int uniform distribution true",
+			distribution: &goptuna.IntUniformDistribution{Low: 10, High: 10},
+			want:         true,
+		},
+		{
+			name:         "int uniform distribution false",
+			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
+			want:         false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.distribution.Single(); got != tt.want {
+				t.Errorf("UniformDistribution.ToInternalRepr() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestDistributionContains(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -128,7 +164,7 @@ func TestDistributionContains(t *testing.T) {
 			want:         false,
 		},
 		{
-			name:         "int uniform distribution",
+			name:         "int uniform distribution true",
 			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
 			args:         3,
 			want:         true,
