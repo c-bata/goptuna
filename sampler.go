@@ -20,14 +20,17 @@ type RandomSearchSampler struct {
 	mu  sync.Mutex
 }
 
+// RandomSearchSamplerOption is a function to set change the optionn.
 type RandomSearchSamplerOption func(sampler *RandomSearchSampler)
 
+// RandomSearchSamplerOptionSeed sets seed number.
 func RandomSearchSamplerOptionSeed(seed int64) RandomSearchSamplerOption {
 	return func(sampler *RandomSearchSampler) {
 		sampler.rng = rand.New(rand.NewSource(seed))
 	}
 }
 
+// NewRandomSearchSampler implements random search algorithm.
 func NewRandomSearchSampler(opts ...RandomSearchSamplerOption) *RandomSearchSampler {
 	s := &RandomSearchSampler{
 		rng: rand.New(rand.NewSource(0)),
@@ -38,6 +41,7 @@ func NewRandomSearchSampler(opts ...RandomSearchSamplerOption) *RandomSearchSamp
 	return s
 }
 
+// Sample a parameter for a given distribution.
 func (s *RandomSearchSampler) Sample(
 	study *Study,
 	trial FrozenTrial,
