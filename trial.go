@@ -53,13 +53,13 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 
 func (t *Trial) SuggestUniform(name string, low, high float64) (float64, error) {
 	return t.suggest(name, UniformDistribution{
-		Name: name, High: high, Low: low,
+		High: high, Low: low,
 	})
 }
 
 func (t *Trial) SuggestInt(name string, low, high int) (int, error) {
 	v, err := t.suggest(name, IntUniformDistribution{
-		Name: name, High: high, Low: low,
+		High: high, Low: low,
 	})
 	return int(v), err
 }
