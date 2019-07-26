@@ -12,9 +12,9 @@ var _ Distribution = &UniformDistribution{}
 type UniformDistribution struct {
 	Name string
 	// High is higher endpoint of the range of the distribution (included in the range).
-	Max float64
+	High float64
 	// Low is lower endpoint of the range of the distribution (included in the range).
-	Min float64
+	Low float64
 }
 
 func (d *UniformDistribution) GetName() string {
