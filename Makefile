@@ -28,7 +28,7 @@ bench:  ## Run benchmarks.
 
 .PHONY: coverage
 cover:  ## Run the tests.
-	@go test -coverprofile=coverage.o
+	@go test -coverprofile=coverage.o ./...
 	@go tool cover -func=coverage.o
 
 .PHONY: generate
