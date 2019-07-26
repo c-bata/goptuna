@@ -8,10 +8,12 @@ Bayesian optimization library for black-box functions, inspired by [Optuna](http
 This library is not only for hyperparameter tuning of machine learning models but also
 we can use the parameter tuning of the systems like server middleware (e.g. Controlling the number of goroutines of your server)
 as much as we can design objective function.
+
 Currently two algorithms are implemented:
 
 * Random Search
 * Tree-structured Parzen Estimators (TPE)
+    * [James S. Bergstra, Remi Bardenet, Yoshua Bengio, and Balázs Kégl. Algorithms for hyper-parameter optimization. In Advances in Neural Information Processing Systems 25. 2011.](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)
 
 ## Installation
 
@@ -79,7 +81,7 @@ import ...
 func main() {
     study, _ := goptuna.CreateStudy(...)
 
-    eg, _ := errgroup.WithContext(context.Background())
+    var eg errgroup.Group
     for i := 0; i < 5; i++ {
         eg.Go(func() error {
             return study.Optimize(objective, 100)

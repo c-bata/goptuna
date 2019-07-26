@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"math"
@@ -32,7 +31,7 @@ func main() {
 		goptuna.StudyOptionSetLogger(logger),
 	)
 
-	eg, _ := errgroup.WithContext(context.Background())
+	var eg errgroup.Group
 	for i := 0; i < 5; i++ {
 		eg.Go(func() error {
 			return study.Optimize(objective, 100)
