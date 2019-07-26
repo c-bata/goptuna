@@ -45,9 +45,8 @@ func (d *UniformDistribution) Single() bool {
 func (d *UniformDistribution) Contains(ir float64) bool {
 	if d.Single() {
 		return ir == d.Low
-	} else {
-		return d.Low <= ir && ir < d.High
 	}
+	return d.Low <= ir && ir < d.High
 }
 
 var _ Distribution = &IntUniformDistribution{}
@@ -62,7 +61,8 @@ type IntUniformDistribution struct {
 
 // ToInternalRepr to convert external representation of a parameter value into internal representation.
 func (d *IntUniformDistribution) ToInternalRepr(xr interface{}) float64 {
-	return xr.(float64)
+	x := xr.(int)
+	return float64(x)
 }
 
 // ToExternalRepr to convert internal representation of a parameter value into external representation.
@@ -80,9 +80,8 @@ func (d *IntUniformDistribution) Contains(ir float64) bool {
 	value := int(ir)
 	if d.Single() {
 		return value == d.Low
-	} else {
-		return d.Low <= value && value < d.High
 	}
+	return d.Low <= value && value < d.High
 }
 
 // DistributionToJSON serialize a distribution to JSON format.
