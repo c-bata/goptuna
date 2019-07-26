@@ -1,7 +1,8 @@
 # Goptuna
 
 ![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)
-[![GoDoc](https://godoc.org/github.com/c-bata/goptuna?status.svg)](https://godoc.org/github.com/c-bata/goptuna) 
+[![GoDoc](https://godoc.org/github.com/c-bata/goptuna?status.svg)](https://godoc.org/github.com/c-bata/goptuna)
+[![Go Report Card](https://goreportcard.com/badge/github.com/c-bata/goptuna)](https://goreportcard.com/report/github.com/c-bata/goptuna)
 
 
 Bayesian optimization library for black-box functions, inspired by [Optuna](https://github.com/pfnet/optuna).
@@ -13,7 +14,6 @@ Currently two algorithms are implemented:
 
 * Random Search
 * Tree-structured Parzen Estimators (TPE)
-    * [James S. Bergstra, Remi Bardenet, Yoshua Bengio, and Balázs Kégl. Algorithms for hyper-parameter optimization. In Advances in Neural Information Processing Systems 25. 2011.](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)
 
 See the blog post for more details: [Practical bayesian optimization in Go using Goptuna](https://medium.com/@c_bata_/practical-bayesian-optimization-in-go-using-goptuna-edf97195fcb5).
 
@@ -141,6 +141,28 @@ func main() {
 [full source code](./_examples/trialnotify/main.go)
 
 </details>
+
+## Links
+
+Articles:
+
+* [Practical bayesian optimization in Go using Goptuna](https://medium.com/@c_bata_/practical-bayesian-optimization-in-go-using-goptuna-edf97195fcb5)
+* [Goptunaを使ったGo言語におけるベイズ最適化の活用 (Japanese)](https://adtech.cyberagent.io/research/archives/2437)
+
+Papers:
+
+* TPE: [James S. Bergstra, Remi Bardenet, Yoshua Bengio, and Balázs Kégl. Algorithms for hyper-parameter optimization. In Advances in Neural Information Processing Systems 25. 2011.](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)
+* Optuna: [Takuya Akiba, Shotaro Sano, Toshihiko Yanase, Takeru Ohta, Masanori Koyama. 2019. Optuna: A Next-generation Hyperparameter Optimization Framework. In The 25th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD ’19), August 4–8, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
+
+Status:
+
+* [godoc](http://godoc.org/github.com/c-bata/goptuna)
+* [gocover.io - goptuna](https://gocover.io/github.com/c-bata/goptuna)
+* [goreportcard](https://goreportcard.com/report/github.com/c-bata/goptuna)
+
+Similar projects:
+
+* [go-bayesopt: A library for doing Bayesian Optimization using Gaussian Processes (blackbox optimizer) in Go/Golang.](https://github.com/d4l3k/go-bayesopt)
 
 ## License
 
