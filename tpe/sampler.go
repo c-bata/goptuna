@@ -359,8 +359,8 @@ func (s *Sampler) sampleNumerical(low, high float64, below, above []float64, q f
 }
 
 func (s *Sampler) sampleUniform(distribution goptuna.UniformDistribution, below, above []float64) float64 {
-	low := distribution.Min
-	high := distribution.Max
+	low := distribution.Low
+	high := distribution.High
 	return s.sampleNumerical(low, high, below, above, 0)
 }
 

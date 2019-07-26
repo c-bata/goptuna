@@ -48,7 +48,7 @@ func (s *RandomSearchSampler) Sample(
 	defer s.mu.Unlock()
 	switch d := paramDistribution.(type) {
 	case UniformDistribution:
-		return s.rng.Float64()*(d.Max-d.Min) + d.Min, nil
+		return s.rng.Float64()*(d.High-d.Low) + d.Low, nil
 	case IntUniformDistribution:
 		return float64(s.rng.Intn(d.High-d.Low) + d.Low), nil
 	default:
