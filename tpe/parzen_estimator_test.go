@@ -19,7 +19,7 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 		args args
 	}{
 		{
-			name: "calculate shape check 1",
+			name: "buildEstimator shape check 1",
 			args: args{
 				mus:  []float64{},
 				low:  -1.0,
@@ -34,7 +34,7 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 			},
 		},
 		{
-			name: "calculate shape check 1-1",
+			name: "buildEstimator shape check 1-1",
 			args: args{
 				mus:  []float64{},
 				low:  -1.0,
@@ -49,7 +49,7 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 			},
 		},
 		{
-			name: "calculate shape check 1-2",
+			name: "buildEstimator shape check 1-2",
 			args: args{
 				mus:  []float64{},
 				low:  -1.0,
@@ -64,7 +64,7 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 			},
 		},
 		{
-			name: "calculate shape check 1-3",
+			name: "buildEstimator shape check 1-3",
 			args: args{
 				mus:  []float64{},
 				low:  -1.0,
@@ -79,7 +79,7 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 			},
 		},
 		{
-			name: "calculate shape check 2",
+			name: "buildEstimator shape check 2",
 			args: args{
 				mus:  []float64{0.4},
 				low:  -1.0,
@@ -94,7 +94,7 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 			},
 		},
 		{
-			name: "calculate shape check 2-1",
+			name: "buildEstimator shape check 2-1",
 			args: args{
 				mus:  []float64{0.4},
 				low:  -1.0,
@@ -109,7 +109,7 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 			},
 		},
 		{
-			name: "calculate shape check 2-2",
+			name: "buildEstimator shape check 2-2",
 			args: args{
 				mus:  []float64{0.4},
 				low:  -1.0,
@@ -124,7 +124,7 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 			},
 		},
 		{
-			name: "calculate shape check 2-3",
+			name: "buildEstimator shape check 2-3",
 			args: args{
 				mus:  []float64{0.4},
 				low:  -1.0,
@@ -139,7 +139,7 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 			},
 		},
 		{
-			name: "calculate shape check 3",
+			name: "buildEstimator shape check 3",
 			args: args{
 				mus:  []float64{-0.4, 0.4},
 				low:  -1.0,
@@ -188,7 +188,7 @@ func TestNewParzenEstimator(t *testing.T) {
 		expected expected
 	}{
 		{
-			name: "calculate 1",
+			name: "buildEstimator 1",
 			args: args{
 				mus:  []float64{},
 				low:  -1.0,
@@ -208,7 +208,7 @@ func TestNewParzenEstimator(t *testing.T) {
 			},
 		},
 		{
-			name: "calculate 2",
+			name: "buildEstimator 2",
 			args: args{
 				mus:  []float64{},
 				low:  -1.0,
@@ -228,7 +228,7 @@ func TestNewParzenEstimator(t *testing.T) {
 			},
 		},
 		{
-			name: "calculate 3",
+			name: "buildEstimator 3",
 			args: args{
 				mus:  []float64{0.4},
 				low:  -1.0,
@@ -248,7 +248,7 @@ func TestNewParzenEstimator(t *testing.T) {
 			},
 		},
 		{
-			name: "calculate 4",
+			name: "buildEstimator 4",
 			args: args{
 				mus:  []float64{-0.4},
 				low:  -1.0,
@@ -268,7 +268,7 @@ func TestNewParzenEstimator(t *testing.T) {
 			},
 		},
 		{
-			name: "calculate 5",
+			name: "buildEstimator 5",
 			args: args{
 				mus:  []float64{-0.4, 0.4},
 				low:  -1.0,

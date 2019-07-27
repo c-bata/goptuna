@@ -20,19 +20,20 @@ type ParzenEstimator struct {
 	Weights []float64
 	Mus     []float64
 	Sigmas  []float64
-	Params  ParzenEstimatorParams
 }
 
-func (e *ParzenEstimator) calculate(
+func buildEstimator(
 	mus []float64,
 	low float64,
 	high float64,
-	considerPrior bool,
-	priorWeight float64,
-	considerMagicClip bool,
-	considerEndpoints bool,
-	weightsFunc FuncWeights,
+	params ParzenEstimatorParams,
 ) ([]float64, []float64, []float64) {
+	considerPrior := params.ConsiderPrior
+	priorWeight := params.PriorWeight
+	considerMagicClip := params.ConsiderMagicClip
+	considerEndpoints := params.ConsiderEndpoints
+	weightsFunc := params.Weights
+
 	var sortedWeights []float64
 	var sortedMus []float64
 	var sigma []float64
@@ -116,11 +117,9 @@ func NewParzenEstimator(mus []float64, low, high float64, params ParzenEstimator
 		Weights: nil,
 		Mus:     nil,
 		Sigmas:  nil,
-		Params:  params,
 	}
 
-	sWeights, sMus, sigma := estimator.calculate(mus, low, high, params.ConsiderPrior, params.PriorWeight,
-		params.ConsiderMagicClip, params.ConsiderEndpoints, params.Weights)
+	sWeights, sMus, sigma := buildEstimator(mus, low, high, params)
 	estimator.Weights = sWeights
 	estimator.Mus = sMus
 	estimator.Sigmas = sigma
