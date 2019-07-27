@@ -5,10 +5,9 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/c-bata/goptuna)](https://goreportcard.com/report/github.com/c-bata/goptuna)
 
 
-Bayesian optimization library for black-box functions, inspired by [Optuna](https://github.com/pfnet/optuna).
-This library is not only for hyperparameter tuning of machine learning models but also
-we can use the parameter tuning of the systems like server middleware (e.g. Controlling the number of goroutines of your server)
-as much as we can design objective function.
+Bayesian optimization framework for black-box functions, inspired by [Optuna](https://github.com/pfnet/optuna).
+This library is not only for hyperparameter tuning of machine learning models.
+Everything will be able to optimize if you can define objective function (e.g. Optimizing the number of goroutines of your server and the memory buffer size of the caching systems).
 
 Currently two algorithms are implemented:
 
