@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-PKGS := $(shell go list ./...)
+6060PKGS := $(shell go list ./...)
 SOURCES := $(shell find . -prune -o -name "*.go" -not -name '*_test.go' -print)
 
 .PHONY: setup
@@ -8,6 +8,7 @@ setup:  ## Setup for required tools.
 	go get -u golang.org/x/lint/golint
 	go get -u golang.org/x/tools/cmd/goimports
 	go get -u golang.org/x/tools/cmd/stringer
+	go get golang.org/x/tools/cmd/godoc
 
 .PHONY: fmt
 fmt: $(SOURCES) ## Formatting source codes.
@@ -30,6 +31,11 @@ bench:  ## Run benchmarks.
 cover:  ## Run the tests.
 	@go test -coverprofile=coverage.o ./...
 	@go tool cover -func=coverage.o
+
+.PHONY: godoc
+godoc: ## Run godoc http server
+	@echo "Please open http://localhost:6060/pkg/github.com/c-bata/goptuna/"
+	godoc -http=localhost:6060
 
 .PHONY: generate
 generate: ## Run go generate

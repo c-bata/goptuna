@@ -120,7 +120,7 @@ func (s *Study) notifyFinishedTrial(trialID string) error {
 func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 	evaluateCnt := 0
 	for {
-		if evaluateCnt > evaluateMax {
+		if evaluateCnt >= evaluateMax {
 			break
 		}
 		evaluateCnt++
