@@ -79,7 +79,11 @@ func bincount(x []int, weights []float64, minlength int) []float64 {
 				counts = append(counts, 0)
 			}
 		}
-		counts[x[i]] += weights[x[i]]
+		if x[i] > len(weights)-1 {
+			counts[x[i]] += 1
+		} else {
+			counts[x[i]] += weights[x[i]]
+		}
 	}
 	return counts
 }
