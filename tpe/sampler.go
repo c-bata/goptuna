@@ -313,6 +313,33 @@ func (s *Sampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimator,
 	return s.logsumRows(y)
 }
 
+func (s *Sampler) sampleFromCategoricalDist(probabilities []float64, size int) []int {
+	if size == 0 {
+		return []int{}
+	}
+	sample := multinomial(1, probabilities, size)
+
+	returnVals := make([]int, size)
+	for i := 0; i < size; i++ {
+		for j := range sample[i] {
+			returnVals[i] += sample[i][j] * j
+		}
+	}
+	return returnVals
+}
+
+func (s *Sampler) categoricalLogPDF(sample []int, p []float64) []float64 {
+	if len(sample) == 0 {
+		return []float64{}
+	}
+
+	result := make([]float64, len(sample))
+	for i := 0; i < len(sample); i++ {
+		result[i] = math.Log(p[sample[i]])
+	}
+	return result
+}
+
 func (s *Sampler) compare(samples []float64, logL []float64, logG []float64) []float64 {
 	if len(samples) > 0 {
 		if len(logL) != len(logG) {
@@ -376,6 +403,55 @@ func (s *Sampler) sampleInt(distribution goptuna.IntUniformDistribution, below, 
 	return s.sampleNumerical(low, high, below, above, q)
 }
 
+func (s *Sampler) sampleCategorical(distribution goptuna.CategoricalDistribution, below, above []float64) float64 {
+	belowInt := make([]int, len(below))
+	for i := range below {
+		belowInt[i] = int(below[i])
+	}
+	aboveInt := make([]int, len(above))
+	for i := range above {
+		aboveInt[i] = int(above[i])
+	}
+	upper := len(distribution.Choices)
+	size := s.numberOfEICandidates
+
+	// below
+	weightsBelow := s.params.Weights(len(below))
+	countsBelow := bincount(belowInt, weightsBelow, upper)
+	weightedBelowSum := 0.0
+	weightedBelow := make([]float64, len(countsBelow))
+	for i := range countsBelow {
+		weightedBelow[i] = countsBelow[i] + s.params.PriorWeight
+		weightedBelowSum += weightedBelow[i]
+	}
+	for i := range weightedBelow {
+		weightedBelow[i] /= weightedBelowSum
+	}
+	samplesBelow := s.sampleFromCategoricalDist(weightedBelow, size)
+	logLikelihoodsBelow := s.categoricalLogPDF(samplesBelow, weightedBelow)
+
+	// above
+	weightsAbove := s.params.Weights(len(above))
+	countsAbove := bincount(aboveInt, weightsAbove, upper)
+	weightedAboveSum := 0.0
+	weightedAbove := make([]float64, len(countsAbove))
+	for i := range countsAbove {
+		weightedAbove[i] = countsAbove[i] + s.params.PriorWeight
+		weightedAboveSum += weightedAbove[i]
+	}
+	for i := range weightedAbove {
+		weightedAbove[i] /= weightedAboveSum
+	}
+	samplesAbove := s.sampleFromCategoricalDist(weightedAbove, size)
+	logLikelihoodsAbove := s.categoricalLogPDF(samplesAbove, weightedAbove)
+
+	floatSamplesBelow := make([]float64, len(samplesBelow))
+	for i := range samplesBelow {
+		floatSamplesBelow[i] = float64(samplesBelow[i])
+	}
+	return s.compare(floatSamplesBelow, logLikelihoodsBelow, logLikelihoodsAbove)[0]
+}
+
 // Sample a parameter for a given distribution.
 func (s *Sampler) Sample(
 	study *goptuna.Study,
@@ -420,6 +496,8 @@ func (s *Sampler) Sample(
 		return s.sampleUniform(d, belowParamValues, aboveParamValues), nil
 	case goptuna.IntUniformDistribution:
 		return s.sampleInt(d, belowParamValues, aboveParamValues), nil
+	case goptuna.CategoricalDistribution:
+		return s.sampleCategorical(d, belowParamValues, aboveParamValues), nil
 	}
 	return 0, goptuna.ErrUnknownDistribution
 }

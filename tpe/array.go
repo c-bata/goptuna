@@ -69,6 +69,50 @@ func searchsorted(array, values []float64) []int {
 	return indexes
 }
 
+func bincount(x []int, weights []float64, minlength int) []float64 {
+	// Count the number of occurences of each value in array of non-negative ints.
+	// https://docs.scipy.org/doc/numpy/reference/generated/numpy.bincount.html
+	counts := make([]float64, minlength)
+	for i := range x {
+		if x[i] > len(counts)-1 {
+			for j := len(counts) - 1; j < x[i]; j++ {
+				counts = append(counts, 0)
+			}
+		}
+		if x[i] > len(weights)-1 {
+			counts[x[i]] += 1
+		} else {
+			counts[x[i]] += weights[x[i]]
+		}
+	}
+	return counts
+}
+
+func multinomial(n int, pvals []float64, size int) [][]int {
+	result := make([][]int, size)
+	l := len(pvals)
+	x := make([]float64, l)
+	floats.CumSum(x, pvals)
+
+	for i := range result {
+		result[i] = make([]int, l)
+
+		for j := 0; j < n; j++ {
+
+			var index int
+			r := rand.Float64()
+			for i := range x {
+				if x[i] > r {
+					index = i
+					break
+				}
+			}
+			result[i][index] += 1
+		}
+	}
+	return result
+}
+
 func argMaxMultinomial(pvals []float64) (int, error) {
 	x := make([]float64, len(pvals))
 	floats.CumSum(x, pvals)
