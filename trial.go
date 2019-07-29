@@ -86,9 +86,9 @@ func (t *Trial) SuggestInt(name string, low, high int) (int, error) {
 }
 
 // SuggestCategorical suggests an categorical parameter.
-func (t *Trial) SuggestCategorical(name string, choices []string) (int, error) {
+func (t *Trial) SuggestCategorical(name string, choices []string) (string, error) {
 	v, err := t.suggest(name, CategoricalDistribution{
 		Choices: choices,
 	})
-	return int(v), err
+	return choices[int(v)], err
 }

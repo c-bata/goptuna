@@ -322,7 +322,7 @@ func (s *Sampler) sampleFromCategoricalDist(probabilities []float64, size int) [
 	returnVals := make([]int, size)
 	for i := 0; i < size; i++ {
 		for j := range sample[i] {
-			returnVals[i] = sample[i][j] * j
+			returnVals[i] += sample[i][j] * j
 		}
 	}
 	return returnVals
