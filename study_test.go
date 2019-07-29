@@ -30,9 +30,8 @@ func ExampleStudy_Optimize() {
 	params, _ := study.GetBestParams()
 
 	fmt.Printf("Best trial: %.5f\n", value)
-	for k := range params {
-		fmt.Printf("%s: %.3f\n", k, params[k])
-	}
+	fmt.Printf("x1: %.3f\n", params["x1"])
+	fmt.Printf("x2: %.3f\n", params["x2"])
 	// Output:
 	// Best trial: 0.03833
 	// x1: 2.182

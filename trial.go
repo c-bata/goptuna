@@ -28,11 +28,10 @@ func (i TrialState) IsFinished() bool {
 // Note that this object is seamlessly instantiated and passed to the objective function behind;
 // hence, in typical use cases, library users do not care about instantiation of this object.
 type Trial struct {
-	study      *Study
-	id         string
-	state      TrialState
-	paramsInIR map[string]float64 // suggested value
-	value      float64
+	study *Study
+	id    int
+	state TrialState
+	value float64
 }
 
 func (t *Trial) suggest(name string, distribution interface{}) (float64, error) {
@@ -46,11 +45,26 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 		return 0.0, err
 	}
 
-	if t.paramsInIR == nil {
-		t.paramsInIR = make(map[string]float64, 8)
+	var d Distribution
+	switch x := distribution.(type) {
+	case UniformDistribution:
+		d = &x
+	case IntUniformDistribution:
+		d = &x
+	default:
+		return -1, ErrUnknownDistribution
 	}
-	t.paramsInIR[name] = v
-	err = t.study.storage.SetTrialParam(trial.ID, name, v)
+
+	if trial.Params == nil {
+		trial.Params = make(map[string]interface{}, 8)
+	}
+	trial.Params[name] = d.ToExternalRepr(v)
+	if trial.ParamsInIR == nil {
+		trial.ParamsInIR = make(map[string]float64, 8)
+	}
+	trial.ParamsInIR[name] = v
+
+	err = t.study.storage.SetTrialParam(trial.ID, name, v, d)
 	return v, err
 }
 

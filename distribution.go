@@ -26,6 +26,9 @@ type UniformDistribution struct {
 	Low float64 `json:"low"`
 }
 
+// UniformDistributionName is the identifier name of UniformDistribution
+const UniformDistributionName = "UniformDistribution"
+
 // ToInternalRepr to convert external representation of a parameter value into internal representation.
 func (d *UniformDistribution) ToInternalRepr(xr interface{}) float64 {
 	return xr.(float64)
@@ -58,6 +61,9 @@ type IntUniformDistribution struct {
 	// Low is lower endpoint of the range of the distribution (included in the range).
 	Low int `json:"low"`
 }
+
+// IntUniformDistributionName is the identifier name of IntUniformDistribution
+const IntUniformDistributionName = "IntUniformDistribution"
 
 // ToInternalRepr to convert external representation of a parameter value into internal representation.
 func (d *IntUniformDistribution) ToInternalRepr(xr interface{}) float64 {
@@ -92,9 +98,9 @@ func DistributionToJSON(distribution interface{}) ([]byte, error) {
 	}
 	switch distribution.(type) {
 	case UniformDistribution:
-		ir.Name = "UniformDistribution"
+		ir.Name = UniformDistributionName
 	case IntUniformDistribution:
-		ir.Name = "IntUniformDistribution"
+		ir.Name = IntUniformDistributionName
 	default:
 		return nil, ErrUnknownDistribution
 	}
@@ -113,7 +119,7 @@ func JSONToDistribution(jsonBytes []byte) (interface{}, error) {
 		return nil, err
 	}
 	switch x.Name {
-	case "UniformDistribution":
+	case UniformDistributionName:
 		var y UniformDistribution
 		var dbytes []byte
 		dbytes, err = json.Marshal(x.Attrs)
@@ -122,7 +128,7 @@ func JSONToDistribution(jsonBytes []byte) (interface{}, error) {
 		}
 		err = json.Unmarshal(dbytes, &y)
 		return y, err
-	case "IntUniformDistribution":
+	case IntUniformDistributionName:
 		var y IntUniformDistribution
 		var dbytes []byte
 		dbytes, err = json.Marshal(x.Attrs)

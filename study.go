@@ -23,7 +23,7 @@ const (
 
 // Study corresponds to an optimization task, i.e., a set of trials.
 type Study struct {
-	id                 string
+	id                 int
 	storage            Storage
 	sampler            Sampler
 	direction          StudyDirection
@@ -45,7 +45,7 @@ func (s *Study) Direction() StudyDirection {
 }
 
 // Report reports an objective function value
-func (s *Study) Report(trialID string, value float64) error {
+func (s *Study) Report(trialID int, value float64) error {
 	return s.storage.SetTrialValue(trialID, value)
 }
 
@@ -56,10 +56,10 @@ func (s *Study) WithContext(ctx context.Context) {
 	s.ctx = ctx
 }
 
-func (s *Study) runTrial(objective FuncObjective) (string, error) {
+func (s *Study) runTrial(objective FuncObjective) (int, error) {
 	trialID, err := s.storage.CreateNewTrialID(s.id)
 	if err != nil {
-		return "", err
+		return -1, err
 	}
 
 	trial := Trial{
@@ -90,7 +90,7 @@ func (s *Study) runTrial(objective FuncObjective) (string, error) {
 	return trialID, nil
 }
 
-func (s *Study) notifyFinishedTrial(trialID string) error {
+func (s *Study) notifyFinishedTrial(trialID int) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -108,10 +108,10 @@ func (s *Study) notifyFinishedTrial(trialID string) error {
 	}
 	if s.logger != nil {
 		s.logger.Info("Finished trial",
-			zap.String("trialID", trialID),
+			zap.Int("trialID", trialID),
 			zap.String("state", trial.State.String()),
 			zap.Float64("value", trial.Value),
-			zap.String("paramsInIR", fmt.Sprintf("%v", trial.ParamsInIR)))
+			zap.String("params", fmt.Sprintf("%v", trial.Params)))
 	}
 	return nil
 }
@@ -157,13 +157,12 @@ func (s *Study) GetBestValue() (float64, error) {
 }
 
 // GetBestParams return parameters of the best trial
-func (s *Study) GetBestParams() (map[string]float64, error) {
-	// TODO: avoid using internal representation value
+func (s *Study) GetBestParams() (map[string]interface{}, error) {
 	trial, err := s.storage.GetBestTrial(s.id)
 	if err != nil {
 		return nil, err
 	}
-	return trial.ParamsInIR, nil
+	return trial.Params, nil
 }
 
 // CreateStudy creates a new Study object.
