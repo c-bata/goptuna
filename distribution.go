@@ -26,6 +26,7 @@ type UniformDistribution struct {
 	Low float64 `json:"low"`
 }
 
+// UniformDistributionName is the identifier name of UniformDistribution
 const UniformDistributionName = "UniformDistribution"
 
 // ToInternalRepr to convert external representation of a parameter value into internal representation.
@@ -61,6 +62,7 @@ type IntUniformDistribution struct {
 	Low int `json:"low"`
 }
 
+// IntUniformDistributionName is the identifier name of IntUniformDistribution
 const IntUniformDistributionName = "IntUniformDistribution"
 
 // ToInternalRepr to convert external representation of a parameter value into internal representation.
