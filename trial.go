@@ -51,6 +51,8 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 		d = &x
 	case IntUniformDistribution:
 		d = &x
+	case CategoricalDistribution:
+		d = &x
 	default:
 		return -1, ErrUnknownDistribution
 	}
@@ -79,6 +81,14 @@ func (t *Trial) SuggestUniform(name string, low, high float64) (float64, error) 
 func (t *Trial) SuggestInt(name string, low, high int) (int, error) {
 	v, err := t.suggest(name, IntUniformDistribution{
 		High: high, Low: low,
+	})
+	return int(v), err
+}
+
+// SuggestCategorical suggests an categorical parameter.
+func (t *Trial) SuggestCategorical(name string, choices []string) (int, error) {
+	v, err := t.suggest(name, CategoricalDistribution{
+		Choices: choices,
 	})
 	return int(v), err
 }

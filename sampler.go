@@ -55,6 +55,8 @@ func (s *RandomSearchSampler) Sample(
 		return s.rng.Float64()*(d.High-d.Low) + d.Low, nil
 	case IntUniformDistribution:
 		return float64(s.rng.Intn(d.High-d.Low) + d.Low), nil
+	case CategoricalDistribution:
+		return float64(rand.Intn(len(d.Choices))), nil
 	default:
 		return 0.0, errors.New("undefined distribution")
 	}
