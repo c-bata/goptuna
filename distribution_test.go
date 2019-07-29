@@ -26,6 +26,12 @@ func TestDistributionConversionBetweenDistributionAndJSON(t *testing.T) {
 				Low:  5,
 			},
 		},
+		{
+			name: "categorical distribution",
+			distribution: goptuna.CategoricalDistribution{
+				Choices: []string{"foo", "bar"},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -63,6 +69,12 @@ func TestDistributionToInternalRepresentation(t *testing.T) {
 			args:         3,
 			want:         3.0,
 		},
+		{
+			name:         "categorical distribution",
+			distribution: &goptuna.CategoricalDistribution{Choices: []string{"a", "b", "c"}},
+			args:         "b",
+			want:         1,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -91,6 +103,12 @@ func TestDistributionToExternalRepresentation(t *testing.T) {
 			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
 			args:         3.0,
 			want:         3,
+		},
+		{
+			name:         "categorical distribution",
+			distribution: &goptuna.CategoricalDistribution{Choices: []string{"a", "b", "c"}},
+			args:         2.0,
+			want:         "c",
 		},
 	}
 	for _, tt := range tests {
@@ -126,6 +144,16 @@ func TestDistributionSingle(t *testing.T) {
 		{
 			name:         "int uniform distribution false",
 			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
+			want:         false,
+		},
+		{
+			name:         "categorical distribution true",
+			distribution: &goptuna.CategoricalDistribution{Choices: []string{"a"}},
+			want:         true,
+		},
+		{
+			name:         "categorical distribution false",
+			distribution: &goptuna.CategoricalDistribution{Choices: []string{"a", "b", "c"}},
 			want:         false,
 		},
 	}
@@ -179,6 +207,24 @@ func TestDistributionContains(t *testing.T) {
 			name:         "int uniform distribution higher",
 			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
 			args:         15,
+			want:         false,
+		},
+		{
+			name:         "categorical distribution true",
+			distribution: &goptuna.CategoricalDistribution{Choices: []string{"a", "b", "c"}},
+			args:         1,
+			want:         true,
+		},
+		{
+			name:         "categorical distribution lower",
+			distribution: &goptuna.CategoricalDistribution{Choices: []string{"a", "b", "c"}},
+			args:         -1,
+			want:         false,
+		},
+		{
+			name:         "categorical distribution higher",
+			distribution: &goptuna.CategoricalDistribution{Choices: []string{"a", "b", "c"}},
+			args:         3,
 			want:         false,
 		},
 	}
