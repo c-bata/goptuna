@@ -139,6 +139,8 @@ func DistributionToJSON(distribution interface{}) ([]byte, error) {
 		ir.Name = UniformDistributionName
 	case IntUniformDistribution:
 		ir.Name = IntUniformDistributionName
+	case CategoricalDistribution:
+		ir.Name = CategoricalDistributionName
 	default:
 		return nil, ErrUnknownDistribution
 	}
