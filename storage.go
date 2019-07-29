@@ -224,11 +224,12 @@ func (s *InMemoryStorage) GetAllStudySummaries(studyID int) ([]StudySummary, err
 	defer s.mu.RUnlock()
 
 	var datetimeStart time.Time
+
+	var foundBestTrial bool
 	var bestTrial FrozenTrial
 	for i, t := range s.trials {
 		if i == 0 {
 			datetimeStart = t.DatetimeStart
-			bestTrial = t
 		}
 
 		if datetimeStart.Unix() > t.DatetimeStart.Unix() {
@@ -236,6 +237,12 @@ func (s *InMemoryStorage) GetAllStudySummaries(studyID int) ([]StudySummary, err
 		}
 
 		if t.State != TrialStateComplete {
+			continue
+		}
+
+		if !foundBestTrial {
+			bestTrial = t
+			foundBestTrial = true
 			continue
 		}
 
@@ -363,6 +370,9 @@ func (s *InMemoryStorage) SetTrialState(trialID int, state TrialState) error {
 		return ErrTrialIsNotUpdated
 	}
 	trial.State = state
+	if trial.State.IsFinished() {
+		trial.DatetimeComplete = time.Now()
+	}
 	s.trials[trialID] = trial
 	return nil
 }
