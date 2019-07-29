@@ -117,10 +117,12 @@ func (d *CategoricalDistribution) ToExternalRepr(ir float64) interface{} {
 	return d.Choices[int(ir)]
 }
 
+// Single to test whether the range of this distribution contains just a single value.
 func (d *CategoricalDistribution) Single() bool {
 	return len(d.Choices) == 1
 }
 
+// Contains to check a parameter value is contained in the range of this distribution.
 func (d *CategoricalDistribution) Contains(ir float64) bool {
 	index := int(ir)
 	return 0 <= index && index < len(d.Choices)
