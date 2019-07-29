@@ -158,7 +158,6 @@ func (s *Study) GetBestValue() (float64, error) {
 
 // GetBestParams return parameters of the best trial
 func (s *Study) GetBestParams() (map[string]interface{}, error) {
-	// TODO: avoid using internal representation value
 	trial, err := s.storage.GetBestTrial(s.id)
 	if err != nil {
 		return nil, err

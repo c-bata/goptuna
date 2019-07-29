@@ -10,17 +10,36 @@ import (
 // internal interfaces to read/write history of studies and trials.
 // This interface is not supposed to be directly accessed by library users.
 type Storage interface {
+	// Basic study manipulation
 	CreateNewStudyID(name string) (int, error)
+	SetStudyUserAttr(studyID int, key string, value interface{}) error
+	SetStudyDirection(studyID int, direction StudyDirection) error
+	SetStudySystemAttr(studyID int, key string, value interface{}) error
+	// Basic study access
+	GetStudyIDFromName(name string) (int, error)
+	GetStudyIDFromTrialID(trialID int) (int, error)
+	GetStudyNameFromID(studyID int) (string, error)
+	GetStudyDirection(studyID int) (StudyDirection, error)
+	GetStudyUserAttrs(studyID int) (map[string]interface{}, error)
+	GetStudySystemAttrs(studyID int) (map[string]interface{}, error)
+	GetAllStudySummaries(studyID int) (StudySummary, error)
+	// Basic trial manipulation
 	CreateNewTrialID(studyID int) (int, error)
-	GetTrial(trialID int) (FrozenTrial, error)
-	GetAllTrials(studyID int) ([]FrozenTrial, error)
-	GetBestTrial(studyID int) (FrozenTrial, error)
 	SetTrialValue(trialID int, value float64) error
 	SetTrialParam(trialID int, paramName string, paramValueInternal float64,
 		distribution Distribution) error
 	SetTrialState(trialID int, state TrialState) error
-	GetStudyDirection(studyID int) (StudyDirection, error)
-	SetStudyDirection(studyID int, direction StudyDirection) error
+	SetTrialUserAttr(trialID int, key string, value interface{}) error
+	SetTrialSystemAttr(trialID int, key string, value interface{}) error
+	// Basic trial access
+	GetTrialNumberFromID(trialID int) (int, error)
+	GetTrialParam(trialID int, paramName string) (float64, error)
+	GetTrial(trialID int) (FrozenTrial, error)
+	GetAllTrials(studyID int) ([]FrozenTrial, error)
+	GetBestTrial(studyID int) (FrozenTrial, error)
+	GetTrialParams(studyID int) (map[string]interface{}, error)
+	GetTrialUserAttrs(trialID int) (map[string]interface{}, error)
+	GetTrialSystemAttrs(trialID int) (map[string]interface{}, error)
 }
 
 // StudySummary holds basic attributes and aggregated results of Study.
@@ -35,17 +54,16 @@ type StudySummary struct {
 
 // FrozenTrial holds the status and results of a Trial.
 type FrozenTrial struct {
-	ID                 int                     `json:"trial_id"`
-	Number             int                     `json:"number"`
-	State              TrialState              `json:"state"`
-	Value              float64                 `json:"value"`
-	DatetimeStart      time.Time               `json:"datetime_start"`
-	DatetimeComplete   time.Time               `json:"datetime_complete"`
-	Params             map[string]interface{}  `json:"params"`
-	Distributions      map[string]Distribution `json:"distributions"`
-	UserAttrs          map[string]interface{}  `json:"user_attrs"`
-	SystemAttrs        map[string]interface{}  `json:"system_attrs"`
-	IntermediateValues map[int]float64         `json:"intermediate_values"`
+	ID               int                     `json:"trial_id"`
+	Number           int                     `json:"number"`
+	State            TrialState              `json:"state"`
+	Value            float64                 `json:"value"`
+	DatetimeStart    time.Time               `json:"datetime_start"`
+	DatetimeComplete time.Time               `json:"datetime_complete"`
+	Params           map[string]interface{}  `json:"params"`
+	Distributions    map[string]Distribution `json:"distributions"`
+	UserAttrs        map[string]interface{}  `json:"user_attrs"`
+	SystemAttrs      map[string]interface{}  `json:"system_attrs"`
 	// Note: ParamsInIR is private in Optuna.
 	// But we need to keep public because this is accessed by TPE sampler.
 	// It couldn't access internal attributes from the external packages.
@@ -121,19 +139,8 @@ func (s *InMemoryStorage) SetTrialParam(
 	}
 
 	// Set param distribution
-	if trial.Distributions == nil {
-		trial.Distributions = make(map[string]Distribution, 8)
-	}
 	trial.Distributions[paramName] = distribution
-	// Set parameter in internal representations
-	if trial.ParamsInIR == nil {
-		trial.ParamsInIR = make(map[string]float64, 8)
-	}
 	trial.ParamsInIR[paramName] = paramValueInternal
-	// Set parameter in external representations
-	if trial.Params == nil {
-		trial.Params = make(map[string]interface{}, 8)
-	}
 	trial.Params[paramName] = distribution.ToExternalRepr(paramValueInternal)
 
 	s.trials[trialID] = trial
@@ -195,18 +202,17 @@ func (s *InMemoryStorage) CreateNewTrialID(studyID int) (int, error) {
 	// trialID equals the number because InMemoryStorage has only 1 study.
 	trialID := number
 	s.trials[trialID] = FrozenTrial{
-		ID:                 number,
-		Number:             number,
-		State:              TrialStateRunning,
-		Value:              0,
-		DatetimeStart:      time.Now(),
-		DatetimeComplete:   time.Time{},
-		Params:             nil,
-		Distributions:      nil,
-		UserAttrs:          nil,
-		SystemAttrs:        nil,
-		IntermediateValues: nil,
-		ParamsInIR:         nil,
+		ID:               number,
+		Number:           number,
+		State:            TrialStateRunning,
+		Value:            0,
+		DatetimeStart:    time.Now(),
+		DatetimeComplete: time.Time{},
+		Params:           make(map[string]interface{}, 8),
+		Distributions:    make(map[string]Distribution, 8),
+		UserAttrs:        make(map[string]interface{}, 8),
+		SystemAttrs:      make(map[string]interface{}, 8),
+		ParamsInIR:       make(map[string]float64, 8),
 	}
 	return trialID, nil
 }
@@ -276,4 +282,64 @@ func (s *InMemoryStorage) GetTrial(trialID int) (FrozenTrial, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.trials[trialID], nil
+}
+
+func (s *InMemoryStorage) SetStudyUserAttr(studyID int, key string, value interface{}) error {
+	panic("implement me")
+}
+
+func (s *InMemoryStorage) SetStudySystemAttr(studyID int, key string, value interface{}) error {
+	panic("implement me")
+}
+
+func (s *InMemoryStorage) GetStudyIDFromName(name string) (int, error) {
+	panic("implement me")
+}
+
+func (s *InMemoryStorage) GetStudyIDFromTrialID(trialID int) (int, error) {
+	panic("implement me")
+}
+
+func (s *InMemoryStorage) GetStudyNameFromID(studyID int) (string, error) {
+	panic("implement me")
+}
+
+func (s *InMemoryStorage) GetStudyUserAttrs(studyID int) (map[string]interface{}, error) {
+	panic("implement me")
+}
+
+func (s *InMemoryStorage) GetStudySystemAttrs(studyID int) (map[string]interface{}, error) {
+	panic("implement me")
+}
+
+func (s *InMemoryStorage) GetAllStudySummaries(studyID int) (StudySummary, error) {
+	panic("implement me")
+}
+
+func (s *InMemoryStorage) SetTrialUserAttr(trialID int, key string, value interface{}) error {
+	panic("implement me")
+}
+
+func (s *InMemoryStorage) SetTrialSystemAttr(trialID int, key string, value interface{}) error {
+	panic("implement me")
+}
+
+func (s *InMemoryStorage) GetTrialNumberFromID(trialID int) (int, error) {
+	panic("implement me")
+}
+
+func (s *InMemoryStorage) GetTrialParam(trialID int, paramName string) (float64, error) {
+	panic("implement me")
+}
+
+func (s *InMemoryStorage) GetTrialParams(studyID int) (map[string]interface{}, error) {
+	panic("implement me")
+}
+
+func (s *InMemoryStorage) GetTrialUserAttrs(trialID int) (map[string]interface{}, error) {
+	panic("implement me")
+}
+
+func (s *InMemoryStorage) GetTrialSystemAttrs(trialID int) (map[string]interface{}, error) {
+	panic("implement me")
 }
