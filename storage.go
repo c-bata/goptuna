@@ -332,7 +332,7 @@ func (s *InMemoryStorage) SetTrialValue(trialID int, value float64) error {
 	return nil
 }
 
-// SetTrialValue sets the value of trial.
+// SetTrialIntermediateValue sets the intermediate value of trial.
 func (s *InMemoryStorage) SetTrialIntermediateValue(trialID int, step int, value float64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
