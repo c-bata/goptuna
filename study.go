@@ -68,14 +68,19 @@ func (s *Study) runTrial(objective FuncObjective) (int, error) {
 	}
 	evaluation, objerr := objective(trial)
 	if objerr != nil {
-		saveerr := s.Storage.SetTrialState(trialID, TrialStateFail)
+		var state = TrialStateFail
+		if objerr == ErrTrialPruned {
+			state = TrialStatePruned
+		}
+		saveerr := s.Storage.SetTrialState(trialID, state)
 		if saveerr != nil {
 			return trialID, saveerr
 		}
 
-		if !s.ignoreObjectiveErr {
+		if objerr != ErrTrialPruned && !s.ignoreObjectiveErr {
 			return trialID, fmt.Errorf("objective: %s", objerr)
 		}
+		return trialID, nil
 	}
 
 	if err = s.Storage.SetTrialValue(trialID, evaluation); err != nil {

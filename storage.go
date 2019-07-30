@@ -29,6 +29,7 @@ type Storage interface {
 	// Basic trial manipulation
 	CreateNewTrialID(studyID int) (int, error)
 	SetTrialValue(trialID int, value float64) error
+	SetTrialIntermediateValue(trialID int, step int, value float64) error
 	SetTrialParam(trialID int, paramName string, paramValueInternal float64,
 		distribution Distribution) error
 	SetTrialState(trialID int, state TrialState) error
@@ -58,17 +59,18 @@ type StudySummary struct {
 
 // FrozenTrial holds the status and results of a Trial.
 type FrozenTrial struct {
-	ID               int                     `json:"trial_id"`
-	StudyID          int                     `json:"study_id"`
-	Number           int                     `json:"number"`
-	State            TrialState              `json:"state"`
-	Value            float64                 `json:"value"`
-	DatetimeStart    time.Time               `json:"datetime_start"`
-	DatetimeComplete time.Time               `json:"datetime_complete"`
-	Params           map[string]interface{}  `json:"params"`
-	Distributions    map[string]Distribution `json:"distributions"`
-	UserAttrs        map[string]interface{}  `json:"user_attrs"`
-	SystemAttrs      map[string]interface{}  `json:"system_attrs"`
+	ID                 int                     `json:"trial_id"`
+	StudyID            int                     `json:"study_id"`
+	Number             int                     `json:"number"`
+	State              TrialState              `json:"state"`
+	Value              float64                 `json:"value"`
+	IntermediateValues map[int]float64         `json:"intermediate_values"`
+	DatetimeStart      time.Time               `json:"datetime_start"`
+	DatetimeComplete   time.Time               `json:"datetime_complete"`
+	Params             map[string]interface{}  `json:"params"`
+	Distributions      map[string]Distribution `json:"distributions"`
+	UserAttrs          map[string]interface{}  `json:"user_attrs"`
+	SystemAttrs        map[string]interface{}  `json:"system_attrs"`
 	// Note: ParamsInIR is private in Optuna.
 	// But we need to keep public because this is accessed by TPE sampler.
 	// It couldn't access internal attributes from the external packages.
@@ -91,19 +93,21 @@ var (
 	ErrInvalidStudyID = errors.New("invalid study id")
 	// ErrInvalidTrialID represents invalid trial id.
 	ErrInvalidTrialID = errors.New("invalid trial id")
-	// ErrTrialIsNotUpdated represents trial cannot be updated.
-	ErrTrialIsNotUpdated = errors.New("trial cannot be updated")
+	// ErrTrialCannotBeUpdated represents trial cannot be updated.
+	ErrTrialCannotBeUpdated = errors.New("trial cannot be updated")
 	// ErrNoCompletedTrials represents no trials are completed yet.
 	ErrNoCompletedTrials = errors.New("no trials are completed yet")
 	// ErrUnknownDistribution returns the distribution is unknown.
 	ErrUnknownDistribution = errors.New("unknown distribution")
+	// ErrTrialPruned represents the pruned.
+	ErrTrialPruned = errors.New("trial is pruned")
 )
 
 // NewInMemoryStorage returns new memory storage.
 func NewInMemoryStorage() *InMemoryStorage {
 	return &InMemoryStorage{
 		direction:   StudyDirectionMinimize,
-		trials:      make(map[int]FrozenTrial, 128),
+		trials:      make([]FrozenTrial, 0, 128),
 		userAttrs:   make(map[string]interface{}, 8),
 		systemAttrs: make(map[string]interface{}, 8),
 		studyName:   DefaultStudyNamePrefix + InMemoryStorageStudyUUID,
@@ -113,7 +117,7 @@ func NewInMemoryStorage() *InMemoryStorage {
 // InMemoryStorage stores data in memory of the Go process.
 type InMemoryStorage struct {
 	direction   StudyDirection
-	trials      map[int]FrozenTrial
+	trials      []FrozenTrial
 	userAttrs   map[string]interface{}
 	systemAttrs map[string]interface{}
 	studyName   string
@@ -294,19 +298,20 @@ func (s *InMemoryStorage) CreateNewTrialID(studyID int) (int, error) {
 	number := len(s.trials)
 	// trialID equals the number because InMemoryStorage has only 1 study.
 	trialID := number
-	s.trials[trialID] = FrozenTrial{
-		ID:               number,
-		Number:           number,
-		State:            TrialStateRunning,
-		Value:            0,
-		DatetimeStart:    time.Now(),
-		DatetimeComplete: time.Time{},
-		Params:           make(map[string]interface{}, 8),
-		Distributions:    make(map[string]Distribution, 8),
-		UserAttrs:        make(map[string]interface{}, 8),
-		SystemAttrs:      make(map[string]interface{}, 8),
-		ParamsInIR:       make(map[string]float64, 8),
-	}
+	s.trials = append(s.trials, FrozenTrial{
+		ID:                 number,
+		Number:             number,
+		State:              TrialStateRunning,
+		Value:              0,
+		IntermediateValues: make(map[int]float64, 8),
+		DatetimeStart:      time.Now(),
+		DatetimeComplete:   time.Time{},
+		Params:             make(map[string]interface{}, 8),
+		Distributions:      make(map[string]Distribution, 8),
+		UserAttrs:          make(map[string]interface{}, 8),
+		SystemAttrs:        make(map[string]interface{}, 8),
+		ParamsInIR:         make(map[string]float64, 8),
+	})
 	return trialID, nil
 }
 
@@ -315,14 +320,37 @@ func (s *InMemoryStorage) SetTrialValue(trialID int, value float64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	trial, ok := s.trials[trialID]
-	if !ok {
+	if trialID >= len(s.trials) {
 		return ErrInvalidTrialID
 	}
+	trial := s.trials[trialID]
 	if trial.State.IsFinished() {
-		return ErrTrialIsNotUpdated
+		return ErrTrialCannotBeUpdated
 	}
 	trial.Value = value
+	s.trials[trialID] = trial
+	return nil
+}
+
+// SetTrialValue sets the value of trial.
+func (s *InMemoryStorage) SetTrialIntermediateValue(trialID int, step int, value float64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if trialID >= len(s.trials) {
+		return ErrInvalidTrialID
+	}
+	trial := s.trials[trialID]
+	if trial.State.IsFinished() {
+		return ErrTrialCannotBeUpdated
+	}
+
+	for key := range trial.IntermediateValues {
+		if key == step {
+			return errors.New("step value is already exist")
+		}
+	}
+	trial.IntermediateValues[step] = value
 	s.trials[trialID] = trial
 	return nil
 }
@@ -338,14 +366,14 @@ func (s *InMemoryStorage) SetTrialParam(
 	defer s.mu.Unlock()
 
 	// Check param has not been set; otherwise, return error
-	trial, ok := s.trials[trialID]
-	if !ok {
+	if trialID >= len(s.trials) {
 		return ErrInvalidTrialID
 	}
+	trial := s.trials[trialID]
 
 	// Check trial is able to update
 	if trial.State.IsFinished() {
-		return ErrTrialIsNotUpdated
+		return ErrTrialCannotBeUpdated
 	}
 
 	// Set param distribution
@@ -362,12 +390,12 @@ func (s *InMemoryStorage) SetTrialState(trialID int, state TrialState) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	trial, ok := s.trials[trialID]
-	if !ok {
+	if trialID >= len(s.trials) {
 		return ErrInvalidTrialID
 	}
+	trial := s.trials[trialID]
 	if trial.State.IsFinished() {
-		return ErrTrialIsNotUpdated
+		return ErrTrialCannotBeUpdated
 	}
 	trial.State = state
 	if trial.State.IsFinished() {
@@ -526,8 +554,8 @@ func (s *InMemoryStorage) GetAllTrials(studyID int) ([]FrozenTrial, error) {
 
 	trials := make([]FrozenTrial, 0, len(s.trials))
 
-	for k := range s.trials {
-		trials = append(trials, s.trials[k])
+	for i := range s.trials {
+		trials = append(trials, s.trials[i])
 	}
 	return trials, nil
 }
