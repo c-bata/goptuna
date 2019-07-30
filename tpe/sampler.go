@@ -3,6 +3,7 @@ package tpe
 import (
 	"math"
 	"math/rand"
+	"sort"
 	"sync"
 
 	"github.com/c-bata/goptuna"
@@ -84,81 +85,18 @@ func NewSampler(opts ...SamplerOption) *Sampler {
 	return sampler
 }
 
-func genKeepIdxs(
-	lossIdxs []int,
-	lossAscending []int,
-	n int, below bool) []int {
-	var l []int
-	if below {
-		l = lossAscending[:n]
-	} else {
-		l = lossAscending[n:]
-	}
-
-	set := make([]int, 0, len(l))
-	isExist := func(l []int, item int) bool {
-		for i := range l {
-			if l[i] == item {
-				return true
-			}
-		}
-		return false
-	}
-	for _, index := range l {
-		item := lossIdxs[index]
-		if !isExist(set, item) {
-			set = append(set, item)
-		}
-	}
-	return set
-}
-
-func genBelowOrAbove(
-	keepIdxs []int,
-	configIdxs []int,
-	configVals []float64,
-) []float64 {
-	size := len(configIdxs)
-	if size > len(configVals) {
-		size = len(configVals)
-	}
-	results := make([]float64, 0, size)
-
-	isExist := func(index int, configIdxs []int) bool {
-		for _, idx := range configIdxs {
-			if index == idx {
-				return true
-			}
-		}
-		return false
-	}
-
-	for i := 0; i < size; i++ {
-		index := configIdxs[i]
-		value := configVals[i]
-
-		if isExist(index, keepIdxs) {
-			results = append(results, value)
-		}
-	}
-	return results
-}
-
 func (s *Sampler) splitObservationPairs(
-	configIdxs []int,
 	configVals []float64,
-	lossIdxs []int,
 	lossVals [][2]float64,
 ) ([]float64, []float64) {
 	nbelow := s.gamma(len(configVals))
 	lossAscending := argSort2d(lossVals)
 
-	keepIdxs := genKeepIdxs(lossIdxs, lossAscending, nbelow, true)
-	below := genBelowOrAbove(keepIdxs, configIdxs, configVals)
+	sort.Ints(lossAscending[:nbelow])
+	below := choice(configVals, lossAscending[:nbelow])
 
-	keepIdxs = genKeepIdxs(lossIdxs, lossAscending, nbelow, false)
-	above := genBelowOrAbove(keepIdxs, configIdxs, configVals)
-
+	sort.Ints(lossAscending[nbelow:])
+	above := choice(configVals, lossAscending[nbelow:])
 	return below, above
 }
 
@@ -462,34 +400,17 @@ func (s *Sampler) Sample(
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	observationPairs, err := getObservationPairs(study, paramName)
+	values, scores, err := getObservationPairs(study, paramName)
 	if err != nil {
 		return 0, err
 	}
-	n := len(observationPairs)
+	n := len(values)
 
 	if n < s.numberOfStartupTrials {
 		return s.randomSampler.Sample(study, trial, paramName, paramDistribution)
 	}
 
-	configIdxs := make([]int, n)
-	for i := 0; i < n; i++ {
-		configIdxs[i] = i
-	}
-	configVals := make([]float64, n)
-	for i := 0; i < n; i++ {
-		configVals[i] = observationPairs[i][0]
-	}
-	lossIdxs := make([]int, n)
-	for i := 0; i < n; i++ {
-		lossIdxs[i] = i
-	}
-	lossVals := make([][2]float64, n)
-	for i := 0; i < n; i++ {
-		lossVals[i] = [2]float64{observationPairs[i][1], observationPairs[i][2]}
-	}
-	belowParamValues, aboveParamValues := s.splitObservationPairs(
-		configIdxs, configVals, lossIdxs, lossVals)
+	belowParamValues, aboveParamValues := s.splitObservationPairs(values, scores)
 
 	switch d := paramDistribution.(type) {
 	case goptuna.UniformDistribution:
@@ -502,35 +423,37 @@ func (s *Sampler) Sample(
 	return 0, goptuna.ErrUnknownDistribution
 }
 
-func getObservationPairs(study *goptuna.Study, paramName string) ([][3]float64, error) {
+func getObservationPairs(study *goptuna.Study, paramName string) ([]float64, [][2]float64, error) {
 	var sign float64 = 1
 	if study.Direction() == goptuna.StudyDirectionMaximize {
 		sign = -1
 	}
 
-	pairs := make([][3]float64, 0, 8)
 	trials, err := study.GetTrials()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
+	values := make([]float64, 0, len(trials))
+	scores := make([][2]float64, 0, len(trials))
 	for _, trial := range trials {
 		ir, ok := trial.ParamsInIR[paramName]
 		if !ok {
 			continue
 		}
 
-		var first, second, third float64
-		first = ir
+		var paramValue, score0, score1 float64
+		paramValue = ir
 		if trial.State == goptuna.TrialStateComplete {
-			second = math.Inf(-1)
-			third = sign * trial.Value
+			score0 = math.Inf(-1)
+			score1 = sign * trial.Value
 		} else if trial.State == goptuna.TrialStatePruned {
 			panic("still be unreachable")
 		} else {
 			continue
 		}
-		pairs = append(pairs, [3]float64{first, second, third})
+		values = append(values, paramValue)
+		scores = append(scores, [2]float64{score0, score1})
 	}
-	return pairs, nil
+	return values, scores, nil
 }
