@@ -28,19 +28,19 @@ func (i TrialState) IsFinished() bool {
 // Note that this object is seamlessly instantiated and passed to the objective function behind;
 // hence, in typical use cases, library users do not care about instantiation of this object.
 type Trial struct {
-	study *Study
-	id    int
+	Study *Study
+	ID    int
 	state TrialState
 	value float64
 }
 
 func (t *Trial) suggest(name string, distribution interface{}) (float64, error) {
-	trial, err := t.study.storage.GetTrial(t.id)
+	trial, err := t.Study.Storage.GetTrial(t.ID)
 	if err != nil {
 		return 0.0, err
 	}
 
-	v, err := t.study.sampler.Sample(t.study, trial, name, distribution)
+	v, err := t.Study.Sampler.Sample(t.Study, trial, name, distribution)
 	if err != nil {
 		return 0.0, err
 	}
@@ -66,8 +66,22 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 	}
 	trial.ParamsInIR[name] = v
 
-	err = t.study.storage.SetTrialParam(trial.ID, name, v, d)
+	err = t.Study.Storage.SetTrialParam(trial.ID, name, v, d)
 	return v, err
+}
+
+// Report an intermediate value of an objective function
+func (t *Trial) Report(value float64, step int) error {
+	err := t.Study.Storage.SetTrialIntermediateValue(t.ID, step, value)
+	if err != nil {
+		return err
+	}
+	return t.Study.Storage.SetTrialValue(t.ID, value)
+}
+
+// Number return trial's number which is consecutive and unique in a study.
+func (t *Trial) Number() (int, error) {
+	return t.Study.Storage.GetTrialNumberFromID(t.ID)
 }
 
 // SuggestUniform suggests a value for the continuous parameter.

@@ -23,9 +23,9 @@ const (
 
 // Study corresponds to an optimization task, i.e., a set of trials.
 type Study struct {
-	id                 int
-	storage            Storage
-	sampler            Sampler
+	ID                 int
+	Storage            Storage
+	Sampler            Sampler
 	direction          StudyDirection
 	logger             *zap.Logger
 	ignoreObjectiveErr bool
@@ -36,7 +36,7 @@ type Study struct {
 
 // GetTrials returns all trials in this study.
 func (s *Study) GetTrials() ([]FrozenTrial, error) {
-	return s.storage.GetAllTrials(s.id)
+	return s.Storage.GetAllTrials(s.ID)
 }
 
 // Direction returns the direction of objective function value
@@ -46,7 +46,7 @@ func (s *Study) Direction() StudyDirection {
 
 // Report reports an objective function value
 func (s *Study) Report(trialID int, value float64) error {
-	return s.storage.SetTrialValue(trialID, value)
+	return s.Storage.SetTrialValue(trialID, value)
 }
 
 // WithContext sets a context and it might cancel the execution of Optimize.
@@ -57,34 +57,39 @@ func (s *Study) WithContext(ctx context.Context) {
 }
 
 func (s *Study) runTrial(objective FuncObjective) (int, error) {
-	trialID, err := s.storage.CreateNewTrialID(s.id)
+	trialID, err := s.Storage.CreateNewTrialID(s.ID)
 	if err != nil {
 		return -1, err
 	}
 
 	trial := Trial{
-		study: s,
-		id:    trialID,
+		Study: s,
+		ID:    trialID,
 	}
 	evaluation, objerr := objective(trial)
 	if objerr != nil {
-		saveerr := s.storage.SetTrialState(trialID, TrialStateFail)
+		var state = TrialStateFail
+		if objerr == ErrTrialPruned {
+			state = TrialStatePruned
+		}
+		saveerr := s.Storage.SetTrialState(trialID, state)
 		if saveerr != nil {
 			return trialID, saveerr
 		}
 
-		if !s.ignoreObjectiveErr {
+		if objerr != ErrTrialPruned && !s.ignoreObjectiveErr {
 			return trialID, fmt.Errorf("objective: %s", objerr)
 		}
+		return trialID, nil
 	}
 
-	if err = s.storage.SetTrialValue(trialID, evaluation); err != nil {
+	if err = s.Storage.SetTrialValue(trialID, evaluation); err != nil {
 		return trialID, err
 	}
 	if err = s.Report(trialID, evaluation); err != nil {
 		return trialID, err
 	}
-	if err = s.storage.SetTrialState(trialID, TrialStateComplete); err != nil {
+	if err = s.Storage.SetTrialState(trialID, TrialStateComplete); err != nil {
 		return trialID, err
 	}
 	return trialID, nil
@@ -98,7 +103,7 @@ func (s *Study) notifyFinishedTrial(trialID int) error {
 		return nil
 	}
 
-	trial, err := s.storage.GetTrial(trialID)
+	trial, err := s.Storage.GetTrial(trialID)
 	if err != nil {
 		return err
 	}
@@ -149,7 +154,7 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 
 // GetBestValue return the best objective value
 func (s *Study) GetBestValue() (float64, error) {
-	trial, err := s.storage.GetBestTrial(s.id)
+	trial, err := s.Storage.GetBestTrial(s.ID)
 	if err != nil {
 		return 0.0, err
 	}
@@ -158,7 +163,7 @@ func (s *Study) GetBestValue() (float64, error) {
 
 // GetBestParams return parameters of the best trial
 func (s *Study) GetBestParams() (map[string]interface{}, error) {
-	trial, err := s.storage.GetBestTrial(s.id)
+	trial, err := s.Storage.GetBestTrial(s.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -177,9 +182,9 @@ func CreateStudy(
 	}
 	sampler := NewRandomSearchSampler()
 	study := &Study{
-		id:                 studyID,
-		storage:            storage,
-		sampler:            sampler,
+		ID:                 studyID,
+		Storage:            storage,
+		Sampler:            sampler,
 		direction:          StudyDirectionMinimize,
 		logger:             nil,
 		ignoreObjectiveErr: false,
@@ -215,7 +220,7 @@ func StudyOptionSetLogger(logger *zap.Logger) StudyOption {
 // StudyOptionStorage sets the storage object.
 func StudyOptionStorage(storage Storage) StudyOption {
 	return func(s *Study) error {
-		s.storage = storage
+		s.Storage = storage
 		return nil
 	}
 }
@@ -223,7 +228,7 @@ func StudyOptionStorage(storage Storage) StudyOption {
 // StudyOptionSampler sets the sampler object.
 func StudyOptionSampler(sampler Sampler) StudyOption {
 	return func(s *Study) error {
-		s.sampler = sampler
+		s.Sampler = sampler
 		return nil
 	}
 }

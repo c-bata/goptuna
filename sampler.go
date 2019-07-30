@@ -52,10 +52,19 @@ func (s *RandomSearchSampler) Sample(
 	defer s.mu.Unlock()
 	switch d := paramDistribution.(type) {
 	case UniformDistribution:
+		if d.Single() {
+			return d.Low, nil
+		}
 		return s.rng.Float64()*(d.High-d.Low) + d.Low, nil
 	case IntUniformDistribution:
+		if d.Single() {
+			return float64(d.Low), nil
+		}
 		return float64(s.rng.Intn(d.High-d.Low) + d.Low), nil
 	case CategoricalDistribution:
+		if d.Single() {
+			return float64(0), nil
+		}
 		return float64(rand.Intn(len(d.Choices))), nil
 	default:
 		return 0.0, errors.New("undefined distribution")
