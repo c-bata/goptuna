@@ -448,7 +448,22 @@ func getObservationPairs(study *goptuna.Study, paramName string) ([]float64, [][
 			score0 = math.Inf(-1)
 			score1 = sign * trial.Value
 		} else if trial.State == goptuna.TrialStatePruned {
-			panic("still be unreachable")
+			if len(trial.IntermediateValues) > 0 {
+				var step int
+				var intermediateValue float64
+
+				for key := range trial.IntermediateValues {
+					if key > step {
+						step = key
+						intermediateValue = trial.IntermediateValues[key]
+					}
+				}
+				score0 = float64(-step)
+				score1 = sign * intermediateValue
+			} else {
+				score0 = math.Inf(1)
+				score1 = 0.0
+			}
 		} else {
 			continue
 		}
