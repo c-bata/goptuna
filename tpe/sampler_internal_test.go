@@ -1,8 +1,10 @@
 package tpe
 
 import (
+	"errors"
 	"math"
 	"math/rand"
+	"reflect"
 	"testing"
 
 	"github.com/c-bata/goptuna"
@@ -24,6 +26,100 @@ func almostEqualFloat641D(a, b []float64, e float64) bool {
 	return true
 }
 
+func TestGetObservationPairs_MINIMIZE(t *testing.T) {
+	study, err := goptuna.CreateStudy(
+		"", goptuna.StudyOptionIgnoreObjectiveErr(true),
+		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize))
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+		return
+	}
+	err = study.Optimize(func(trial goptuna.Trial) (float64, error) {
+		x, _ := trial.SuggestInt("x", 5, 5)
+		number, _ := trial.Number()
+		if number == 0 {
+			return float64(x), nil
+		} else if number == 1 {
+			_ = trial.Report(1, 4)
+			_ = trial.Report(2, 7)
+			return 0.0, goptuna.ErrTrialPruned
+		} else if number == 2 {
+			return 0.0, goptuna.ErrTrialPruned
+		} else {
+			return 0.0, errors.New("runtime error")
+		}
+	}, 4)
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+		return
+	}
+
+	values, scores, err := getObservationPairs(study, "x")
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+	}
+
+	expectedValues := []float64{5.0, 5.0, 5.0}
+	if !reflect.DeepEqual(values, expectedValues) {
+		t.Errorf("should be %v, but got %v", expectedValues, values)
+	}
+	expectedScores := [][2]float64{
+		{math.Inf(-1), 5},
+		{-7, 2},
+		{math.Inf(1), 0},
+	}
+	if !reflect.DeepEqual(scores, expectedScores) {
+		t.Errorf("should be %v, but got %v", expectedScores, scores)
+	}
+}
+
+func TestGetObservationPairs_MAXIMIZE(t *testing.T) {
+	study, err := goptuna.CreateStudy(
+		"", goptuna.StudyOptionIgnoreObjectiveErr(true),
+		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMaximize))
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+		return
+	}
+	err = study.Optimize(func(trial goptuna.Trial) (float64, error) {
+		x, _ := trial.SuggestInt("x", 5, 5)
+		number, _ := trial.Number()
+		if number == 0 {
+			return float64(x), nil
+		} else if number == 1 {
+			_ = trial.Report(1, 4)
+			_ = trial.Report(2, 7)
+			return 0.0, goptuna.ErrTrialPruned
+		} else if number == 2 {
+			return 0.0, goptuna.ErrTrialPruned
+		} else {
+			return 0.0, errors.New("runtime error")
+		}
+	}, 4)
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+		return
+	}
+
+	values, scores, err := getObservationPairs(study, "x")
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+	}
+
+	expectedValues := []float64{5.0, 5.0, 5.0}
+	if !reflect.DeepEqual(values, expectedValues) {
+		t.Errorf("should be %v, but got %v", expectedValues, values)
+	}
+	expectedScores := [][2]float64{
+		{math.Inf(-1), -5},
+		{-7, -2},
+		{math.Inf(1), 0},
+	}
+	if !reflect.DeepEqual(scores, expectedScores) {
+		t.Errorf("should be %v, but got %v", expectedScores, scores)
+	}
+}
+
 // Following test cases are generated from Optuna's behavior.
 
 func TestSampler_splitObservationPairs(t *testing.T) {
@@ -36,9 +132,7 @@ func TestSampler_splitObservationPairs(t *testing.T) {
 		randomSampler         *goptuna.RandomSearchSampler
 	}
 	type args struct {
-		configIdxs []int
 		configVals []float64
-		lossIdxs   []int
 		lossVals   [][2]float64
 	}
 	tests := []struct {
@@ -54,9 +148,7 @@ func TestSampler_splitObservationPairs(t *testing.T) {
 				Gamma: DefaultGamma,
 			},
 			args: args{
-				configIdxs: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
 				configVals: []float64{7.515720606531342, 5.350185623031333, 5.124041307972975, 1.4089387361626944, -2.895952062621281, -8.814621912214118, 7.603846274084024, 5.915757103674883, 8.364607575197955, 1.4694727910185534},
-				lossIdxs:   []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
 				lossVals: [][2]float64{
 					{math.Inf(-1), 51.07650573447907},
 					{math.Inf(-1), 100.79007507622603},
@@ -86,11 +178,11 @@ func TestSampler_splitObservationPairs(t *testing.T) {
 				rng:                   tt.fields.rng,
 				randomSampler:         tt.fields.randomSampler,
 			}
-			gotBelow, gotAbove := s.splitObservationPairs(tt.args.configIdxs, tt.args.configVals, tt.args.lossIdxs, tt.args.lossVals)
-			if !almostEqualFloat641D(gotBelow, tt.wantBelow, 1e-4) {
+			gotBelow, gotAbove := s.splitObservationPairs(tt.args.configVals, tt.args.lossVals)
+			if !almostEqualFloat641D(gotBelow, tt.wantBelow, 1e-6) {
 				t.Errorf("Sampler.splitObservationPairs() gotBelow = %v, want %v", gotBelow, tt.wantBelow)
 			}
-			if !almostEqualFloat641D(gotAbove, tt.wantAbove, 1e-4) {
+			if !almostEqualFloat641D(gotAbove, tt.wantAbove, 1e-6) {
 				t.Errorf("Sampler.splitObservationPairs() gotAbove = %v, want %v", gotAbove, tt.wantAbove)
 			}
 		})
