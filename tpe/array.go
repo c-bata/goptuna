@@ -70,7 +70,7 @@ func searchsorted(array, values []float64) []int {
 }
 
 func bincount(x []int, weights []float64, minlength int) []float64 {
-	// Count the number of occurences of each value in array of non-negative ints.
+	// Count the number of occurrences of each value in array of non-negative ints.
 	// https://docs.scipy.org/doc/numpy/reference/generated/numpy.bincount.html
 	counts := make([]float64, minlength)
 	for i := range x {
@@ -80,7 +80,7 @@ func bincount(x []int, weights []float64, minlength int) []float64 {
 			}
 		}
 		if x[i] > len(weights)-1 {
-			counts[x[i]] += 1
+			counts[x[i]]++
 		} else {
 			counts[x[i]] += weights[x[i]]
 		}
@@ -107,7 +107,7 @@ func multinomial(n int, pvals []float64, size int) [][]int {
 					break
 				}
 			}
-			result[i][index] += 1
+			result[i][index]++
 		}
 	}
 	return result

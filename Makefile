@@ -1,14 +1,16 @@
 .DEFAULT_GOAL := help
 
-6060PKGS := $(shell go list ./...)
-SOURCES := $(shell find . -prune -o -name "*.go" -not -name '*_test.go' -print)
+PKGS := $(shell go list ./...)
+SOURCES := $(shell find . -name "*.go" -not -name '*_test.go')
 
 .PHONY: setup
 setup:  ## Setup for required tools.
 	go get -u golang.org/x/lint/golint
 	go get -u golang.org/x/tools/cmd/goimports
+	go get -u github.com/client9/misspell/cmd/misspell
 	go get -u golang.org/x/tools/cmd/stringer
 	go get golang.org/x/tools/cmd/godoc
+
 
 .PHONY: fmt
 fmt: $(SOURCES) ## Formatting source codes.
@@ -18,6 +20,7 @@ fmt: $(SOURCES) ## Formatting source codes.
 lint: ## Run golint and go vet.
 	@golint -set_exit_status=1 $(PKGS)
 	@go vet $(PKGS)
+	@misspell $(SOURCES)
 
 .PHONY: test
 test:  ## Run tests with race condition checking.
