@@ -1,13 +1,10 @@
 package medianstopping
 
-import "testing"
+import (
+	"testing"
 
-func almostEqualFloat64(a, b float64, e float64) bool {
-	if a+e > b && a-e < b {
-		return true
-	}
-	return false
-}
+	"github.com/c-bata/goptuna/internal/testutil"
+)
 
 func Test_percentile(t *testing.T) {
 	type args struct {
@@ -62,7 +59,8 @@ func Test_percentile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := percentile(tt.args.a, tt.args.q); !almostEqualFloat64(got, tt.want, 1e-5) {
+			got := percentile(tt.args.a, tt.args.q)
+			if !testutil.AlmostEqualFloat64(got, tt.want, 1e-5) {
 				t.Errorf("percentile() = %v, want %v", got, tt.want)
 			}
 		})
