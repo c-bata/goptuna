@@ -85,6 +85,13 @@ func (t *Trial) Report(value float64, step int) error {
 // This method calls prune method of the pruner, which judges whether
 // the trial should be pruned at the given step.
 func (t *Trial) ShouldPrune(value float64) (bool, error) {
+	if t.Study.Pruner == nil {
+		if t.Study.logger != nil {
+			t.Study.logger.Warn("Although it's not registered pruner, but you calls ShouldPrune method")
+		}
+		return false, nil
+	}
+
 	trial, err := t.Study.Storage.GetTrial(t.ID)
 	if err != nil {
 		return false, err
@@ -97,11 +104,6 @@ func (t *Trial) ShouldPrune(value float64) (bool, error) {
 	}
 	if maxStep == -1 {
 		return false, errors.New("there is no reported intermediate values")
-	}
-
-	if t.Study.Pruner == nil {
-		t.Study.logger.Warn("Although it's not registered pruner, but you calls ShouldPrune method")
-		return false, nil
 	}
 	return t.Study.Pruner.Prune(t.Study.Storage, t.Study.ID, t.ID, maxStep)
 }
