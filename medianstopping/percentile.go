@@ -1,11 +1,23 @@
 package medianstopping
 
 import (
+	"errors"
 	"math"
 	"sort"
 
 	"github.com/c-bata/goptuna"
 )
+
+func NewPercentilePruner(q float64) (*PercentilePruner, error) {
+	if q > 100 || q < 0 {
+		return nil, errors.New("please specify the percentile between 0 and 100")
+	}
+	return &PercentilePruner{
+		Percentile:     q,
+		NStartUpTrials: 5,
+		NWarmUpSteps:   0,
+	}, nil
+}
 
 type PercentilePruner struct {
 	Percentile     float64
