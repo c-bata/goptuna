@@ -26,6 +26,7 @@ type Study struct {
 	ID                 int
 	Storage            Storage
 	Sampler            Sampler
+	Pruner             Pruner
 	direction          StudyDirection
 	logger             *zap.Logger
 	ignoreObjectiveErr bool
@@ -185,6 +186,7 @@ func CreateStudy(
 		ID:                 studyID,
 		Storage:            storage,
 		Sampler:            sampler,
+		Pruner:             nil,
 		direction:          StudyDirectionMinimize,
 		logger:             nil,
 		ignoreObjectiveErr: false,
@@ -229,6 +231,14 @@ func StudyOptionStorage(storage Storage) StudyOption {
 func StudyOptionSampler(sampler Sampler) StudyOption {
 	return func(s *Study) error {
 		s.Sampler = sampler
+		return nil
+	}
+}
+
+// StudyOptionSampler sets the pruner object.
+func StudyOptionPruner(pruner Pruner) StudyOption {
+	return func(s *Study) error {
+		s.Pruner = pruner
 		return nil
 	}
 }
