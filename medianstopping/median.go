@@ -1,5 +1,6 @@
 package medianstopping
 
+// NewMedianPruner is a constructor of MedianPruner.
 func NewMedianPruner() *MedianPruner {
 	percentile := &PercentilePruner{
 		Percentile:     50,
