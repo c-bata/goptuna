@@ -8,8 +8,9 @@ import (
 	"github.com/c-bata/goptuna"
 )
 
+// NewPercentilePruner is a constructor of percentile pruner
 func NewPercentilePruner(q float64) (*PercentilePruner, error) {
-	if q > 100 || q < 0 {
+	if q >= 100 || q <= 0 {
 		return nil, errors.New("please specify the percentile between 0 and 100")
 	}
 	return &PercentilePruner{
@@ -19,6 +20,7 @@ func NewPercentilePruner(q float64) (*PercentilePruner, error) {
 	}, nil
 }
 
+// PercentilePruner to keep the specified percentile of the trials.
 type PercentilePruner struct {
 	Percentile     float64
 	NStartUpTrials int
@@ -57,6 +59,10 @@ func getBestIntermediateResultOverSteps(trial goptuna.FrozenTrial, direction gop
 
 	var bestResult float64
 	for i := range values {
+		if i == 0 {
+			bestResult = values[i]
+			continue
+		}
 		if direction == goptuna.StudyDirectionMaximize {
 			bestResult = math.Max(bestResult, values[i])
 		} else {
@@ -95,6 +101,7 @@ func getPercentileIntermediateResultOverSteps(
 	return percentile(intermediateValues, q)
 }
 
+// Prune if the best intermediate value is in the bottom percentile among trials at the same step.
 func (p *PercentilePruner) Prune(storage goptuna.Storage, studyID, trialID, step int) (bool, error) {
 	completedTrials, err := getCompletedTrials(storage, studyID)
 	if err != nil {
