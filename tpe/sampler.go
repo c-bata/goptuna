@@ -341,6 +341,16 @@ func (s *Sampler) sampleInt(distribution goptuna.IntUniformDistribution, below, 
 	return s.sampleNumerical(low, high, below, above, q)
 }
 
+func (s *Sampler) sampleDiscreteUniform(distribution goptuna.DiscreteUniformDistribution, below, above []float64) float64 {
+	q := distribution.Q
+	r := distribution.High - distribution.Low
+	// [low, high] is shifted to [0, r] to align sampled values at regular intervals.
+	low := 0 - 0.5*q
+	high := r + 0.5*q
+	best := s.sampleNumerical(low, high, below, above, q) + low
+	return math.Min(math.Max(best, distribution.Low), distribution.High)
+}
+
 func (s *Sampler) sampleCategorical(distribution goptuna.CategoricalDistribution, below, above []float64) float64 {
 	belowInt := make([]int, len(below))
 	for i := range below {
@@ -417,6 +427,8 @@ func (s *Sampler) Sample(
 		return s.sampleUniform(d, belowParamValues, aboveParamValues), nil
 	case goptuna.IntUniformDistribution:
 		return s.sampleInt(d, belowParamValues, aboveParamValues), nil
+	case goptuna.DiscreteUniformDistribution:
+		return s.sampleDiscreteUniform(d, belowParamValues, aboveParamValues), nil
 	case goptuna.CategoricalDistribution:
 		return s.sampleCategorical(d, belowParamValues, aboveParamValues), nil
 	}
