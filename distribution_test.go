@@ -27,6 +27,14 @@ func TestDistributionConversionBetweenDistributionAndJSON(t *testing.T) {
 			},
 		},
 		{
+			name: "discrete uniform distribution",
+			distribution: goptuna.DiscreteUniformDistribution{
+				High: 20,
+				Low:  5,
+				Q:    1,
+			},
+		},
+		{
 			name: "categorical distribution",
 			distribution: goptuna.CategoricalDistribution{
 				Choices: []string{"foo", "bar"},
@@ -70,6 +78,12 @@ func TestDistributionToInternalRepresentation(t *testing.T) {
 			want:         3.0,
 		},
 		{
+			name:         "discrete uniform distribution",
+			distribution: &goptuna.DiscreteUniformDistribution{Low: 0.5, High: 5.5, Q: 0.5},
+			args:         3.5,
+			want:         3.5,
+		},
+		{
 			name:         "categorical distribution",
 			distribution: &goptuna.CategoricalDistribution{Choices: []string{"a", "b", "c"}},
 			args:         "b",
@@ -103,6 +117,12 @@ func TestDistributionToExternalRepresentation(t *testing.T) {
 			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
 			args:         3.0,
 			want:         3,
+		},
+		{
+			name:         "discrete uniform distribution",
+			distribution: &goptuna.DiscreteUniformDistribution{Low: 0.5, High: 5.5, Q: 0.5},
+			args:         3.5,
+			want:         3.5,
 		},
 		{
 			name:         "categorical distribution",
@@ -144,6 +164,16 @@ func TestDistributionSingle(t *testing.T) {
 		{
 			name:         "int uniform distribution false",
 			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
+			want:         false,
+		},
+		{
+			name:         "discrete uniform distribution true",
+			distribution: &goptuna.DiscreteUniformDistribution{Low: 10, High: 10, Q: 1},
+			want:         true,
+		},
+		{
+			name:         "discrete uniform distribution false",
+			distribution: &goptuna.DiscreteUniformDistribution{Low: 0, High: 10, Q: 1},
 			want:         false,
 		},
 		{
@@ -206,6 +236,42 @@ func TestDistributionContains(t *testing.T) {
 		{
 			name:         "int uniform distribution higher",
 			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
+			args:         15,
+			want:         false,
+		},
+		{
+			name:         "discrete uniform distribution true",
+			distribution: &goptuna.DiscreteUniformDistribution{Low: 0.5, High: 5.5, Q: 1},
+			args:         3.5,
+			want:         true,
+		},
+		{
+			name:         "discrete uniform distribution true",
+			distribution: &goptuna.DiscreteUniformDistribution{Low: 0.0, High: 1.0, Q: 0.3},
+			args:         0.3,
+			want:         true,
+		},
+		{
+			name:         "discrete uniform distribution true aaa",
+			distribution: &goptuna.DiscreteUniformDistribution{Low: 0.0, High: 1.0, Q: 0.3},
+			args:         0.7,
+			want:         true,
+		},
+		{
+			name:         "discrete uniform distribution true",
+			distribution: &goptuna.DiscreteUniformDistribution{Low: 0.5, High: 3.5, Q: 1},
+			args:         3.0,
+			want:         false,
+		},
+		{
+			name:         "discrete uniform distribution lower",
+			distribution: &goptuna.DiscreteUniformDistribution{Low: 0.5, High: 5.5, Q: 0.5},
+			args:         -3,
+			want:         false,
+		},
+		{
+			name:         "discrete uniform distribution higher",
+			distribution: &goptuna.DiscreteUniformDistribution{Low: 0.5, High: 5.5, Q: 0.5},
 			args:         15,
 			want:         false,
 		},
