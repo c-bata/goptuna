@@ -8,23 +8,8 @@ import (
 	"testing"
 
 	"github.com/c-bata/goptuna"
+	"github.com/c-bata/goptuna/internal/testutil"
 )
-
-func almostEqualFloat64(a, b float64, e float64) bool {
-	if a+e > b && a-e < b {
-		return true
-	}
-	return false
-}
-
-func almostEqualFloat641D(a, b []float64, e float64) bool {
-	for i := range a {
-		if !almostEqualFloat64(a[i], b[i], e) {
-			return false
-		}
-	}
-	return true
-}
 
 func TestGetObservationPairs_MINIMIZE(t *testing.T) {
 	study, err := goptuna.CreateStudy(
@@ -179,10 +164,10 @@ func TestSampler_splitObservationPairs(t *testing.T) {
 				randomSampler:         tt.fields.randomSampler,
 			}
 			gotBelow, gotAbove := s.splitObservationPairs(tt.args.configVals, tt.args.lossVals)
-			if !almostEqualFloat641D(gotBelow, tt.wantBelow, 1e-6) {
+			if !testutil.AlmostEqualFloat641D(gotBelow, tt.wantBelow, 1e-6) {
 				t.Errorf("Sampler.splitObservationPairs() gotBelow = %v, want %v", gotBelow, tt.wantBelow)
 			}
-			if !almostEqualFloat641D(gotAbove, tt.wantAbove, 1e-6) {
+			if !testutil.AlmostEqualFloat641D(gotAbove, tt.wantAbove, 1e-6) {
 				t.Errorf("Sampler.splitObservationPairs() gotAbove = %v, want %v", gotAbove, tt.wantAbove)
 			}
 		})
