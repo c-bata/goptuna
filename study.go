@@ -235,7 +235,7 @@ func StudyOptionSampler(sampler Sampler) StudyOption {
 	}
 }
 
-// StudyOptionSampler sets the pruner object.
+// StudyOptionPruner sets the pruner object.
 func StudyOptionPruner(pruner Pruner) StudyOption {
 	return func(s *Study) error {
 		s.Pruner = pruner
