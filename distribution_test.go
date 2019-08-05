@@ -20,6 +20,13 @@ func TestDistributionConversionBetweenDistributionAndJSON(t *testing.T) {
 			},
 		},
 		{
+			name: "log uniform distribution",
+			distribution: goptuna.LogUniformDistribution{
+				High: 1e2,
+				Low:  1e-1,
+			},
+		},
+		{
 			name: "int uniform distribution",
 			distribution: goptuna.IntUniformDistribution{
 				High: 20,
@@ -72,6 +79,12 @@ func TestDistributionToInternalRepresentation(t *testing.T) {
 			want:         3.5,
 		},
 		{
+			name:         "log uniform distribution",
+			distribution: &goptuna.LogUniformDistribution{Low: 1e-2, High: 1e5},
+			args:         float64(1e3),
+			want:         float64(1e3),
+		},
+		{
 			name:         "int uniform distribution",
 			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
 			args:         3,
@@ -111,6 +124,12 @@ func TestDistributionToExternalRepresentation(t *testing.T) {
 			distribution: &goptuna.UniformDistribution{Low: 0.5, High: 5.5},
 			args:         3.5,
 			want:         3.5,
+		},
+		{
+			name:         "log uniform distribution",
+			distribution: &goptuna.LogUniformDistribution{Low: 1e-2, High: 1e3},
+			args:         float64(1e2),
+			want:         float64(1e2),
 		},
 		{
 			name:         "int uniform distribution",
@@ -154,6 +173,16 @@ func TestDistributionSingle(t *testing.T) {
 		{
 			name:         "uniform distribution false",
 			distribution: &goptuna.UniformDistribution{Low: 0.5, High: 5.5},
+			want:         false,
+		},
+		{
+			name:         "log uniform distribution true",
+			distribution: &goptuna.LogUniformDistribution{Low: 1e3, High: 1e3},
+			want:         true,
+		},
+		{
+			name:         "log uniform distribution false",
+			distribution: &goptuna.LogUniformDistribution{Low: 1e-3, High: 1e2},
 			want:         false,
 		},
 		{
@@ -219,6 +248,24 @@ func TestDistributionContains(t *testing.T) {
 			name:         "uniform distribution higher",
 			distribution: &goptuna.UniformDistribution{Low: 0.5, High: 5.5},
 			args:         7.5,
+			want:         false,
+		},
+		{
+			name:         "log uniform distribution true",
+			distribution: &goptuna.LogUniformDistribution{Low: 1e-1, High: 1e3},
+			args:         float64(1e2),
+			want:         true,
+		},
+		{
+			name:         "log uniform distribution lower",
+			distribution: &goptuna.LogUniformDistribution{Low: 1e-1, High: 1e3},
+			args:         1e-3,
+			want:         false,
+		},
+		{
+			name:         "log uniform distribution higher",
+			distribution: &goptuna.LogUniformDistribution{Low: 1e-1, High: 1e3},
+			args:         1e5,
 			want:         false,
 		},
 		{

@@ -53,6 +53,42 @@ func (d *UniformDistribution) Contains(ir float64) bool {
 	return d.Low <= ir && ir < d.High
 }
 
+var _ Distribution = &LogUniformDistribution{}
+
+// LogUniformDistribution is a uniform distribution in the log domain.
+type LogUniformDistribution struct {
+	// High is higher endpoint of the range of the distribution (included in the range).
+	High float64 `json:"high"`
+	// Low is lower endpoint of the range of the distribution (included in the range).
+	Low float64 `json:"low"`
+}
+
+// LogUniformDistributionName is the identifier name of LogUniformDistribution
+const LogUniformDistributionName = "LogUniformDistribution"
+
+// ToInternalRepr to convert external representation of a parameter value into internal representation.
+func (d *LogUniformDistribution) ToInternalRepr(xr interface{}) float64 {
+	return xr.(float64)
+}
+
+// ToExternalRepr to convert internal representation of a parameter value into external representation.
+func (d *LogUniformDistribution) ToExternalRepr(ir float64) interface{} {
+	return ir
+}
+
+// Single to test whether the range of this distribution contains just a single value.
+func (d *LogUniformDistribution) Single() bool {
+	return d.High == d.Low
+}
+
+// Contains to check a parameter value is contained in the range of this distribution.
+func (d *LogUniformDistribution) Contains(ir float64) bool {
+	if d.Single() {
+		return ir == d.Low
+	}
+	return d.Low <= ir && ir < d.High
+}
+
 var _ Distribution = &IntUniformDistribution{}
 
 // IntUniformDistribution is a uniform distribution on integers.
@@ -187,6 +223,8 @@ func DistributionToJSON(distribution interface{}) ([]byte, error) {
 	switch distribution.(type) {
 	case UniformDistribution:
 		ir.Name = UniformDistributionName
+	case LogUniformDistribution:
+		ir.Name = LogUniformDistributionName
 	case IntUniformDistribution:
 		ir.Name = IntUniformDistributionName
 	case DiscreteUniformDistribution:
@@ -213,6 +251,15 @@ func JSONToDistribution(jsonBytes []byte) (interface{}, error) {
 	switch x.Name {
 	case UniformDistributionName:
 		var y UniformDistribution
+		var dbytes []byte
+		dbytes, err = json.Marshal(x.Attrs)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(dbytes, &y)
+		return y, err
+	case LogUniformDistributionName:
+		var y LogUniformDistribution
 		var dbytes []byte
 		dbytes, err = json.Marshal(x.Attrs)
 		if err != nil {
