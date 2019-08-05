@@ -56,7 +56,59 @@ func TestRandomSearchSamplerOptionSeed(t *testing.T) {
 	}
 }
 
-func TestSampler_SampleDiscreteUniform(t *testing.T) {
+func TestRandomSearchSampler_SampleLogUniform(t *testing.T) {
+	sampler := goptuna.NewRandomSearchSampler()
+	study, err := goptuna.CreateStudy("", goptuna.StudyOptionSampler(sampler))
+	if err != nil {
+		t.Errorf("should not be err, but got %s", err)
+		return
+	}
+
+	distribution := goptuna.LogUniformDistribution{
+		Low:  1e-7,
+		High: 1,
+	}
+
+	points := make([]float64, 100)
+	for i := 0; i < 100; i++ {
+		trialID, err := study.Storage.CreateNewTrialID(study.ID)
+		if err != nil {
+			t.Errorf("should not be err, but got %s", err)
+			return
+		}
+		trial, err := study.Storage.GetTrial(trialID)
+		if err != nil {
+			t.Errorf("should not be err, but got %s", err)
+			return
+		}
+		sampled, err := study.Sampler.Sample(study, trial, "x", distribution)
+		if err != nil {
+			t.Errorf("should not be err, but got %s", err)
+			return
+		}
+		if sampled < distribution.Low || sampled > distribution.High {
+			t.Errorf("should not be less than %f, and larger than %f, but got %f",
+				distribution.High, distribution.Low, sampled)
+			return
+		}
+		points[i] = sampled
+	}
+
+	for i := range points {
+		if points[i] < distribution.Low {
+			t.Errorf("should be higher than %f, but got %f",
+				distribution.Low, points[i])
+			return
+		}
+		if points[i] > distribution.High {
+			t.Errorf("should be lower than %f, but got %f",
+				distribution.High, points[i])
+			return
+		}
+	}
+}
+
+func TestRandomSearchSampler_SampleDiscreteUniform(t *testing.T) {
 	sampler := goptuna.NewRandomSearchSampler()
 	study, err := goptuna.CreateStudy("", goptuna.StudyOptionSampler(sampler))
 	if err != nil {

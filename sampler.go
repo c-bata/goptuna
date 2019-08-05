@@ -57,6 +57,13 @@ func (s *RandomSearchSampler) Sample(
 			return d.Low, nil
 		}
 		return s.rng.Float64()*(d.High-d.Low) + d.Low, nil
+	case LogUniformDistribution:
+		if d.Single() {
+			return d.Low, nil
+		}
+		logLow := math.Log(d.Low)
+		logHigh := math.Log(d.High)
+		return math.Exp(s.rng.Float64()*(logHigh-logLow) + logLow), nil
 	case IntUniformDistribution:
 		if d.Single() {
 			return float64(d.Low), nil

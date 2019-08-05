@@ -100,7 +100,7 @@ func (s *Sampler) splitObservationPairs(
 	return below, above
 }
 
-func (s *Sampler) sampleFromGMM(parzenEstimator *ParzenEstimator, low, high float64, size int, q float64) []float64 {
+func (s *Sampler) sampleFromGMM(parzenEstimator *ParzenEstimator, low, high float64, size int, q float64, isLog bool) []float64 {
 	weights := parzenEstimator.Weights
 	mus := parzenEstimator.Mus
 	sigmas := parzenEstimator.Sigmas
@@ -125,6 +125,13 @@ func (s *Sampler) sampleFromGMM(parzenEstimator *ParzenEstimator, low, high floa
 			samples = append(samples, draw)
 		}
 	}
+
+	if isLog {
+		for i := range samples {
+			samples[i] = math.Exp(samples[i])
+		}
+	}
+
 	if q > 0 {
 		for i := range samples {
 			samples[i] = math.Round(samples[i]/q) * q
@@ -145,6 +152,21 @@ func (s *Sampler) normalCDF(x float64, mu []float64, sigma []float64) []float64 
 	return results
 }
 
+func (s *Sampler) logNormalCDF(x float64, mu []float64, sigma []float64) []float64 {
+	if x < 0 {
+		panic("negative argument is given to logNormalCDF")
+	}
+	l := len(mu)
+	results := make([]float64, l)
+	for i := 0; i < l; i++ {
+		denominator := math.Log(math.Max(x, eps)) - mu[i]
+		numerator := math.Max(math.Sqrt(2)*sigma[i], eps)
+		z := denominator / numerator
+		results[i] = 0.5 + (0.5 * math.Erf(z))
+	}
+	return results
+}
+
 func (s *Sampler) logsumRows(x [][]float64) []float64 {
 	y := make([]float64, len(x))
 	for i := range x {
@@ -159,7 +181,7 @@ func (s *Sampler) logsumRows(x [][]float64) []float64 {
 	return y
 }
 
-func (s *Sampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimator, low, high float64, q float64) []float64 {
+func (s *Sampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimator, low, high float64, q float64, isLog bool) []float64 {
 	weights := parzenEstimator.Weights
 	mus := parzenEstimator.Mus
 	sigmas := parzenEstimator.Sigmas
@@ -191,15 +213,25 @@ func (s *Sampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimator,
 			upperBound := make([]float64, len(samples))
 			lowerBound := make([]float64, len(samples))
 			for i := range upperBound {
-				upperBound[i] = math.Min(samples[i]+q/2.0, high)
-				lowerBound[i] = math.Max(samples[i]-q/2.0, low)
-
+				if isLog {
+					upperBound[i] = math.Min(samples[i]+q/2.0, math.Exp(high))
+					lowerBound[i] = math.Max(samples[i]-q/2.0, math.Exp(low))
+					lowerBound[i] = math.Max(0, lowerBound[i])
+				} else {
+					upperBound[i] = math.Min(samples[i]+q/2.0, high)
+					lowerBound[i] = math.Max(samples[i]-q/2.0, low)
+				}
 			}
 
 			incAmt := make([]float64, len(samples))
 			for j := range upperBound {
-				incAmt[j] = w * s.normalCDF(upperBound[j], []float64{mu}, []float64{sigma})[0]
-				incAmt[j] -= w * s.normalCDF(lowerBound[j], []float64{mu}, []float64{sigma})[0]
+				if isLog {
+					incAmt[j] = w * s.logNormalCDF(upperBound[j], []float64{mu}, []float64{sigma})[0]
+					incAmt[j] -= w * s.logNormalCDF(lowerBound[j], []float64{mu}, []float64{sigma})[0]
+				} else {
+					incAmt[j] = w * s.normalCDF(upperBound[j], []float64{mu}, []float64{sigma})[0]
+					incAmt[j] -= w * s.normalCDF(lowerBound[j], []float64{mu}, []float64{sigma})[0]
+				}
 			}
 			for j := range probabilities {
 				probabilities[j] += incAmt[j]
@@ -211,12 +243,25 @@ func (s *Sampler) gmmLogPDF(samples []float64, parzenEstimator *ParzenEstimator,
 		}
 		return returnValue
 	}
-	jacobian := ones1d(len(samples))
-	distance := make([][]float64, len(samples))
+
+	var (
+		jacobian []float64
+		distance [][]float64
+	)
+	if isLog {
+		jacobian = samples
+	} else {
+		jacobian = ones1d(len(samples))
+	}
+	distance = make([][]float64, len(samples))
 	for i := range samples {
 		distance[i] = make([]float64, len(mus))
 		for j := range mus {
-			distance[i][j] = samples[i] - mus[j]
+			if isLog {
+				distance[i][j] = math.Log(samples[i]) - mus[j]
+			} else {
+				distance[i][j] = samples[i] - mus[j]
+			}
 		}
 	}
 	mahalanobis := make([][]float64, len(distance))
@@ -315,14 +360,24 @@ func (s *Sampler) compare(samples []float64, logL []float64, logG []float64) []f
 	return results
 }
 
-func (s *Sampler) sampleNumerical(low, high float64, below, above []float64, q float64) float64 {
+func (s *Sampler) sampleNumerical(low, high float64, below, above []float64, q float64, isLog bool) float64 {
+	if isLog {
+		low = math.Log(low)
+		high = math.Log(high)
+		for i := range below {
+			below[i] = math.Log(below[i])
+		}
+		for i := range above {
+			above[i] = math.Log(above[i])
+		}
+	}
 	size := s.numberOfEICandidates
 	parzenEstimatorBelow := NewParzenEstimator(below, low, high, s.params)
-	sampleBelow := s.sampleFromGMM(parzenEstimatorBelow, low, high, size, q)
-	logLikelihoodsBelow := s.gmmLogPDF(sampleBelow, parzenEstimatorBelow, low, high, q)
+	sampleBelow := s.sampleFromGMM(parzenEstimatorBelow, low, high, size, q, isLog)
+	logLikelihoodsBelow := s.gmmLogPDF(sampleBelow, parzenEstimatorBelow, low, high, q, isLog)
 
 	parzenEstimatorAbove := NewParzenEstimator(above, low, high, s.params)
-	logLikelihoodsAbove := s.gmmLogPDF(sampleBelow, parzenEstimatorAbove, low, high, q)
+	logLikelihoodsAbove := s.gmmLogPDF(sampleBelow, parzenEstimatorAbove, low, high, q, isLog)
 
 	return s.compare(sampleBelow, logLikelihoodsBelow, logLikelihoodsAbove)[0]
 }
@@ -330,14 +385,20 @@ func (s *Sampler) sampleNumerical(low, high float64, below, above []float64, q f
 func (s *Sampler) sampleUniform(distribution goptuna.UniformDistribution, below, above []float64) float64 {
 	low := distribution.Low
 	high := distribution.High
-	return s.sampleNumerical(low, high, below, above, 0)
+	return s.sampleNumerical(low, high, below, above, 0, false)
+}
+
+func (s *Sampler) sampleLogUniform(distribution goptuna.LogUniformDistribution, below, above []float64) float64 {
+	low := distribution.Low
+	high := distribution.High
+	return s.sampleNumerical(low, high, below, above, 0, true)
 }
 
 func (s *Sampler) sampleInt(distribution goptuna.IntUniformDistribution, below, above []float64) float64 {
 	q := 1.0
 	low := float64(distribution.Low) - 0.5*q
 	high := float64(distribution.High) + 0.5*q
-	return s.sampleNumerical(low, high, below, above, q)
+	return s.sampleNumerical(low, high, below, above, q, false)
 }
 
 func (s *Sampler) sampleDiscreteUniform(distribution goptuna.DiscreteUniformDistribution, below, above []float64) float64 {
@@ -346,7 +407,7 @@ func (s *Sampler) sampleDiscreteUniform(distribution goptuna.DiscreteUniformDist
 	// [low, high] is shifted to [0, r] to align sampled values at regular intervals.
 	low := 0 - 0.5*q
 	high := r + 0.5*q
-	best := s.sampleNumerical(low, high, below, above, q) + distribution.Low
+	best := s.sampleNumerical(low, high, below, above, q, false) + distribution.Low
 	return math.Min(math.Max(best, distribution.Low), distribution.High)
 }
 
@@ -424,6 +485,8 @@ func (s *Sampler) Sample(
 	switch d := paramDistribution.(type) {
 	case goptuna.UniformDistribution:
 		return s.sampleUniform(d, belowParamValues, aboveParamValues), nil
+	case goptuna.LogUniformDistribution:
+		return s.sampleLogUniform(d, belowParamValues, aboveParamValues), nil
 	case goptuna.IntUniformDistribution:
 		return s.sampleInt(d, belowParamValues, aboveParamValues), nil
 	case goptuna.DiscreteUniformDistribution:
