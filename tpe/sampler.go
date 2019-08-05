@@ -279,40 +279,40 @@ func (s *Sampler) categoricalLogPDF(sample []int, p []float64) []float64 {
 }
 
 func (s *Sampler) compare(samples []float64, logL []float64, logG []float64) []float64 {
-	if len(samples) > 0 {
-		if len(logL) != len(logG) {
-			panic("the size of the log_l and log_g should be same")
-		}
-		score := make([]float64, len(logL))
-		for i := range score {
-			score[i] = logL[i] - logG[i]
-		}
-		if len(samples) != len(score) {
-			panic("the size of the samples and score should be same")
-		}
-
-		argMax := func(s []float64) int {
-			max := s[0]
-			maxIdx := 0
-			for i := range s {
-				if i == 0 {
-					continue
-				}
-				if s[i] > max {
-					max = s[i]
-					maxIdx = i
-				}
-			}
-			return maxIdx
-		}
-		best := argMax(score)
-		results := make([]float64, len(samples))
-		for i := range results {
-			results[i] = samples[best]
-		}
-		return results
+	if len(samples) == 0 {
+		return []float64{}
 	}
-	return []float64{}
+	if len(logL) != len(logG) {
+		panic("the size of the log_l and log_g should be same")
+	}
+	score := make([]float64, len(logL))
+	for i := range score {
+		score[i] = logL[i] - logG[i]
+	}
+	if len(samples) != len(score) {
+		panic("the size of the samples and score should be same")
+	}
+
+	argMax := func(s []float64) int {
+		max := s[0]
+		maxIdx := 0
+		for i := range s {
+			if i == 0 {
+				continue
+			}
+			if s[i] > max {
+				max = s[i]
+				maxIdx = i
+			}
+		}
+		return maxIdx
+	}
+	best := argMax(score)
+	results := make([]float64, len(samples))
+	for i := range results {
+		results[i] = samples[best]
+	}
+	return results
 }
 
 func (s *Sampler) sampleNumerical(low, high float64, below, above []float64, q float64) float64 {
@@ -322,8 +322,7 @@ func (s *Sampler) sampleNumerical(low, high float64, below, above []float64, q f
 	logLikelihoodsBelow := s.gmmLogPDF(sampleBelow, parzenEstimatorBelow, low, high, q)
 
 	parzenEstimatorAbove := NewParzenEstimator(above, low, high, s.params)
-	sampleAbove := s.sampleFromGMM(parzenEstimatorAbove, low, high, size, q)
-	logLikelihoodsAbove := s.gmmLogPDF(sampleAbove, parzenEstimatorAbove, low, high, q)
+	logLikelihoodsAbove := s.gmmLogPDF(sampleBelow, parzenEstimatorAbove, low, high, q)
 
 	return s.compare(sampleBelow, logLikelihoodsBelow, logLikelihoodsAbove)[0]
 }
@@ -339,6 +338,16 @@ func (s *Sampler) sampleInt(distribution goptuna.IntUniformDistribution, below, 
 	low := float64(distribution.Low) - 0.5*q
 	high := float64(distribution.High) + 0.5*q
 	return s.sampleNumerical(low, high, below, above, q)
+}
+
+func (s *Sampler) sampleDiscreteUniform(distribution goptuna.DiscreteUniformDistribution, below, above []float64) float64 {
+	q := distribution.Q
+	r := distribution.High - distribution.Low
+	// [low, high] is shifted to [0, r] to align sampled values at regular intervals.
+	low := 0 - 0.5*q
+	high := r + 0.5*q
+	best := s.sampleNumerical(low, high, below, above, q) + distribution.Low
+	return math.Min(math.Max(best, distribution.Low), distribution.High)
 }
 
 func (s *Sampler) sampleCategorical(distribution goptuna.CategoricalDistribution, below, above []float64) float64 {
@@ -417,6 +426,8 @@ func (s *Sampler) Sample(
 		return s.sampleUniform(d, belowParamValues, aboveParamValues), nil
 	case goptuna.IntUniformDistribution:
 		return s.sampleInt(d, belowParamValues, aboveParamValues), nil
+	case goptuna.DiscreteUniformDistribution:
+		return s.sampleDiscreteUniform(d, belowParamValues, aboveParamValues), nil
 	case goptuna.CategoricalDistribution:
 		return s.sampleCategorical(d, belowParamValues, aboveParamValues), nil
 	}

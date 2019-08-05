@@ -2,6 +2,7 @@ package goptuna
 
 import (
 	"encoding/json"
+	"math"
 )
 
 // Distribution represents a parameter that can be optimized.
@@ -90,6 +91,55 @@ func (d *IntUniformDistribution) Contains(ir float64) bool {
 	return d.Low <= value && value < d.High
 }
 
+var _ Distribution = &DiscreteUniformDistribution{}
+
+// DiscreteUniformDistribution is a discretized uniform distribution in the linear domain.
+type DiscreteUniformDistribution struct {
+	// High is higher endpoint of the range of the distribution (included in the range).
+	High float64 `json:"high"`
+	// Low is lower endpoint of the range of the distribution (included in the range).
+	Low float64 `json:"low"`
+	// Q is a discretization step.
+	Q float64 `json:"q"`
+}
+
+// DiscreteUniformDistributionName is the identifier name of DiscreteUniformDistribution
+const DiscreteUniformDistributionName = "DiscreteUniformDistribution"
+
+// ToInternalRepr to convert external representation of a parameter value into internal representation.
+func (d *DiscreteUniformDistribution) ToInternalRepr(xr interface{}) float64 {
+	return xr.(float64)
+}
+
+// ToExternalRepr to convert internal representation of a parameter value into external representation.
+func (d *DiscreteUniformDistribution) ToExternalRepr(ir float64) interface{} {
+	return ir
+}
+
+// Single to test whether the range of this distribution contains just a single value.
+func (d *DiscreteUniformDistribution) Single() bool {
+	return d.High == d.Low
+}
+
+// Contains to check a parameter value is contained in the range of this distribution.
+func (d *DiscreteUniformDistribution) Contains(ir float64) bool {
+	if d.Single() {
+		return ir == d.Low
+	}
+	if d.Low > ir || ir > d.High {
+		return false
+	}
+
+	eps := 1e-6
+	if math.Mod(ir-d.Low+eps, d.Q) <= 2*eps {
+		return true
+	}
+	if math.Mod(d.High-ir+eps, d.Q) <= 2*eps {
+		return true
+	}
+	return false
+}
+
 var _ Distribution = &CategoricalDistribution{}
 
 // CategoricalDistribution is a distribution for categorical parameters
@@ -139,6 +189,8 @@ func DistributionToJSON(distribution interface{}) ([]byte, error) {
 		ir.Name = UniformDistributionName
 	case IntUniformDistribution:
 		ir.Name = IntUniformDistributionName
+	case DiscreteUniformDistribution:
+		ir.Name = DiscreteUniformDistributionName
 	case CategoricalDistribution:
 		ir.Name = CategoricalDistributionName
 	default:
@@ -170,6 +222,15 @@ func JSONToDistribution(jsonBytes []byte) (interface{}, error) {
 		return y, err
 	case IntUniformDistributionName:
 		var y IntUniformDistribution
+		var dbytes []byte
+		dbytes, err = json.Marshal(x.Attrs)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(dbytes, &y)
+		return y, err
+	case DiscreteUniformDistributionName:
+		var y DiscreteUniformDistribution
 		var dbytes []byte
 		dbytes, err = json.Marshal(x.Attrs)
 		if err != nil {

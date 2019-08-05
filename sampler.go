@@ -2,6 +2,7 @@ package goptuna
 
 import (
 	"errors"
+	"math"
 	"math/rand"
 	"sync"
 )
@@ -61,6 +62,18 @@ func (s *RandomSearchSampler) Sample(
 			return float64(d.Low), nil
 		}
 		return float64(s.rng.Intn(d.High-d.Low) + d.Low), nil
+	case DiscreteUniformDistribution:
+		if d.Single() {
+			return d.Low, nil
+		}
+		q := d.Q
+		r := d.High - d.Low
+		// [low, high] is shifted to [0, r] to align sampled values at regular intervals.
+		low := 0 - 0.5*q
+		high := r + 0.5*q
+		x := s.rng.Float64()*(high-low) + low
+		v := math.Round(x/q)*q + d.Low
+		return math.Min(math.Max(v, d.Low), d.High), nil
 	case CategoricalDistribution:
 		if d.Single() {
 			return float64(0), nil
