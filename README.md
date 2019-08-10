@@ -7,7 +7,7 @@
 
 Bayesian optimization framework for black-box functions, inspired by [Optuna](https://github.com/pfnet/optuna).
 This library is not only for hyperparameter tuning of machine learning models.
-Everything will be able to optimize if you can define the objective function (e.g. Optimizing the number of goroutines of your server and the memory buffer size of the caching systems).
+Everything will be able to optimized if you can define the objective function (e.g. Optimizing the number of goroutines of your server and the memory buffer size of the caching systems).
 
 Currently following algorithms are implemented:
 
