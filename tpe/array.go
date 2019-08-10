@@ -1,11 +1,7 @@
 package tpe
 
 import (
-	"errors"
-	"math/rand"
 	"sort"
-
-	"gonum.org/v1/gonum/floats"
 )
 
 func ones1d(size int) []float64 {
@@ -86,44 +82,6 @@ func bincount(x []int, weights []float64, minlength int) []float64 {
 		}
 	}
 	return counts
-}
-
-func multinomial(n int, pvals []float64, size int) [][]int {
-	result := make([][]int, size)
-	l := len(pvals)
-	x := make([]float64, l)
-	floats.CumSum(x, pvals)
-
-	for i := range result {
-		result[i] = make([]int, l)
-
-		for j := 0; j < n; j++ {
-
-			var index int
-			r := rand.Float64()
-			for i := range x {
-				if x[i] > r {
-					index = i
-					break
-				}
-			}
-			result[i][index]++
-		}
-	}
-	return result
-}
-
-func argMaxMultinomial(pvals []float64) (int, error) {
-	x := make([]float64, len(pvals))
-	floats.CumSum(x, pvals)
-
-	r := rand.Float64()
-	for i := range x {
-		if x[i] > r {
-			return i, nil
-		}
-	}
-	return 0, errors.New("invalid pvals")
 }
 
 func clip(array []float64, min, max float64) {

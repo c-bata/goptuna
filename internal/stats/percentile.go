@@ -1,11 +1,11 @@
-package medianstopping
+package stats
 
 import (
 	"math"
 	"sort"
 )
 
-func percentile(a []float64, q float64) float64 {
+func Percentile(a []float64, q float64) float64 {
 	// Caution: this modifies the order of given first argument.
 	length := len(a)
 	if length == 0 {

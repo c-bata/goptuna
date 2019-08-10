@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/c-bata/goptuna"
+	"github.com/c-bata/goptuna/internal/random"
 	"gonum.org/v1/gonum/floats"
 )
 
@@ -115,7 +116,7 @@ func (s *Sampler) sampleFromGMM(parzenEstimator *ParzenEstimator, low, high floa
 		if len(samples) == nsamples {
 			break
 		}
-		active, err := argMaxMultinomial(weights)
+		active, err := random.ArgMaxMultinomial(weights)
 		if err != nil {
 			panic(err)
 		}
@@ -300,7 +301,7 @@ func (s *Sampler) sampleFromCategoricalDist(probabilities []float64, size int) [
 	if size == 0 {
 		return []int{}
 	}
-	sample := multinomial(1, probabilities, size)
+	sample := random.Multinomial(1, probabilities, size)
 
 	returnVals := make([]int, size)
 	for i := 0; i < size; i++ {

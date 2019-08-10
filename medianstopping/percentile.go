@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/c-bata/goptuna"
+	"github.com/c-bata/goptuna/internal/stats"
 )
 
 // NewPercentilePruner is a constructor of percentile pruner
@@ -98,7 +99,7 @@ func getPercentileIntermediateResultOverSteps(
 	if len(intermediateValues) == 0 {
 		return math.NaN()
 	}
-	return percentile(intermediateValues, q)
+	return stats.Percentile(intermediateValues, q)
 }
 
 // Prune if the best intermediate value is in the bottom percentile among trials at the same step.

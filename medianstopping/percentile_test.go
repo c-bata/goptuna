@@ -1,10 +1,11 @@
-package medianstopping
+package medianstopping_test
 
 import (
 	"reflect"
 	"testing"
 
 	"github.com/c-bata/goptuna"
+	"github.com/c-bata/goptuna/medianstopping"
 )
 
 func TestPercentilePruner_PruneWithOneTrial(t *testing.T) {
@@ -26,7 +27,7 @@ func TestPercentilePruner_PruneWithOneTrial(t *testing.T) {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
 
-	pruner := &PercentilePruner{
+	pruner := &medianstopping.PercentilePruner{
 		Percentile:     25.0,
 		NStartUpTrials: 0,
 		NWarmUpSteps:   0,
@@ -49,7 +50,7 @@ func TestNewPercentilePruner(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *PercentilePruner
+		want    *medianstopping.PercentilePruner
 		wantErr bool
 	}{
 		{
@@ -73,7 +74,7 @@ func TestNewPercentilePruner(t *testing.T) {
 			args: args{
 				q: 25.0,
 			},
-			want: &PercentilePruner{
+			want: &medianstopping.PercentilePruner{
 				Percentile:     25.0,
 				NStartUpTrials: 5,
 				NWarmUpSteps:   0,
@@ -99,7 +100,7 @@ func TestNewPercentilePruner(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewPercentilePruner(tt.args.q)
+			got, err := medianstopping.NewPercentilePruner(tt.args.q)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewPercentilePruner() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -180,7 +181,7 @@ func TestPercentilePruner_Prune(t *testing.T) {
 				}
 			}
 
-			p := &PercentilePruner{
+			p := &medianstopping.PercentilePruner{
 				Percentile:     tt.fields.Percentile,
 				NStartUpTrials: tt.fields.NStartUpTrials,
 				NWarmUpSteps:   tt.fields.NWarmUpSteps,

@@ -1,8 +1,9 @@
-package medianstopping
+package stats_test
 
 import (
 	"testing"
 
+	"github.com/c-bata/goptuna/internal/stats"
 	"github.com/c-bata/goptuna/internal/testutil"
 )
 
@@ -59,7 +60,7 @@ func Test_percentile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := percentile(tt.args.a, tt.args.q)
+			got := stats.Percentile(tt.args.a, tt.args.q)
 			if !testutil.AlmostEqualFloat64(got, tt.want, 1e-5) {
 				t.Errorf("percentile() = %v, want %v", got, tt.want)
 			}
