@@ -1,6 +1,8 @@
 package rdb
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 
@@ -62,12 +64,22 @@ func (s *Storage) SetStudyDirection(studyID int, direction goptuna.StudyDirectio
 
 // SetStudyUserAttr to store the value for the user.
 func (s *Storage) SetStudyUserAttr(studyID int, key string, value string) error {
-	panic("implement me")
+	result := s.db.Create(&studyUserAttributeModel{
+		UserAttributeReferStudy: studyID,
+		Key:                     key,
+		ValueJSON:               value,
+	})
+	return result.Error
 }
 
 // SetStudySystemAttr to store the value for the system.
 func (s *Storage) SetStudySystemAttr(studyID int, key string, value string) error {
-	panic("implement me")
+	result := s.db.Create(&studySystemAttributeModel{
+		SystemAttributeReferStudy: studyID,
+		Key:                       key,
+		ValueJSON:                 value,
+	})
+	return result.Error
 }
 
 // GetStudyIDFromName return the study id from study name.
@@ -99,12 +111,22 @@ func (s *Storage) GetStudyUserAttrs(studyID int) (map[string]string, error) {
 	for i := range attrs {
 		res[attrs[i].Key] = attrs[i].ValueJSON
 	}
-	panic("implement me")
+	return res, nil
 }
 
 // GetStudySystemAttrs to restore the attributes for the system.
 func (s *Storage) GetStudySystemAttrs(studyID int) (map[string]string, error) {
-	panic("implement me")
+	var attrs []studySystemAttributeModel
+	result := s.db.Find(&attrs, "study_id = ?", studyID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	res := make(map[string]string, len(attrs))
+	for i := range attrs {
+		res[attrs[i].Key] = attrs[i].ValueJSON
+	}
+	return res, nil
 }
 
 // GetAllStudySummaries returns all study summaries.
@@ -114,7 +136,26 @@ func (s *Storage) GetAllStudySummaries(studyID int) ([]goptuna.StudySummary, err
 
 // CreateNewTrialID creates trial and returns trialID.
 func (s *Storage) CreateNewTrialID(studyID int) (int, error) {
-	panic("implement me")
+	start := time.Now()
+	trial := &trialModel{
+		TrialReferStudy: studyID,
+		State:           trialStateRunning,
+		DatetimeStart:   &start,
+	}
+	result := s.db.Create(trial)
+	if result.Error != nil {
+		return -1, result.Error
+	}
+	_, err := s.createNewTrialNumber(studyID, trial.ID)
+	if err != nil {
+		return -1, err
+	}
+	return trial.ID, nil
+}
+
+func (s *Storage) createNewTrialNumber(studyID int, trialID int) (int, error) {
+	// todo: implement me
+	return -1, nil
 }
 
 // SetTrialValue sets the value of trial.
@@ -140,12 +181,22 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 
 // SetTrialUserAttr to store the value for the user.
 func (s *Storage) SetTrialUserAttr(trialID int, key string, value string) error {
-	panic("implement me")
+	result := s.db.Create(&trialUserAttributeModel{
+		UserAttributeReferTrial: trialID,
+		Key:                     key,
+		ValueJSON:               value,
+	})
+	return result.Error
 }
 
 // SetTrialSystemAttr to store the value for the system.
 func (s *Storage) SetTrialSystemAttr(trialID int, key string, value string) error {
-	panic("implement me")
+	result := s.db.Create(&trialSystemAttributeModel{
+		SystemAttributeReferTrial: trialID,
+		Key:                       key,
+		ValueJSON:                 value,
+	})
+	return result.Error
 }
 
 // GetTrialNumberFromID returns the trial's number.
@@ -165,12 +216,32 @@ func (s *Storage) GetTrialParams(trialID int) (map[string]interface{}, error) {
 
 // GetTrialUserAttrs to restore the attributes for the user.
 func (s *Storage) GetTrialUserAttrs(trialID int) (map[string]string, error) {
-	panic("implement me")
+	var attrs []trialUserAttributeModel
+	result := s.db.Find(&attrs, "trial_id = ?", trialID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	res := make(map[string]string, len(attrs))
+	for i := range attrs {
+		res[attrs[i].Key] = attrs[i].ValueJSON
+	}
+	return res, nil
 }
 
 // GetTrialSystemAttrs to restore the attributes for the system.
 func (s *Storage) GetTrialSystemAttrs(trialID int) (map[string]string, error) {
-	panic("implement me")
+	var attrs []trialSystemAttributeModel
+	result := s.db.Find(&attrs, "trial_id = ?", trialID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	res := make(map[string]string, len(attrs))
+	for i := range attrs {
+		res[attrs[i].Key] = attrs[i].ValueJSON
+	}
+	return res, nil
 }
 
 // GetBestTrial returns the best trial.

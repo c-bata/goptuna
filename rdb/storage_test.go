@@ -2,6 +2,7 @@ package rdb_test
 
 import (
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/c-bata/goptuna"
@@ -17,6 +18,7 @@ func SetupSQLite3Test(t *testing.T, sqlitePath string) (*gorm.DB, func(), error)
 		t.Errorf("failed to setup sqlite3 with %s", err)
 		return nil, nil, err
 	}
+	db.LogMode(false)
 	rdb.RunAutoMigrate(db)
 	if db.Error != nil {
 		t.Errorf("failed to setup sqlite3 with %s", err)
@@ -105,5 +107,143 @@ func TestStorage_StudyDirection(t *testing.T) {
 	if direction != goptuna.StudyDirectionMaximize {
 		t.Errorf("want %s, but got %s", goptuna.StudyDirectionMaximize, direction)
 		return
+	}
+}
+
+func TestStorage_StudyUserAttrs(t *testing.T) {
+	db, teardown, err := SetupSQLite3Test(t, "goptuna-test.db")
+	defer teardown()
+	if err != nil {
+		t.Errorf("failed to setup tests with %s", err)
+		return
+	}
+
+	storage := rdb.NewStorage(db)
+	studyID, err := storage.CreateNewStudyID("")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	err = storage.SetStudyUserAttr(studyID, "key", "value")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	got, err := storage.GetStudyUserAttrs(studyID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	want := map[string]string{"key": "value"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want %#v, but got %#v", want, got)
+	}
+}
+
+func TestStorage_StudySystemAttrs(t *testing.T) {
+	db, teardown, err := SetupSQLite3Test(t, "goptuna-test.db")
+	defer teardown()
+	if err != nil {
+		t.Errorf("failed to setup tests with %s", err)
+		return
+	}
+
+	storage := rdb.NewStorage(db)
+	studyID, err := storage.CreateNewStudyID("")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	err = storage.SetStudySystemAttr(studyID, "key", "value")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	got, err := storage.GetStudySystemAttrs(studyID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	want := map[string]string{"key": "value"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want %#v, but got %#v", want, got)
+	}
+}
+
+func TestStorage_TrialUserAttrs(t *testing.T) {
+	db, teardown, err := SetupSQLite3Test(t, "goptuna-test.db")
+	defer teardown()
+	if err != nil {
+		t.Errorf("failed to setup tests with %s", err)
+		return
+	}
+
+	storage := rdb.NewStorage(db)
+	studyID, err := storage.CreateNewStudyID("")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	trialID, err := storage.CreateNewTrialID(studyID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	err = storage.SetTrialUserAttr(trialID, "key", "value")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	got, err := storage.GetTrialUserAttrs(trialID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	want := map[string]string{"key": "value"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want %#v, but got %#v", want, got)
+	}
+}
+
+func TestStorage_TrialSystemAttrs(t *testing.T) {
+	db, teardown, err := SetupSQLite3Test(t, "goptuna-test.db")
+	defer teardown()
+	if err != nil {
+		t.Errorf("failed to setup tests with %s", err)
+		return
+	}
+
+	storage := rdb.NewStorage(db)
+	studyID, err := storage.CreateNewStudyID("")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	trialID, err := storage.CreateNewTrialID(studyID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	err = storage.SetTrialSystemAttr(trialID, "key", "value")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	got, err := storage.GetTrialSystemAttrs(trialID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	want := map[string]string{"key": "value"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want %#v, but got %#v", want, got)
 	}
 }
