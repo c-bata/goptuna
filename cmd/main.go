@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/c-bata/goptuna/cmd/createstudy"
@@ -17,7 +16,7 @@ func main() {
 	rootCmd.AddCommand(createstudy.GetCommand())
 	err := rootCmd.Execute()
 	if err != nil {
-		fmt.Println(err)
+		rootCmd.PrintErrln(err)
 		os.Exit(1)
 	}
 }
