@@ -16,25 +16,25 @@ type Storage interface {
 	// Basic study manipulation
 	CreateNewStudyID(name string) (int, error)
 	SetStudyDirection(studyID int, direction StudyDirection) error
-	SetStudyUserAttr(studyID int, key string, value interface{}) error
-	SetStudySystemAttr(studyID int, key string, value interface{}) error
+	SetStudyUserAttr(studyID int, key string, value string) error
+	SetStudySystemAttr(studyID int, key string, value string) error
 	// Basic study access
 	GetStudyIDFromName(name string) (int, error)
 	GetStudyIDFromTrialID(trialID int) (int, error)
 	GetStudyNameFromID(studyID int) (string, error)
 	GetStudyDirection(studyID int) (StudyDirection, error)
-	GetStudyUserAttrs(studyID int) (map[string]interface{}, error)
-	GetStudySystemAttrs(studyID int) (map[string]interface{}, error)
-	GetAllStudySummaries(studyID int) ([]StudySummary, error)
+	GetStudyUserAttrs(studyID int) (map[string]string, error)
+	GetStudySystemAttrs(studyID int) (map[string]string, error)
+	GetAllStudySummaries() ([]StudySummary, error)
 	// Basic trial manipulation
 	CreateNewTrialID(studyID int) (int, error)
 	SetTrialValue(trialID int, value float64) error
 	SetTrialIntermediateValue(trialID int, step int, value float64) error
 	SetTrialParam(trialID int, paramName string, paramValueInternal float64,
-		distribution Distribution) error
+		distribution interface{}) error
 	SetTrialState(trialID int, state TrialState) error
-	SetTrialUserAttr(trialID int, key string, value interface{}) error
-	SetTrialSystemAttr(trialID int, key string, value interface{}) error
+	SetTrialUserAttr(trialID int, key string, value string) error
+	SetTrialSystemAttr(trialID int, key string, value string) error
 	// Basic trial access
 	GetTrialNumberFromID(trialID int) (int, error)
 	GetTrialParam(trialID int, paramName string) (float64, error)
@@ -42,35 +42,35 @@ type Storage interface {
 	GetAllTrials(studyID int) ([]FrozenTrial, error)
 	GetBestTrial(studyID int) (FrozenTrial, error)
 	GetTrialParams(trialID int) (map[string]interface{}, error)
-	GetTrialUserAttrs(trialID int) (map[string]interface{}, error)
-	GetTrialSystemAttrs(trialID int) (map[string]interface{}, error)
+	GetTrialUserAttrs(trialID int) (map[string]string, error)
+	GetTrialSystemAttrs(trialID int) (map[string]string, error)
 }
 
 // StudySummary holds basic attributes and aggregated results of Study.
 type StudySummary struct {
-	ID            int                    `json:"study_id"`
-	Name          string                 `json:"study_name"`
-	Direction     StudyDirection         `json:"direction"`
-	BestTrial     FrozenTrial            `json:"best_trial"`
-	UserAttrs     map[string]interface{} `json:"user_attrs"`
-	SystemAttrs   map[string]interface{} `json:"system_attrs"`
-	DatetimeStart time.Time              `json:"datetime_start"`
+	ID            int               `json:"study_id"`
+	Name          string            `json:"study_name"`
+	Direction     StudyDirection    `json:"direction"`
+	BestTrial     FrozenTrial       `json:"best_trial"`
+	UserAttrs     map[string]string `json:"user_attrs"`
+	SystemAttrs   map[string]string `json:"system_attrs"`
+	DatetimeStart time.Time         `json:"datetime_start"`
 }
 
 // FrozenTrial holds the status and results of a Trial.
 type FrozenTrial struct {
-	ID                 int                     `json:"trial_id"`
-	StudyID            int                     `json:"study_id"`
-	Number             int                     `json:"number"`
-	State              TrialState              `json:"state"`
-	Value              float64                 `json:"value"`
-	IntermediateValues map[int]float64         `json:"intermediate_values"`
-	DatetimeStart      time.Time               `json:"datetime_start"`
-	DatetimeComplete   time.Time               `json:"datetime_complete"`
-	Params             map[string]interface{}  `json:"params"`
-	Distributions      map[string]Distribution `json:"distributions"`
-	UserAttrs          map[string]interface{}  `json:"user_attrs"`
-	SystemAttrs        map[string]interface{}  `json:"system_attrs"`
+	ID                 int                    `json:"trial_id"`
+	StudyID            int                    `json:"study_id"`
+	Number             int                    `json:"number"`
+	State              TrialState             `json:"state"`
+	Value              float64                `json:"value"`
+	IntermediateValues map[int]float64        `json:"intermediate_values"`
+	DatetimeStart      time.Time              `json:"datetime_start"`
+	DatetimeComplete   time.Time              `json:"datetime_complete"`
+	Params             map[string]interface{} `json:"params"`
+	Distributions      map[string]interface{} `json:"distributions"`
+	UserAttrs          map[string]string      `json:"user_attrs"`
+	SystemAttrs        map[string]string      `json:"system_attrs"`
 	// Note: ParamsInIR is private in Optuna.
 	// But we need to keep public because this is accessed by TPE sampler.
 	// It couldn't access internal attributes from the external packages.
@@ -108,8 +108,8 @@ func NewInMemoryStorage() *InMemoryStorage {
 	return &InMemoryStorage{
 		direction:   StudyDirectionMinimize,
 		trials:      make([]FrozenTrial, 0, 128),
-		userAttrs:   make(map[string]interface{}, 8),
-		systemAttrs: make(map[string]interface{}, 8),
+		userAttrs:   make(map[string]string, 8),
+		systemAttrs: make(map[string]string, 8),
 		studyName:   DefaultStudyNamePrefix + InMemoryStorageStudyUUID,
 	}
 }
@@ -118,8 +118,8 @@ func NewInMemoryStorage() *InMemoryStorage {
 type InMemoryStorage struct {
 	direction   StudyDirection
 	trials      []FrozenTrial
-	userAttrs   map[string]interface{}
-	systemAttrs map[string]interface{}
+	userAttrs   map[string]string
+	systemAttrs map[string]string
 	studyName   string
 
 	mu sync.RWMutex
@@ -146,7 +146,7 @@ func (s *InMemoryStorage) SetStudyDirection(studyID int, direction StudyDirectio
 }
 
 // SetStudyUserAttr to store the value for the user.
-func (s *InMemoryStorage) SetStudyUserAttr(studyID int, key string, value interface{}) error {
+func (s *InMemoryStorage) SetStudyUserAttr(studyID int, key string, value string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -155,7 +155,7 @@ func (s *InMemoryStorage) SetStudyUserAttr(studyID int, key string, value interf
 }
 
 // SetStudySystemAttr to store the value for the system.
-func (s *InMemoryStorage) SetStudySystemAttr(studyID int, key string, value interface{}) error {
+func (s *InMemoryStorage) SetStudySystemAttr(studyID int, key string, value string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -199,11 +199,11 @@ func (s *InMemoryStorage) GetStudyNameFromID(studyID int) (string, error) {
 }
 
 // GetStudyUserAttrs to restore the attributes for the user.
-func (s *InMemoryStorage) GetStudyUserAttrs(studyID int) (map[string]interface{}, error) {
+func (s *InMemoryStorage) GetStudyUserAttrs(studyID int) (map[string]string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	n := make(map[string]interface{}, len(s.userAttrs))
+	n := make(map[string]string, len(s.userAttrs))
 	for k := range s.userAttrs {
 		n[k] = s.userAttrs[k]
 	}
@@ -211,11 +211,11 @@ func (s *InMemoryStorage) GetStudyUserAttrs(studyID int) (map[string]interface{}
 }
 
 // GetStudySystemAttrs to restore the attributes for the system.
-func (s *InMemoryStorage) GetStudySystemAttrs(studyID int) (map[string]interface{}, error) {
+func (s *InMemoryStorage) GetStudySystemAttrs(studyID int) (map[string]string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	n := make(map[string]interface{}, len(s.systemAttrs))
+	n := make(map[string]string, len(s.systemAttrs))
 	for k := range s.systemAttrs {
 		n[k] = s.systemAttrs[k]
 	}
@@ -223,7 +223,7 @@ func (s *InMemoryStorage) GetStudySystemAttrs(studyID int) (map[string]interface
 }
 
 // GetAllStudySummaries returns all study summaries.
-func (s *InMemoryStorage) GetAllStudySummaries(studyID int) ([]StudySummary, error) {
+func (s *InMemoryStorage) GetAllStudySummaries() ([]StudySummary, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -261,11 +261,11 @@ func (s *InMemoryStorage) GetAllStudySummaries(studyID int) ([]StudySummary, err
 		}
 	}
 
-	sa := make(map[string]interface{}, len(s.systemAttrs))
+	sa := make(map[string]string, len(s.systemAttrs))
 	for k := range s.systemAttrs {
 		sa[k] = s.systemAttrs[k]
 	}
-	ua := make(map[string]interface{}, len(s.userAttrs))
+	ua := make(map[string]string, len(s.userAttrs))
 	for k := range s.userAttrs {
 		ua[k] = s.userAttrs[k]
 	}
@@ -307,9 +307,9 @@ func (s *InMemoryStorage) CreateNewTrialID(studyID int) (int, error) {
 		DatetimeStart:      time.Now(),
 		DatetimeComplete:   time.Time{},
 		Params:             make(map[string]interface{}, 8),
-		Distributions:      make(map[string]Distribution, 8),
-		UserAttrs:          make(map[string]interface{}, 8),
-		SystemAttrs:        make(map[string]interface{}, 8),
+		Distributions:      make(map[string]interface{}, 8),
+		UserAttrs:          make(map[string]string, 8),
+		SystemAttrs:        make(map[string]string, 8),
 		ParamsInIR:         make(map[string]float64, 8),
 	})
 	return trialID, nil
@@ -360,7 +360,7 @@ func (s *InMemoryStorage) SetTrialParam(
 	trialID int,
 	paramName string,
 	paramValueInternal float64,
-	distribution Distribution) error {
+	distribution interface{}) error {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -379,7 +379,11 @@ func (s *InMemoryStorage) SetTrialParam(
 	// Set param distribution
 	trial.Distributions[paramName] = distribution
 	trial.ParamsInIR[paramName] = paramValueInternal
-	trial.Params[paramName] = distribution.ToExternalRepr(paramValueInternal)
+	var err error
+	trial.Params[paramName], err = ToExternalRepresentation(distribution, paramValueInternal)
+	if err != nil {
+		return err
+	}
 
 	s.trials[trialID] = trial
 	return nil
@@ -406,7 +410,7 @@ func (s *InMemoryStorage) SetTrialState(trialID int, state TrialState) error {
 }
 
 // SetTrialUserAttr to store the value for the user.
-func (s *InMemoryStorage) SetTrialUserAttr(trialID int, key string, value interface{}) error {
+func (s *InMemoryStorage) SetTrialUserAttr(trialID int, key string, value string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -420,7 +424,7 @@ func (s *InMemoryStorage) SetTrialUserAttr(trialID int, key string, value interf
 }
 
 // SetTrialSystemAttr to store the value for the system.
-func (s *InMemoryStorage) SetTrialSystemAttr(trialID int, key string, value interface{}) error {
+func (s *InMemoryStorage) SetTrialSystemAttr(trialID int, key string, value string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -477,13 +481,13 @@ func (s *InMemoryStorage) GetTrialParams(trialID int) (map[string]interface{}, e
 }
 
 // GetTrialUserAttrs to restore the attributes for the user.
-func (s *InMemoryStorage) GetTrialUserAttrs(trialID int) (map[string]interface{}, error) {
+func (s *InMemoryStorage) GetTrialUserAttrs(trialID int) (map[string]string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	for _, t := range s.trials {
 		if t.ID == trialID {
-			n := make(map[string]interface{}, len(t.UserAttrs))
+			n := make(map[string]string, len(t.UserAttrs))
 			for k := range t.UserAttrs {
 				n[k] = t.UserAttrs[k]
 			}
@@ -494,13 +498,13 @@ func (s *InMemoryStorage) GetTrialUserAttrs(trialID int) (map[string]interface{}
 }
 
 // GetTrialSystemAttrs to restore the attributes for the system.
-func (s *InMemoryStorage) GetTrialSystemAttrs(trialID int) (map[string]interface{}, error) {
+func (s *InMemoryStorage) GetTrialSystemAttrs(trialID int) (map[string]string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	for _, t := range s.trials {
 		if t.ID == trialID {
-			n := make(map[string]interface{}, len(t.SystemAttrs))
+			n := make(map[string]string, len(t.SystemAttrs))
 			for k := range t.SystemAttrs {
 				n[k] = t.SystemAttrs[k]
 			}

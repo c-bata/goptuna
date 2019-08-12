@@ -180,7 +180,7 @@ func TestMemoryStorage_GetAllStudySummaries(t *testing.T) {
 		return
 	}
 
-	summaries, err := storage.GetAllStudySummaries(studyID)
+	summaries, err := storage.GetAllStudySummaries()
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
 		return
