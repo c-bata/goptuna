@@ -214,7 +214,7 @@ func (d *CategoricalDistribution) Contains(ir float64) bool {
 	return 0 <= index && index < len(d.Choices)
 }
 
-// ToExternalRepresentation converts internal representation to external representatoin
+// ToExternalRepresentation converts to external representation
 func ToExternalRepresentation(distribution interface{}, ir float64) (interface{}, error) {
 	switch d := distribution.(type) {
 	case UniformDistribution:

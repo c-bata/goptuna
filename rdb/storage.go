@@ -292,7 +292,7 @@ func (s *Storage) SetTrialParam(
 	trialID int,
 	paramName string,
 	paramValueInternal float64,
-	distribution goptuna.Distribution,
+	distribution interface{},
 ) error {
 	j, err := goptuna.DistributionToJSON(distribution)
 	if err != nil {

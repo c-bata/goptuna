@@ -31,7 +31,7 @@ type Storage interface {
 	SetTrialValue(trialID int, value float64) error
 	SetTrialIntermediateValue(trialID int, step int, value float64) error
 	SetTrialParam(trialID int, paramName string, paramValueInternal float64,
-		distribution Distribution) error
+		distribution interface{}) error
 	SetTrialState(trialID int, state TrialState) error
 	SetTrialUserAttr(trialID int, key string, value string) error
 	SetTrialSystemAttr(trialID int, key string, value string) error
@@ -360,7 +360,7 @@ func (s *InMemoryStorage) SetTrialParam(
 	trialID int,
 	paramName string,
 	paramValueInternal float64,
-	distribution Distribution) error {
+	distribution interface{}) error {
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -379,7 +379,11 @@ func (s *InMemoryStorage) SetTrialParam(
 	// Set param distribution
 	trial.Distributions[paramName] = distribution
 	trial.ParamsInIR[paramName] = paramValueInternal
-	trial.Params[paramName] = distribution.ToExternalRepr(paramValueInternal)
+	var err error
+	trial.Params[paramName], err = ToExternalRepresentation(distribution, paramValueInternal)
+	if err != nil {
+		return err
+	}
 
 	s.trials[trialID] = trial
 	return nil

@@ -47,28 +47,19 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 		return 0.0, err
 	}
 
-	var d Distribution
-	switch x := distribution.(type) {
-	case UniformDistribution:
-		d = &x
-	case IntUniformDistribution:
-		d = &x
-	case CategoricalDistribution:
-		d = &x
-	default:
-		return -1, ErrUnknownDistribution
-	}
-
 	if trial.Params == nil {
 		trial.Params = make(map[string]interface{}, 8)
 	}
-	trial.Params[name] = d.ToExternalRepr(v)
+	trial.Params[name], err = ToExternalRepresentation(distribution, v)
+	if err != nil {
+		return 0.0, err
+	}
 	if trial.ParamsInIR == nil {
 		trial.ParamsInIR = make(map[string]float64, 8)
 	}
 	trial.ParamsInIR[name] = v
 
-	err = t.Study.Storage.SetTrialParam(trial.ID, name, v, d)
+	err = t.Study.Storage.SetTrialParam(trial.ID, name, v, distribution)
 	return v, err
 }
 

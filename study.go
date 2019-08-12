@@ -177,13 +177,9 @@ func CreateStudy(
 	opts ...StudyOption,
 ) (*Study, error) {
 	storage := NewInMemoryStorage()
-	studyID, err := storage.CreateNewStudyID(name)
-	if err != nil {
-		return nil, err
-	}
 	sampler := NewRandomSearchSampler()
 	study := &Study{
-		ID:                 studyID,
+		ID:                 0,
 		Storage:            storage,
 		Sampler:            sampler,
 		Pruner:             nil,
@@ -197,6 +193,12 @@ func CreateStudy(
 			return nil, err
 		}
 	}
+
+	studyID, err := study.Storage.CreateNewStudyID(name)
+	if err != nil {
+		return nil, err
+	}
+	study.ID = studyID
 	return study, nil
 }
 
