@@ -1,6 +1,7 @@
 package rdb
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -36,11 +37,8 @@ func (s *Storage) CreateNewStudyID(name string) (int, error) {
 		Name:      name,
 		Direction: directionNotSet,
 	}
-	result := s.db.Create(study)
-	if result.Error != nil {
-		return -1, result.Error
-	}
-	return study.ID, nil
+	err := s.db.Create(study).Error
+	return study.ID, err
 }
 
 // SetStudyDirection sets study direction of the objective.
@@ -50,32 +48,28 @@ func (s *Storage) SetStudyDirection(studyID int, direction goptuna.StudyDirectio
 		d = directionMaximize
 	}
 
-	result := s.db.Model(&studyModel{}).Where("study_id = ?", studyID).Update("direction", d)
-	if result.Error != nil {
-		return result.Error
-	}
-
-	return nil
+	err := s.db.Model(&studyModel{}).
+		Where("study_id = ?", studyID).
+		Update("direction", d).Error
+	return err
 }
 
 // SetStudyUserAttr to store the value for the user.
 func (s *Storage) SetStudyUserAttr(studyID int, key string, value string) error {
-	result := s.db.Create(&studyUserAttributeModel{
+	return s.db.Create(&studyUserAttributeModel{
 		UserAttributeReferStudy: studyID,
 		Key:                     key,
 		ValueJSON:               value,
-	})
-	return result.Error
+	}).Error
 }
 
 // SetStudySystemAttr to store the value for the system.
 func (s *Storage) SetStudySystemAttr(studyID int, key string, value string) error {
-	result := s.db.Create(&studySystemAttributeModel{
+	return s.db.Create(&studySystemAttributeModel{
 		SystemAttributeReferStudy: studyID,
 		Key:                       key,
 		ValueJSON:                 value,
-	})
-	return result.Error
+	}).Error
 }
 
 // GetStudyIDFromName return the study id from study name.
@@ -98,9 +92,9 @@ func (s *Storage) GetStudyNameFromID(studyID int) (string, error) {
 // GetStudyUserAttrs to restore the attributes for the user.
 func (s *Storage) GetStudyUserAttrs(studyID int) (map[string]string, error) {
 	var attrs []studyUserAttributeModel
-	result := s.db.Find(&attrs, "study_id = ?", studyID)
-	if result.Error != nil {
-		return nil, result.Error
+	err := s.db.Find(&attrs, "study_id = ?", studyID).Error
+	if err != nil {
+		return nil, err
 	}
 
 	res := make(map[string]string, len(attrs))
@@ -113,9 +107,9 @@ func (s *Storage) GetStudyUserAttrs(studyID int) (map[string]string, error) {
 // GetStudySystemAttrs to restore the attributes for the system.
 func (s *Storage) GetStudySystemAttrs(studyID int) (map[string]string, error) {
 	var attrs []studySystemAttributeModel
-	result := s.db.Find(&attrs, "study_id = ?", studyID)
-	if result.Error != nil {
-		return nil, result.Error
+	err := s.db.Find(&attrs, "study_id = ?", studyID).Error
+	if err != nil {
+		return nil, err
 	}
 
 	res := make(map[string]string, len(attrs))
@@ -155,7 +149,7 @@ func (s *Storage) createNewTrialNumber(studyID int, trialID int) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	err = s.SetTrialSystemAttr(trialID, "_number", string(number))
+	err = s.SetTrialSystemAttr(trialID, "_number", strconv.Itoa(number))
 	return number, err
 }
 
@@ -194,42 +188,62 @@ func (s *Storage) SetTrialParam(
 
 // SetTrialState sets the state of trial.
 func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
-	panic("implement me")
+	xr, err := toStateInternalRepresentation(state)
+	if err != nil {
+		return err
+	}
+	err = s.db.Model(&trialModel{}).
+		Where("trial_id = ?", trialID).
+		Update("state", xr).Error
+	return err
 }
 
 // SetTrialUserAttr to store the value for the user.
 func (s *Storage) SetTrialUserAttr(trialID int, key string, value string) error {
-	result := s.db.Create(&trialUserAttributeModel{
+	return s.db.Create(&trialUserAttributeModel{
 		UserAttributeReferTrial: trialID,
 		Key:                     key,
 		ValueJSON:               value,
-	})
-	return result.Error
+	}).Error
 }
 
 // SetTrialSystemAttr to store the value for the system.
 func (s *Storage) SetTrialSystemAttr(trialID int, key string, value string) error {
-	result := s.db.Create(&trialSystemAttributeModel{
+	return s.db.Create(&trialSystemAttributeModel{
 		SystemAttributeReferTrial: trialID,
 		Key:                       key,
 		ValueJSON:                 value,
-	})
-	return result.Error
+	}).Error
 }
 
 // GetTrialNumberFromID returns the trial's number.
 func (s *Storage) GetTrialNumberFromID(trialID int) (int, error) {
-	panic("implement me")
+	var attr trialSystemAttributeModel
+	err := s.db.First(&attr, "trial_id = ? AND key = ?", trialID, "_number").Error
+	if err != nil {
+		return -1, err
+	}
+	number, err := strconv.Atoi(attr.ValueJSON)
+	return number, err
 }
 
 // GetTrialParam returns the internal parameter of the trial
 func (s *Storage) GetTrialParam(trialID int, paramName string) (float64, error) {
-	panic("implement me")
+	var param trialParamModel
+	err := s.db.First(&param, "trial_id = ? AND param_name = ?", trialID, paramName).Error
+	if err != nil {
+		return -1, err
+	}
+	return param.Value, nil
 }
 
 // GetTrialParams returns the external parameters in the trial
 func (s *Storage) GetTrialParams(trialID int) (map[string]interface{}, error) {
-	panic("implement me")
+	trial, err := s.GetTrial(trialID)
+	if err != nil {
+		return nil, err
+	}
+	return trial.Params, nil
 }
 
 // GetTrialUserAttrs to restore the attributes for the user.
@@ -306,8 +320,15 @@ func (s *Storage) GetStudyDirection(studyID int) (goptuna.StudyDirection, error)
 // GetTrial returns Trial.
 func (s *Storage) GetTrial(trialID int) (goptuna.FrozenTrial, error) {
 	var trial trialModel
-	var systemAttrs []trialSystemAttributeModel
-	var userAttrs []trialUserAttributeModel
-	s.db.Model(&trial).Related(&userAttrs).Related(&systemAttrs)
-	panic("implement me")
+	err := s.db.
+		Preload("UserAttributes").
+		Preload("SystemAttributes").
+		Preload("TrialParams").
+		Preload("TrialValues").
+		First(&trial, "trial_id = ?", trialID).Error
+	if err != nil {
+		return goptuna.FrozenTrial{}, err
+	}
+	ft, err := toFrozenTrial(trial)
+	return ft, err
 }

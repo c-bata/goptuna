@@ -94,6 +94,21 @@ func toStateExternalRepresentation(state int) (goptuna.TrialState, error) {
 	}
 }
 
+func toStateInternalRepresentation(state goptuna.TrialState) (int, error) {
+	switch state {
+	case goptuna.TrialStateRunning:
+		return trialStateRunning, nil
+	case goptuna.TrialStateComplete:
+		return trialStateComplete, nil
+	case goptuna.TrialStatePruned:
+		return trialStatePruned, nil
+	case goptuna.TrialStateFail:
+		return trialStateFail, nil
+	default:
+		return -1, errors.New("invalid trial state")
+	}
+}
+
 func toGoptunaStudyDirection(direction int) goptuna.StudyDirection {
 	switch direction {
 	case directionMaximize:

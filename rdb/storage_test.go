@@ -298,7 +298,62 @@ func TestStorage_GetAllTrials(t *testing.T) {
 	}
 
 	trials, err := storage.GetAllTrials(studyID)
-	for i := range trials {
-		t.Errorf("%#v\n", trials[i])
+	if len(trials) != 2 {
+		t.Errorf("want two trials, but got %d\n  Detail: %#v", len(trials), trials)
+		return
+	}
+}
+
+func TestStorage_GetTrial(t *testing.T) {
+	db, teardown, err := SetupSQLite3Test(t, "goptuna-test.db")
+	defer teardown()
+	if err != nil {
+		t.Errorf("failed to setup tests with %s", err)
+		return
+	}
+
+	storage := rdb.NewStorage(db)
+	studyID, err := storage.CreateNewStudyID("")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	trialID, err := storage.CreateNewTrialID(studyID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	err = storage.SetTrialSystemAttr(trialID, "key1", "value1")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	err = storage.SetTrialSystemAttr(trialID, "key2", "value2")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	err = storage.SetTrialSystemAttr(trialID, "key3", "value3")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	err = storage.SetTrialUserAttr(trialID, "key1", "value1")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	trial, err := storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	if trial.ID != trialID {
+		t.Errorf("want trialID = %d, but got %d", trialID, trial.ID)
 	}
 }
