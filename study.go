@@ -198,7 +198,47 @@ func CreateStudy(
 	if err != nil {
 		return nil, err
 	}
+	err = study.Storage.SetStudyDirection(studyID, study.direction)
+	if err != nil {
+		return nil, err
+	}
 	study.ID = studyID
+	return study, nil
+}
+
+// LoadStudy loads an existing study.
+func LoadStudy(
+	name string,
+	opts ...StudyOption,
+) (*Study, error) {
+	storage := NewInMemoryStorage()
+	sampler := NewRandomSearchSampler()
+	study := &Study{
+		ID:                 0,
+		Storage:            storage,
+		Sampler:            sampler,
+		Pruner:             nil,
+		direction:          "",
+		logger:             nil,
+		ignoreObjectiveErr: false,
+	}
+
+	for _, opt := range opts {
+		if err := opt(study); err != nil {
+			return nil, err
+		}
+	}
+
+	studyID, err := study.Storage.GetStudyIDFromName(name)
+	if err != nil {
+		return nil, err
+	}
+	study.ID = studyID
+	direction, err := study.Storage.GetStudyDirection(studyID)
+	if err != nil {
+		return nil, err
+	}
+	study.direction = direction
 	return study, nil
 }
 

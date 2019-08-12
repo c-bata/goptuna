@@ -4,3 +4,5 @@ vendor/
 
 *.sqlite3
 *.db
+
+venv/

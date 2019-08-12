@@ -3,6 +3,9 @@ package createstudy
 import (
 	"fmt"
 	"os"
+	"strings"
+
+	"github.com/c-bata/goptuna"
 
 	"github.com/c-bata/goptuna/internal/sqlalchemy"
 	"github.com/c-bata/goptuna/rdb"
@@ -55,6 +58,16 @@ func GetCommand() *cobra.Command {
 				os.Exit(1)
 			}
 
+			direction := goptuna.StudyDirectionMinimize
+			directionStr, err := cmd.Flags().GetString("direction")
+			if err != nil {
+				cmd.PrintErrln(err)
+				os.Exit(1)
+			}
+			if strings.ToLower(directionStr) == "maximize" {
+				direction = goptuna.StudyDirectionMaximize
+			}
+
 			storage := rdb.NewStorage(db)
 			studyID, err := storage.CreateNewStudyID(studyName)
 			if err != nil {
@@ -67,6 +80,12 @@ func GetCommand() *cobra.Command {
 				cmd.PrintErrln(err)
 				os.Exit(1)
 			}
+
+			err = storage.SetStudyDirection(studyID, direction)
+			if err != nil {
+				cmd.PrintErrln(err)
+				os.Exit(1)
+			}
 			fmt.Println(studyName)
 		},
 	}
@@ -75,6 +94,9 @@ func GetCommand() *cobra.Command {
 	command.Flags().StringP(
 		"study", "", "",
 		"A human-readable name of a study to distinguish it from others.")
+	command.Flags().StringP(
+		"direction", "", "minimize",
+		"Set study direction.")
 	// http://gorm.io/docs/migration.html
 	command.Flags().BoolP(
 		"without-migration", "", false,

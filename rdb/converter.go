@@ -104,7 +104,7 @@ func toStudySummary(study studyModel, bestTrial goptuna.FrozenTrial, start time.
 	}, nil
 }
 
-func toStateExternalRepresentation(state int) (goptuna.TrialState, error) {
+func toStateExternalRepresentation(state string) (goptuna.TrialState, error) {
 	switch state {
 	case trialStateRunning:
 		return goptuna.TrialStateRunning, nil
@@ -119,7 +119,7 @@ func toStateExternalRepresentation(state int) (goptuna.TrialState, error) {
 	}
 }
 
-func toStateInternalRepresentation(state goptuna.TrialState) (int, error) {
+func toStateInternalRepresentation(state goptuna.TrialState) (string, error) {
 	switch state {
 	case goptuna.TrialStateRunning:
 		return trialStateRunning, nil
@@ -130,11 +130,11 @@ func toStateInternalRepresentation(state goptuna.TrialState) (int, error) {
 	case goptuna.TrialStateFail:
 		return trialStateFail, nil
 	default:
-		return -1, errors.New("invalid trial state")
+		return "", errors.New("invalid trial state")
 	}
 }
 
-func toGoptunaStudyDirection(direction int) goptuna.StudyDirection {
+func toGoptunaStudyDirection(direction string) goptuna.StudyDirection {
 	switch direction {
 	case directionMaximize:
 		return goptuna.StudyDirectionMaximize

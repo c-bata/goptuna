@@ -37,11 +37,12 @@ func main() {
 	if err != nil {
 		logger.Fatal("failed to open db", zap.Error(err))
 	}
-	rdb.RunAutoMigrate(db)
+	storage := rdb.NewStorage(db)
+	defer db.Close()
 
-	study, err := goptuna.CreateStudy(
-		"goptuna-example",
-		goptuna.StudyOptionStorage(rdb.NewStorage(db)),
+	study, err := goptuna.LoadStudy(
+		"rdb",
+		goptuna.StudyOptionStorage(storage),
 		goptuna.StudyOptionSampler(tpe.NewSampler()),
 		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionSetLogger(logger),

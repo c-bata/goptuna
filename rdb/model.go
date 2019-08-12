@@ -7,16 +7,16 @@ import (
 )
 
 const (
-	directionNotSet   = 0
-	directionMinimize = 1
-	directionMaximize = 2
+	directionNotSet   = "NOT_SET"
+	directionMinimize = "MINIMIZE"
+	directionMaximize = "MAXIMIZE"
 )
 
 const (
-	trialStateRunning  = 0
-	trialStateComplete = 1
-	trialStatePruned   = 2
-	trialStateFail     = 3
+	trialStateRunning  = "RUNNING"
+	trialStateComplete = "COMPLETE"
+	trialStatePruned   = "PRUNED"
+	trialStateFail     = "FAIL"
 )
 
 // https://gorm.io/docs/models.html
@@ -24,7 +24,7 @@ const (
 type studyModel struct {
 	ID        int    `gorm:"column:study_id;PRIMARY_KEY"`
 	Name      string `gorm:"column:study_name;type:varchar(512);unique_index;NOT NULL"`
-	Direction int    `gorm:"column:direction;NOT NULL"`
+	Direction string `gorm:"column:direction;NOT NULL"`
 
 	// Associations
 	UserAttributes   []studyUserAttributeModel   `gorm:"foreignkey:UserAttributeReferStudy;association_foreignkey:ID"`
@@ -61,7 +61,7 @@ func (m studySystemAttributeModel) TableName() string {
 type trialModel struct {
 	ID               int        `gorm:"column:trial_id;PRIMARY_KEY"`
 	TrialReferStudy  int        `gorm:"column:study_id"`
-	State            int        `gorm:"column:state;NOT NULL"`
+	State            string     `gorm:"column:state;NOT NULL"`
 	Value            float64    `gorm:"column:value"`
 	DatetimeStart    *time.Time `gorm:"column:datetime_start"`
 	DatetimeComplete *time.Time `gorm:"column:datetime_complete"`
