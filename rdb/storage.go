@@ -252,7 +252,39 @@ func (s *Storage) SetTrialValue(trialID int, value float64) error {
 
 // SetTrialIntermediateValue sets the intermediate value of trial.
 func (s *Storage) SetTrialIntermediateValue(trialID int, step int, value float64) error {
-	panic("implement me")
+	tx := s.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	var trial trialModel
+	err := tx.First(&trial, "trial_id = ?", trialID).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	result := tx.First(&trialValueModel{}, "trial_id = ? AND step = ?", trialID, step)
+	if result.Error != nil && !result.RecordNotFound() {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Create(&trialValueModel{
+		TrialValueReferTrial: trialID,
+		Step:                 step,
+		Value:                value,
+	}).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
 }
 
 // SetTrialParam sets the sampled parameters of trial.

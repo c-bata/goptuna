@@ -478,3 +478,45 @@ func TestStorage_GetBestTrial(t *testing.T) {
 		t.Errorf("want Trial(Value=0.2, Number: 3), but got %#v", bestTrial)
 	}
 }
+
+func TestStorage_SetTrialIntermediateValue(t *testing.T) {
+	db, teardown, err := SetupSQLite3Test(t, "goptuna-test.db")
+	defer teardown()
+	if err != nil {
+		t.Errorf("failed to setup tests with %s", err)
+		return
+	}
+
+	storage := rdb.NewStorage(db)
+	studyID, err := storage.CreateNewStudyID("")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	// trial number 1 (not completed yet)
+	trialID, err := storage.CreateNewTrialID(studyID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	err = storage.SetTrialIntermediateValue(trialID, 1, 0.5)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	err = storage.SetTrialIntermediateValue(trialID, 3, 0.7)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	trial, err := storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	if len(trial.IntermediateValues) != 2 {
+		t.Errorf("want two intermediate vales, but got %#v", trial.IntermediateValues)
+	}
+}
