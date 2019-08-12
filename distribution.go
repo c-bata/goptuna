@@ -214,6 +214,24 @@ func (d *CategoricalDistribution) Contains(ir float64) bool {
 	return 0 <= index && index < len(d.Choices)
 }
 
+// ToExternalRepresentation converts internal representation to external representatoin
+func ToExternalRepresentation(distribution interface{}, ir float64) (interface{}, error) {
+	switch d := distribution.(type) {
+	case UniformDistribution:
+		return d.ToExternalRepr(ir), nil
+	case LogUniformDistribution:
+		return d.ToExternalRepr(ir), nil
+	case IntUniformDistribution:
+		return d.ToExternalRepr(ir), nil
+	case DiscreteUniformDistribution:
+		return d.ToExternalRepr(ir), nil
+	case CategoricalDistribution:
+		return d.ToExternalRepr(ir), nil
+	default:
+		return nil, ErrUnknownDistribution
+	}
+}
+
 // DistributionToJSON serialize a distribution to JSON format.
 func DistributionToJSON(distribution interface{}) ([]byte, error) {
 	var ir struct {

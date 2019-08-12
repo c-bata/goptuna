@@ -59,18 +59,18 @@ type StudySummary struct {
 
 // FrozenTrial holds the status and results of a Trial.
 type FrozenTrial struct {
-	ID                 int                     `json:"trial_id"`
-	StudyID            int                     `json:"study_id"`
-	Number             int                     `json:"number"`
-	State              TrialState              `json:"state"`
-	Value              float64                 `json:"value"`
-	IntermediateValues map[int]float64         `json:"intermediate_values"`
-	DatetimeStart      time.Time               `json:"datetime_start"`
-	DatetimeComplete   time.Time               `json:"datetime_complete"`
-	Params             map[string]interface{}  `json:"params"`
-	Distributions      map[string]Distribution `json:"distributions"`
-	UserAttrs          map[string]string       `json:"user_attrs"`
-	SystemAttrs        map[string]string       `json:"system_attrs"`
+	ID                 int                    `json:"trial_id"`
+	StudyID            int                    `json:"study_id"`
+	Number             int                    `json:"number"`
+	State              TrialState             `json:"state"`
+	Value              float64                `json:"value"`
+	IntermediateValues map[int]float64        `json:"intermediate_values"`
+	DatetimeStart      time.Time              `json:"datetime_start"`
+	DatetimeComplete   time.Time              `json:"datetime_complete"`
+	Params             map[string]interface{} `json:"params"`
+	Distributions      map[string]interface{} `json:"distributions"`
+	UserAttrs          map[string]string      `json:"user_attrs"`
+	SystemAttrs        map[string]string      `json:"system_attrs"`
 	// Note: ParamsInIR is private in Optuna.
 	// But we need to keep public because this is accessed by TPE sampler.
 	// It couldn't access internal attributes from the external packages.
@@ -307,7 +307,7 @@ func (s *InMemoryStorage) CreateNewTrialID(studyID int) (int, error) {
 		DatetimeStart:      time.Now(),
 		DatetimeComplete:   time.Time{},
 		Params:             make(map[string]interface{}, 8),
-		Distributions:      make(map[string]Distribution, 8),
+		Distributions:      make(map[string]interface{}, 8),
 		UserAttrs:          make(map[string]string, 8),
 		SystemAttrs:        make(map[string]string, 8),
 		ParamsInIR:         make(map[string]float64, 8),

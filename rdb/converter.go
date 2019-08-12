@@ -9,7 +9,7 @@ import (
 	"github.com/c-bata/goptuna"
 )
 
-func ToFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
+func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 	userAttrs := make(map[string]string, len(trial.UserAttributes))
 	for i := range trial.UserAttributes {
 		userAttrs[trial.UserAttributes[i].Key] = trial.UserAttributes[i].ValueJSON
@@ -18,6 +18,25 @@ func ToFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 	systemAttrs := make(map[string]string, len(trial.SystemAttributes))
 	for i := range trial.SystemAttributes {
 		systemAttrs[trial.SystemAttributes[i].Key] = trial.SystemAttributes[i].ValueJSON
+	}
+
+	paramsInIR := make(map[string]float64, len(trial.TrialParams))
+	distributions := make(map[string]interface{}, len(trial.TrialParams))
+	paramsInXR := make(map[string]interface{}, len(trial.TrialParams))
+	for i := range trial.TrialParams {
+		// paramsInIR
+		paramsInIR[trial.TrialParams[i].Name] = trial.TrialParams[i].Value
+		// distributions
+		d, err := goptuna.JSONToDistribution([]byte(trial.TrialParams[i].DistributionJSON))
+		if err != nil {
+			return goptuna.FrozenTrial{}, err
+		}
+		distributions[trial.TrialParams[i].Name] = d
+		// external representations
+		paramsInXR[trial.TrialParams[i].Name], err = goptuna.ToExternalRepresentation(d, trial.TrialParams[i].Value)
+		if err != nil {
+			return goptuna.FrozenTrial{}, err
+		}
 	}
 
 	numberStr, ok := systemAttrs["_number"]
@@ -42,7 +61,7 @@ func ToFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 		datetimeComplete = *trial.DatetimeComplete
 	}
 
-	// todo: convert all attributes
+	// todo: convert intermediate values
 	return goptuna.FrozenTrial{
 		ID:                 trial.ID,
 		StudyID:            trial.TrialReferStudy,
@@ -52,11 +71,11 @@ func ToFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 		IntermediateValues: nil,
 		DatetimeStart:      datetimeStart,
 		DatetimeComplete:   datetimeComplete,
-		Params:             nil,
-		Distributions:      nil,
+		Params:             paramsInXR,
+		Distributions:      distributions,
 		UserAttrs:          userAttrs,
 		SystemAttrs:        systemAttrs,
-		ParamsInIR:         nil,
+		ParamsInIR:         paramsInIR,
 	}, nil
 }
 

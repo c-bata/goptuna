@@ -170,9 +170,26 @@ func (s *Storage) SetTrialIntermediateValue(trialID int, step int, value float64
 }
 
 // SetTrialParam sets the sampled parameters of trial.
-func (s *Storage) SetTrialParam(trialID int, paramName string, paramValueInternal float64,
-	distribution goptuna.Distribution) error {
-	panic("implement me")
+func (s *Storage) SetTrialParam(
+	trialID int,
+	paramName string,
+	paramValueInternal float64,
+	distribution goptuna.Distribution,
+) error {
+	j, err := goptuna.DistributionToJSON(distribution)
+	if err != nil {
+		return err
+	}
+	err = s.db.Create(&trialParamModel{
+		TrialParamReferTrial: trialID,
+		Name:                 paramName,
+		Value:                paramValueInternal,
+		DistributionJSON:     string(j),
+	}).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // SetTrialState sets the state of trial.
@@ -267,7 +284,7 @@ func (s *Storage) GetAllTrials(studyID int) ([]goptuna.FrozenTrial, error) {
 
 	res := make([]goptuna.FrozenTrial, len(trials))
 	for i := range trials {
-		ft, err := ToFrozenTrial(trials[i])
+		ft, err := toFrozenTrial(trials[i])
 		if err != nil {
 			return nil, err
 		}
@@ -288,5 +305,9 @@ func (s *Storage) GetStudyDirection(studyID int) (goptuna.StudyDirection, error)
 
 // GetTrial returns Trial.
 func (s *Storage) GetTrial(trialID int) (goptuna.FrozenTrial, error) {
+	var trial trialModel
+	var systemAttrs []trialSystemAttributeModel
+	var userAttrs []trialUserAttributeModel
+	s.db.Model(&trial).Related(&userAttrs).Related(&systemAttrs)
 	panic("implement me")
 }
