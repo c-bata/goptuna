@@ -7,6 +7,8 @@ import (
 	"gonum.org/v1/gonum/floats"
 )
 
+// Multinomial draw samples from a multinomial distribution like numpy.random.multinomial.
+// See https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.multinomial.html
 func Multinomial(n int, pvals []float64, size int) [][]int {
 	result := make([][]int, size)
 	l := len(pvals)
@@ -32,6 +34,7 @@ func Multinomial(n int, pvals []float64, size int) [][]int {
 	return result
 }
 
+// ArgMaxMultinomial returns the index sampled by multinomial distribution with given probabilities.
 func ArgMaxMultinomial(pvals []float64) (int, error) {
 	x := make([]float64, len(pvals))
 	floats.CumSum(x, pvals)

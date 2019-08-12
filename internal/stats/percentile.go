@@ -5,6 +5,8 @@ import (
 	"sort"
 )
 
+// Percentile compute the q-th percentile of the data along the specified axis.
+// Like https://docs.scipy.org/doc/numpy/reference/generated/numpy.percentile.html
 func Percentile(a []float64, q float64) float64 {
 	// Caution: this modifies the order of given first argument.
 	length := len(a)
