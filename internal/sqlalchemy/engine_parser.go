@@ -6,10 +6,13 @@ import (
 )
 
 var (
+	// ErrInvalidDatabaseURL means invalid as a SQLAlchemy's Engine URL format.
 	ErrInvalidDatabaseURL = errors.New("invalid database url")
+	// ErrUnsupportedDialect means the given dialect is unsupported.
 	ErrUnsupportedDialect = errors.New("unsupported dialect")
 )
 
+// ParseDatabaseURL parse SQLAlchemy's Engine URL format and returns Go's dialect and args.
 func ParseDatabaseURL(url string) (dialect string, args []interface{}, err error) {
 	// https://docs.sqlalchemy.org/en/13/core/engines.html
 	// dialect+driver://username:password@host:port/database

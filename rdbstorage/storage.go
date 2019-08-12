@@ -30,14 +30,14 @@ func (s *Storage) CreateNewStudyID(name string) (int, error) {
 		}
 		name = goptuna.DefaultStudyNamePrefix + u.String()
 	}
-	result := s.db.Create(&StudyModel{
+	result := s.db.Create(&studyModel{
 		Name:      name,
-		Direction: DirectionNotSet,
+		Direction: directionNotSet,
 	})
 	if result.Error != nil {
 		return -1, result.Error
 	}
-	var study StudyModel
+	var study studyModel
 	result = s.db.First(&study, "study_name = ?", name)
 	if result.Error != nil {
 		return -1, result.Error
@@ -47,12 +47,12 @@ func (s *Storage) CreateNewStudyID(name string) (int, error) {
 
 // SetStudyDirection sets study direction of the objective.
 func (s *Storage) SetStudyDirection(studyID int, direction goptuna.StudyDirection) error {
-	d := DirectionMINIMIZE
+	d := directionMINIMIZE
 	if direction == goptuna.StudyDirectionMaximize {
-		d = DirectionMAXIMIZE
+		d = directionMAXIMIZE
 	}
 
-	result := s.db.Model(&StudyModel{}).Where("study_id = ?", studyID).Update("direction", d)
+	result := s.db.Model(&studyModel{}).Where("study_id = ?", studyID).Update("direction", d)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -82,7 +82,7 @@ func (s *Storage) GetStudyIDFromTrialID(trialID int) (int, error) {
 
 // GetStudyNameFromID return the study name from study id.
 func (s *Storage) GetStudyNameFromID(studyID int) (string, error) {
-	var study StudyModel
+	var study studyModel
 	s.db.First(&study, "study_id = ?", studyID)
 	return study.Name, nil
 }
@@ -175,16 +175,16 @@ func (s *Storage) GetAllTrials(studyID int) ([]goptuna.FrozenTrial, error) {
 
 // GetStudyDirection returns study direction of the objective.
 func (s *Storage) GetStudyDirection(studyID int) (goptuna.StudyDirection, error) {
-	var study StudyModel
+	var study studyModel
 	result := s.db.First(&study, "study_id = ?", studyID)
 	if result.Error != nil {
 		return goptuna.StudyDirectionMinimize, result.Error
 	}
 
 	switch study.Direction {
-	case DirectionMAXIMIZE:
+	case directionMAXIMIZE:
 		return goptuna.StudyDirectionMaximize, nil
-	case DirectionMINIMIZE:
+	case directionMINIMIZE:
 		return goptuna.StudyDirectionMinimize, nil
 	default:
 		return goptuna.StudyDirectionMinimize, nil
