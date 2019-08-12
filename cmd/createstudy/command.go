@@ -49,7 +49,7 @@ func GetCommand() *cobra.Command {
 				rdb.RunAutoMigrate(db)
 			}
 
-			studyName, err := cmd.Flags().GetString("study-name")
+			studyName, err := cmd.Flags().GetString("study")
 			if err != nil {
 				cmd.PrintErrln(err)
 				os.Exit(1)
@@ -73,7 +73,7 @@ func GetCommand() *cobra.Command {
 	command.Flags().StringP(
 		"storage", "", "", "DB URL specified in Engine Database URL format of SQLAlchemy (e.g. sqlite:///example.db). See https://docs.sqlalchemy.org/en/13/core/engines.html for more details.")
 	command.Flags().StringP(
-		"study-name", "", "",
+		"study", "", "",
 		"A human-readable name of a study to distinguish it from others.")
 	// http://gorm.io/docs/migration.html
 	command.Flags().BoolP(
