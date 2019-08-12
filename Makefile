@@ -46,6 +46,8 @@ generate: ## Run go generate
 
 .PHONY: build
 build: ## Build example command lines.
+	mkdir -p ./bin/
+	GO111MODULE=on go build -o ./bin/goptuna cmd/main.go
 	./_examples/build.sh
 
 .PHONY: help

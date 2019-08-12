@@ -9,11 +9,7 @@ import (
 
 var _ goptuna.Storage = &Storage{}
 
-func NewStorage() (*Storage, error) {
-	db, err := gorm.Open("sqlite3", "db.sqlite3")
-	if err != nil {
-		return nil, err
-	}
+func NewStorage(db *gorm.DB) (*Storage, error) {
 	return &Storage{
 		db: db,
 	}, nil
