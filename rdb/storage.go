@@ -74,12 +74,16 @@ func (s *Storage) SetStudySystemAttr(studyID int, key string, value string) erro
 
 // GetStudyIDFromName return the study id from study name.
 func (s *Storage) GetStudyIDFromName(name string) (int, error) {
-	panic("implement me")
+	var study studyModel
+	err := s.db.First(&study, "study_name = ?", name).Error
+	return study.ID, err
 }
 
 // GetStudyIDFromTrialID return the study id from trial id.
 func (s *Storage) GetStudyIDFromTrialID(trialID int) (int, error) {
-	panic("implement me")
+	var trial trialModel
+	err := s.db.First(&trial, "trial_id = ?", trialID).Error
+	return trial.TrialReferStudy, err
 }
 
 // GetStudyNameFromID return the study name from study id.
