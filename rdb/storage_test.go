@@ -341,6 +341,16 @@ func TestStorage_GetTrial(t *testing.T) {
 		t.Errorf("error: %v != nil", err)
 		return
 	}
+	err = storage.SetTrialValue(trialID, 0.1)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	err = storage.SetTrialState(trialID, goptuna.TrialStateComplete)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
 
 	err = storage.SetTrialUserAttr(trialID, "key1", "value1")
 	if err != nil {

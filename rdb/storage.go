@@ -213,7 +213,39 @@ func (s *Storage) createNewTrialNumber(studyID int, trialID int) (int, error) {
 
 // SetTrialValue sets the value of trial.
 func (s *Storage) SetTrialValue(trialID int, value float64) error {
-	panic("implement me")
+	tx := s.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	if tx.Error != nil {
+		return tx.Error
+	}
+	var trial trialModel
+	err := tx.First(&trial, "trial_id = ?", trialID).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	state, err := toStateExternalRepresentation(trial.State)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if state.IsFinished() {
+		tx.Rollback()
+		return goptuna.ErrTrialCannotBeUpdated
+	}
+
+	err = tx.Model(&trialModel{}).
+		Where("trial_id = ?", trialID).
+		Update("value", value).Error
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
 }
 
 // SetTrialIntermediateValue sets the intermediate value of trial.
