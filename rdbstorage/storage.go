@@ -66,7 +66,9 @@ func (s *Storage) GetStudyIDFromTrialID(trialID int) (int, error) {
 
 // GetStudyNameFromID return the study name from study id.
 func (s *Storage) GetStudyNameFromID(studyID int) (string, error) {
-	panic("implement me")
+	var study StudyModel
+	s.db.First(&study, "study_id = ?", studyID)
+	return study.Name, nil
 }
 
 // GetStudyUserAttrs to restore the attributes for the user.

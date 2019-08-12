@@ -15,7 +15,7 @@ func GetCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "create-study",
 		Short:   "Create a study in your relational database storage.",
-		Example: "  goptuna create-study --storage sqlite:///example.db --study-name test-study",
+		Example: "  goptuna create-study --storage sqlite:///example.db",
 		Run: func(cmd *cobra.Command, args []string) {
 			storageURL, err := cmd.Flags().GetString("storage")
 			if err != nil {
@@ -56,7 +56,13 @@ func GetCommand() *cobra.Command {
 			}
 
 			storage := rdbstorage.NewStorage(db)
-			_, err = storage.CreateNewStudyID(studyName)
+			studyID, err := storage.CreateNewStudyID(studyName)
+			if err != nil {
+				cmd.PrintErrln(err)
+				os.Exit(1)
+			}
+
+			studyName, err = storage.GetStudyNameFromID(studyID)
 			if err != nil {
 				cmd.PrintErrln(err)
 				os.Exit(1)
