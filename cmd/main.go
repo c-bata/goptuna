@@ -5,6 +5,8 @@ import (
 
 	"github.com/c-bata/goptuna/cmd/createstudy"
 	"github.com/spf13/cobra"
+
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 var rootCmd = &cobra.Command{

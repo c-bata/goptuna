@@ -24,7 +24,7 @@ lint: ## Run golint and go vet.
 
 .PHONY: test
 test:  ## Run tests with race condition checking.
-	@go test -race ./...
+	@GO111MODULE=on go test -race ./...
 
 .PHONY: bench
 bench:  ## Run benchmarks.

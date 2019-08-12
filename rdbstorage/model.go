@@ -2,6 +2,8 @@ package rdbstorage
 
 import (
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 const (
@@ -118,4 +120,18 @@ type TrialValueModel struct {
 
 func (m TrialValueModel) TableName() string {
 	return "trial_values"
+}
+
+// RunAutoMigrate runs Auto-Migration. This will ONLY create tables,
+// missing columns and missing indexes, and WON’T change existing
+// column’s type or delete unused columns to protect your data.
+func RunAutoMigrate(db *gorm.DB) {
+	db.AutoMigrate(&StudyModel{})
+	db.AutoMigrate(&StudyUserAttributeModel{})
+	db.AutoMigrate(&StudySystemAttributeModel{})
+	db.AutoMigrate(&TrialModel{})
+	db.AutoMigrate(&TrialUserAttributeModel{})
+	db.AutoMigrate(&TrialSystemAttributeModel{})
+	db.AutoMigrate(&TrialParamModel{})
+	db.AutoMigrate(&TrialValueModel{})
 }

@@ -9,16 +9,19 @@ import (
 
 var _ goptuna.Storage = &Storage{}
 
-func NewStorage(db *gorm.DB) (*Storage, error) {
+// NewStorage returns new RDB storage.
+func NewStorage(db *gorm.DB) *Storage {
 	return &Storage{
 		db: db,
-	}, nil
+	}
 }
 
+// Storage stores data in your relational databases.
 type Storage struct {
 	db *gorm.DB
 }
 
+// CreateNewStudyID creates study and returns studyID.
 func (s *Storage) CreateNewStudyID(name string) (int, error) {
 	if name == "" {
 		u, err := uuid.NewUUID()
@@ -36,103 +39,128 @@ func (s *Storage) CreateNewStudyID(name string) (int, error) {
 	return study.ID, nil
 }
 
+// SetStudyDirection sets study direction of the objective.
 func (s *Storage) SetStudyDirection(studyID int, direction goptuna.StudyDirection) error {
 	panic("implement me")
 }
 
-func (*Storage) SetStudyUserAttr(studyID int, key string, value interface{}) error {
+// SetStudyUserAttr to store the value for the user.
+func (s *Storage) SetStudyUserAttr(studyID int, key string, value interface{}) error {
 	panic("implement me")
 }
 
-func (*Storage) SetStudySystemAttr(studyID int, key string, value interface{}) error {
+// SetStudySystemAttr to store the value for the system.
+func (s *Storage) SetStudySystemAttr(studyID int, key string, value interface{}) error {
 	panic("implement me")
 }
 
-func (*Storage) GetStudyIDFromName(name string) (int, error) {
+// GetStudyIDFromName return the study id from study name.
+func (s *Storage) GetStudyIDFromName(name string) (int, error) {
 	panic("implement me")
 }
 
-func (*Storage) GetStudyIDFromTrialID(trialID int) (int, error) {
+// GetStudyIDFromTrialID return the study id from trial id.
+func (s *Storage) GetStudyIDFromTrialID(trialID int) (int, error) {
 	panic("implement me")
 }
 
-func (*Storage) GetStudyNameFromID(studyID int) (string, error) {
+// GetStudyNameFromID return the study name from study id.
+func (s *Storage) GetStudyNameFromID(studyID int) (string, error) {
 	panic("implement me")
 }
 
-func (*Storage) GetStudyDirection(studyID int) (goptuna.StudyDirection, error) {
+// GetStudyUserAttrs to restore the attributes for the user.
+func (s *Storage) GetStudyUserAttrs(studyID int) (map[string]interface{}, error) {
 	panic("implement me")
 }
 
-func (*Storage) GetStudyUserAttrs(studyID int) (map[string]interface{}, error) {
+// GetStudySystemAttrs to restore the attributes for the system.
+func (s *Storage) GetStudySystemAttrs(studyID int) (map[string]interface{}, error) {
 	panic("implement me")
 }
 
-func (*Storage) GetStudySystemAttrs(studyID int) (map[string]interface{}, error) {
+// GetAllStudySummaries returns all study summaries.
+func (s *Storage) GetAllStudySummaries(studyID int) ([]goptuna.StudySummary, error) {
 	panic("implement me")
 }
 
-func (*Storage) GetAllStudySummaries(studyID int) ([]goptuna.StudySummary, error) {
+// CreateNewTrialID creates trial and returns trialID.
+func (s *Storage) CreateNewTrialID(studyID int) (int, error) {
 	panic("implement me")
 }
 
-func (*Storage) CreateNewTrialID(studyID int) (int, error) {
+// SetTrialValue sets the value of trial.
+func (s *Storage) SetTrialValue(trialID int, value float64) error {
 	panic("implement me")
 }
 
-func (*Storage) SetTrialValue(trialID int, value float64) error {
+// SetTrialIntermediateValue sets the intermediate value of trial.
+func (s *Storage) SetTrialIntermediateValue(trialID int, step int, value float64) error {
 	panic("implement me")
 }
 
-func (*Storage) SetTrialIntermediateValue(trialID int, step int, value float64) error {
-	panic("implement me")
-}
-
-func (*Storage) SetTrialParam(trialID int, paramName string, paramValueInternal float64,
+// SetTrialParam sets the sampled parameters of trial.
+func (s *Storage) SetTrialParam(trialID int, paramName string, paramValueInternal float64,
 	distribution goptuna.Distribution) error {
 	panic("implement me")
 }
 
-func (*Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
+// SetTrialState sets the state of trial.
+func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 	panic("implement me")
 }
 
-func (*Storage) SetTrialUserAttr(trialID int, key string, value interface{}) error {
+// SetTrialUserAttr to store the value for the user.
+func (s *Storage) SetTrialUserAttr(trialID int, key string, value interface{}) error {
 	panic("implement me")
 }
 
-func (*Storage) SetTrialSystemAttr(trialID int, key string, value interface{}) error {
+// SetTrialSystemAttr to store the value for the system.
+func (s *Storage) SetTrialSystemAttr(trialID int, key string, value interface{}) error {
 	panic("implement me")
 }
 
-func (*Storage) GetTrialNumberFromID(trialID int) (int, error) {
+// GetTrialNumberFromID returns the trial's number.
+func (s *Storage) GetTrialNumberFromID(trialID int) (int, error) {
 	panic("implement me")
 }
 
-func (*Storage) GetTrialParam(trialID int, paramName string) (float64, error) {
+// GetTrialParam returns the internal parameter of the trial
+func (s *Storage) GetTrialParam(trialID int, paramName string) (float64, error) {
 	panic("implement me")
 }
 
-func (*Storage) GetTrial(trialID int) (goptuna.FrozenTrial, error) {
+// GetTrialParams returns the external parameters in the trial
+func (s *Storage) GetTrialParams(trialID int) (map[string]interface{}, error) {
 	panic("implement me")
 }
 
-func (*Storage) GetAllTrials(studyID int) ([]goptuna.FrozenTrial, error) {
+// GetTrialUserAttrs to restore the attributes for the user.
+func (s *Storage) GetTrialUserAttrs(trialID int) (map[string]interface{}, error) {
 	panic("implement me")
 }
 
-func (*Storage) GetBestTrial(studyID int) (goptuna.FrozenTrial, error) {
+// GetTrialSystemAttrs to restore the attributes for the system.
+func (s *Storage) GetTrialSystemAttrs(trialID int) (map[string]interface{}, error) {
 	panic("implement me")
 }
 
-func (*Storage) GetTrialParams(trialID int) (map[string]interface{}, error) {
+// GetBestTrial returns the best trial.
+func (s *Storage) GetBestTrial(studyID int) (goptuna.FrozenTrial, error) {
 	panic("implement me")
 }
 
-func (*Storage) GetTrialUserAttrs(trialID int) (map[string]interface{}, error) {
+// GetAllTrials returns the all trials.
+func (s *Storage) GetAllTrials(studyID int) ([]goptuna.FrozenTrial, error) {
 	panic("implement me")
 }
 
-func (*Storage) GetTrialSystemAttrs(trialID int) (map[string]interface{}, error) {
+// GetStudyDirection returns study direction of the objective.
+func (s *Storage) GetStudyDirection(studyID int) (goptuna.StudyDirection, error) {
+	panic("implement me")
+}
+
+// GetTrial returns Trial.
+func (s *Storage) GetTrial(trialID int) (goptuna.FrozenTrial, error) {
 	panic("implement me")
 }
