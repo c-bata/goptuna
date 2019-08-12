@@ -19,28 +19,28 @@ func GetCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			storageURL, err := cmd.Flags().GetString("storage")
 			if err != nil {
-				_, _ = fmt.Fprintln(os.Stderr, err)
+				cmd.PrintErrln(err)
 				os.Exit(1)
 			}
 			if storageURL == "" {
-				_, _ = fmt.Fprintln(os.Stderr, "Storage URL is specified neither in config file nor --storage option.")
+				cmd.PrintErrln("Storage URL is specified neither in config file nor --storage option.")
 				os.Exit(1)
 			}
 
 			dialect, dbargs, err := sqlalchemy.ParseDatabaseURL(storageURL)
 			if err != nil {
-				_, _ = fmt.Fprintln(os.Stderr, err)
+				cmd.PrintErrln(err)
 				os.Exit(1)
 			}
 
 			db, err := gorm.Open(dialect, dbargs...)
 			if err != nil {
-				_, _ = fmt.Fprintln(os.Stderr, err)
+				cmd.PrintErrln(err)
 				os.Exit(1)
 			}
 			storage, err := rdbstorage.NewStorage(db)
 			if err != nil {
-				_, _ = fmt.Fprintln(os.Stderr, err)
+				cmd.PrintErrln(err)
 				os.Exit(1)
 			}
 
@@ -55,12 +55,12 @@ func GetCommand() *cobra.Command {
 
 			studyName, err := cmd.Flags().GetString("study-name")
 			if err != nil {
-				_, _ = fmt.Fprintln(os.Stderr, err)
+				cmd.PrintErrln(err)
 				os.Exit(1)
 			}
 			_, err = storage.CreateNewStudyID(studyName)
 			if err != nil {
-				_, _ = fmt.Fprintln(os.Stderr, err)
+				cmd.PrintErrln(err)
 				os.Exit(1)
 			}
 			fmt.Println(studyName)

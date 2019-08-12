@@ -11,9 +11,6 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "goptuna",
 	Short: "A command line interface for Goptuna",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("I am root cmd.")
-	},
 }
 
 func main() {
