@@ -32,15 +32,11 @@ func (s *Storage) CreateNewStudyID(name string) (int, error) {
 		}
 		name = goptuna.DefaultStudyNamePrefix + u.String()
 	}
-	result := s.db.Create(&studyModel{
+	study := &studyModel{
 		Name:      name,
 		Direction: directionNotSet,
-	})
-	if result.Error != nil {
-		return -1, result.Error
 	}
-	var study studyModel
-	result = s.db.First(&study, "study_name = ?", name)
+	result := s.db.Create(study)
 	if result.Error != nil {
 		return -1, result.Error
 	}
