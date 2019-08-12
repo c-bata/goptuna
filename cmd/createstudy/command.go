@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/c-bata/goptuna/internal/sqlalchemy"
-	"github.com/c-bata/goptuna/rdbstorage"
+	"github.com/c-bata/goptuna/rdb"
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/cobra"
 )
@@ -46,7 +46,7 @@ func GetCommand() *cobra.Command {
 				os.Exit(1)
 			}
 			if !withoutMigrate {
-				rdbstorage.RunAutoMigrate(db)
+				rdb.RunAutoMigrate(db)
 			}
 
 			studyName, err := cmd.Flags().GetString("study-name")
@@ -55,7 +55,7 @@ func GetCommand() *cobra.Command {
 				os.Exit(1)
 			}
 
-			storage := rdbstorage.NewStorage(db)
+			storage := rdb.NewStorage(db)
 			studyID, err := storage.CreateNewStudyID(studyName)
 			if err != nil {
 				cmd.PrintErrln(err)

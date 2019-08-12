@@ -1,4 +1,4 @@
-package rdbstorage
+package rdb
 
 import (
 	"github.com/google/uuid"

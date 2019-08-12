@@ -1,4 +1,4 @@
-package rdbstorage_test
+package rdb_test
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/c-bata/goptuna"
 
-	"github.com/c-bata/goptuna/rdbstorage"
+	"github.com/c-bata/goptuna/rdb"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
@@ -17,7 +17,7 @@ func SetupSQLite3Test(t *testing.T, sqlitePath string) (*gorm.DB, func(), error)
 		t.Errorf("failed to setup sqlite3 with %s", err)
 		return nil, nil, err
 	}
-	rdbstorage.RunAutoMigrate(db)
+	rdb.RunAutoMigrate(db)
 	if db.Error != nil {
 		t.Errorf("failed to setup sqlite3 with %s", err)
 		return nil, nil, err
@@ -37,7 +37,7 @@ func TestStorage_CreateNewStudyID(t *testing.T) {
 		return
 	}
 
-	s := rdbstorage.NewStorage(db)
+	s := rdb.NewStorage(db)
 	got, err := s.CreateNewStudyID("study1")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
@@ -73,7 +73,7 @@ func TestStorage_StudyDirection(t *testing.T) {
 		return
 	}
 
-	s := rdbstorage.NewStorage(db)
+	s := rdb.NewStorage(db)
 	studyID, err := s.CreateNewStudyID("study")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
