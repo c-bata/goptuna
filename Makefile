@@ -28,12 +28,12 @@ test:  ## Run tests with race condition checking.
 
 .PHONY: bench
 bench:  ## Run benchmarks.
-	@go test -bench=. -run=- -benchmem ./...
+	@GO111MODULE=on go test -bench=. -run=- -benchmem ./...
 
 .PHONY: coverage
 cover:  ## Run the tests.
-	@go test -coverprofile=coverage.o ./...
-	@go tool cover -func=coverage.o
+	@GO111MODULE=on go test -coverprofile=coverage.o ./...
+	@GO111MODULE=on go tool cover -func=coverage.o
 
 .PHONY: godoc
 godoc: ## Run godoc http server
@@ -42,13 +42,13 @@ godoc: ## Run godoc http server
 
 .PHONY: generate
 generate: ## Run go generate
-	@go generate ./...
+	@GO111MODULE=on go generate ./...
 
 .PHONY: build
 build: ## Build example command lines.
 	mkdir -p ./bin/
 	GO111MODULE=on go build -o ./bin/goptuna cmd/main.go
-	./_examples/build.sh
+	GO111MODULE=on ./_examples/build.sh
 
 .PHONY: help
 help: ## Show help text
