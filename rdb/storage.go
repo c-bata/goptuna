@@ -61,12 +61,12 @@ func (s *Storage) SetStudyDirection(studyID int, direction goptuna.StudyDirectio
 }
 
 // SetStudyUserAttr to store the value for the user.
-func (s *Storage) SetStudyUserAttr(studyID int, key string, value interface{}) error {
+func (s *Storage) SetStudyUserAttr(studyID int, key string, value string) error {
 	panic("implement me")
 }
 
 // SetStudySystemAttr to store the value for the system.
-func (s *Storage) SetStudySystemAttr(studyID int, key string, value interface{}) error {
+func (s *Storage) SetStudySystemAttr(studyID int, key string, value string) error {
 	panic("implement me")
 }
 
@@ -88,12 +88,22 @@ func (s *Storage) GetStudyNameFromID(studyID int) (string, error) {
 }
 
 // GetStudyUserAttrs to restore the attributes for the user.
-func (s *Storage) GetStudyUserAttrs(studyID int) (map[string]interface{}, error) {
+func (s *Storage) GetStudyUserAttrs(studyID int) (map[string]string, error) {
+	var attrs []studyUserAttributeModel
+	result := s.db.Find(&attrs, "study_id = ?", studyID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	res := make(map[string]string, len(attrs))
+	for i := range attrs {
+		res[attrs[i].Key] = attrs[i].ValueJSON
+	}
 	panic("implement me")
 }
 
 // GetStudySystemAttrs to restore the attributes for the system.
-func (s *Storage) GetStudySystemAttrs(studyID int) (map[string]interface{}, error) {
+func (s *Storage) GetStudySystemAttrs(studyID int) (map[string]string, error) {
 	panic("implement me")
 }
 
@@ -129,12 +139,12 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 }
 
 // SetTrialUserAttr to store the value for the user.
-func (s *Storage) SetTrialUserAttr(trialID int, key string, value interface{}) error {
+func (s *Storage) SetTrialUserAttr(trialID int, key string, value string) error {
 	panic("implement me")
 }
 
 // SetTrialSystemAttr to store the value for the system.
-func (s *Storage) SetTrialSystemAttr(trialID int, key string, value interface{}) error {
+func (s *Storage) SetTrialSystemAttr(trialID int, key string, value string) error {
 	panic("implement me")
 }
 
@@ -154,12 +164,12 @@ func (s *Storage) GetTrialParams(trialID int) (map[string]interface{}, error) {
 }
 
 // GetTrialUserAttrs to restore the attributes for the user.
-func (s *Storage) GetTrialUserAttrs(trialID int) (map[string]interface{}, error) {
+func (s *Storage) GetTrialUserAttrs(trialID int) (map[string]string, error) {
 	panic("implement me")
 }
 
 // GetTrialSystemAttrs to restore the attributes for the system.
-func (s *Storage) GetTrialSystemAttrs(trialID int) (map[string]interface{}, error) {
+func (s *Storage) GetTrialSystemAttrs(trialID int) (map[string]string, error) {
 	panic("implement me")
 }
 
