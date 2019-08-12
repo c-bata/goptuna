@@ -1,7 +1,13 @@
+VERSION := $(shell git describe --tags --abbrev=0)
+REVISION := $(shell git rev-parse --short HEAD)
+LDFLAGS := -X 'main.version=$(VERSION)' \
+           -X 'main.revision=$(REVISION)'
+
 .DEFAULT_GOAL := help
 
 PKGS := $(shell go list ./...)
 SOURCES := $(shell find . -name "*.go" -not -name '*_test.go')
+ENV := GO111MODULE=on
 
 .PHONY: setup
 setup:  ## Setup for required tools.
@@ -14,41 +20,41 @@ setup:  ## Setup for required tools.
 
 .PHONY: fmt
 fmt: $(SOURCES) ## Formatting source codes.
-	@goimports -w $^
+	@$(GO) goimports -w $^
 
 .PHONY: lint
 lint: ## Run golint and go vet.
-	@golint -set_exit_status=1 $(PKGS)
-	@go vet $(PKGS)
-	@misspell $(SOURCES)
+	@$(ENV) golint -set_exit_status=1 $(PKGS)
+	@$(ENV) go vet $(PKGS)
+	@$(ENV) misspell $(SOURCES)
 
 .PHONY: test
 test:  ## Run tests with race condition checking.
-	@GO111MODULE=on go test -race ./...
+	@$(ENV) go test -race ./...
 
 .PHONY: bench
 bench:  ## Run benchmarks.
-	@GO111MODULE=on go test -bench=. -run=- -benchmem ./...
+	@$(ENV) go test -bench=. -run=- -benchmem ./...
 
 .PHONY: coverage
 cover:  ## Run the tests.
-	@GO111MODULE=on go test -coverprofile=coverage.o ./...
-	@GO111MODULE=on go tool cover -func=coverage.o
+	@$(ENV) go test -coverprofile=coverage.o ./...
+	@$(ENV) go tool cover -func=coverage.o
 
 .PHONY: godoc
 godoc: ## Run godoc http server
-	@echo "Please open http://localhost:6060/pkg/github.com/c-bata/goptuna/"
-	godoc -http=localhost:6060
+	@$(ENV) echo "Please open http://localhost:6060/pkg/github.com/c-bata/goptuna/"
+	$(ENV) godoc -http=localhost:6060
 
 .PHONY: generate
 generate: ## Run go generate
-	@GO111MODULE=on go generate ./...
+	@$(ENV) go generate ./...
 
 .PHONY: build
 build: ## Build example command lines.
 	mkdir -p ./bin/
-	GO111MODULE=on go build -o ./bin/goptuna cmd/main.go
-	GO111MODULE=on ./_examples/build.sh
+	$(ENV) go build -o ./bin/goptuna -ldflags "$(LDFLAGS)" cmd/main.go
+	$(ENV) ./_examples/build.sh
 
 .PHONY: help
 help: ## Show help text
