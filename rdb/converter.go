@@ -79,6 +79,27 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 	}, nil
 }
 
+func toStudySummary(study studyModel, bestTrial goptuna.FrozenTrial, start time.Time) (goptuna.StudySummary, error) {
+	userAttrs := make(map[string]string, len(study.UserAttributes))
+	for i := range study.UserAttributes {
+		userAttrs[study.UserAttributes[i].Key] = study.UserAttributes[i].ValueJSON
+	}
+
+	systemAttrs := make(map[string]string, len(study.SystemAttributes))
+	for i := range study.SystemAttributes {
+		systemAttrs[study.SystemAttributes[i].Key] = study.SystemAttributes[i].ValueJSON
+	}
+	return goptuna.StudySummary{
+		ID:            study.ID,
+		Name:          study.Name,
+		Direction:     toGoptunaStudyDirection(study.Direction),
+		BestTrial:     bestTrial,
+		UserAttrs:     userAttrs,
+		SystemAttrs:   systemAttrs,
+		DatetimeStart: start,
+	}, nil
+}
+
 func toStateExternalRepresentation(state int) (goptuna.TrialState, error) {
 	switch state {
 	case trialStateRunning:

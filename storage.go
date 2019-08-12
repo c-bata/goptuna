@@ -25,7 +25,7 @@ type Storage interface {
 	GetStudyDirection(studyID int) (StudyDirection, error)
 	GetStudyUserAttrs(studyID int) (map[string]string, error)
 	GetStudySystemAttrs(studyID int) (map[string]string, error)
-	GetAllStudySummaries(studyID int) ([]StudySummary, error)
+	GetAllStudySummaries() ([]StudySummary, error)
 	// Basic trial manipulation
 	CreateNewTrialID(studyID int) (int, error)
 	SetTrialValue(trialID int, value float64) error
@@ -223,7 +223,7 @@ func (s *InMemoryStorage) GetStudySystemAttrs(studyID int) (map[string]string, e
 }
 
 // GetAllStudySummaries returns all study summaries.
-func (s *InMemoryStorage) GetAllStudySummaries(studyID int) ([]StudySummary, error) {
+func (s *InMemoryStorage) GetAllStudySummaries() ([]StudySummary, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 

@@ -357,3 +357,44 @@ func TestStorage_GetTrial(t *testing.T) {
 		t.Errorf("want trialID = %d, but got %d", trialID, trial.ID)
 	}
 }
+
+func TestStorage_GetAllStudySummaries(t *testing.T) {
+	db, teardown, err := SetupSQLite3Test(t, "goptuna-test.db")
+	defer teardown()
+	if err != nil {
+		t.Errorf("failed to setup tests with %s", err)
+		return
+	}
+
+	storage := rdb.NewStorage(db)
+	studyID, err := storage.CreateNewStudyID("")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	err = storage.SetStudySystemAttr(studyID, "key1", "value1")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	err = storage.SetStudySystemAttr(studyID, "key2", "value2")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	err = storage.SetStudyUserAttr(studyID, "key1", "value1")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	studies, err := storage.GetAllStudySummaries()
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	if len(studies) != 1 || studies[0].ID != studyID {
+		t.Errorf("want studyID = %d, but got %#v", studyID, studies)
+	}
+}

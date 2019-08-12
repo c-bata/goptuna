@@ -124,8 +124,62 @@ func (s *Storage) GetStudySystemAttrs(studyID int) (map[string]string, error) {
 }
 
 // GetAllStudySummaries returns all study summaries.
-func (s *Storage) GetAllStudySummaries(studyID int) ([]goptuna.StudySummary, error) {
-	panic("implement me")
+func (s *Storage) GetAllStudySummaries() ([]goptuna.StudySummary, error) {
+	var err error
+	var studies []studyModel
+	err = s.db.
+		Preload("UserAttributes").
+		Preload("SystemAttributes").
+		Preload("Trials").
+		Find(&studies).Error
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]goptuna.StudySummary, len(studies))
+	for i, study := range studies {
+		var best *trialModel
+		var start *time.Time
+		for i := range study.Trials {
+			if best == nil {
+				best = &study.Trials[i]
+			}
+			if study.Direction == directionMaximize {
+				if best.Value < study.Trials[i].Value {
+					best = &study.Trials[i]
+				}
+			} else {
+				if best.Value > study.Trials[i].Value {
+					best = &study.Trials[i]
+				}
+			}
+
+			if start == nil {
+				start = study.Trials[i].DatetimeStart
+			}
+			if start.Unix() < study.Trials[i].DatetimeStart.Unix() {
+				start = study.Trials[i].DatetimeStart
+			}
+		}
+
+		var ft goptuna.FrozenTrial
+		if best != nil {
+			ft, err = s.GetTrial(best.ID)
+			if err != nil {
+				return nil, err
+			}
+		}
+		var studyStart time.Time
+		if start != nil {
+			studyStart = *start
+		}
+		ss, err := toStudySummary(studies[i], ft, studyStart)
+		if err != nil {
+			return nil, err
+		}
+		res[i] = ss
+	}
+	return res, nil
 }
 
 // CreateNewTrialID creates trial and returns trialID.
