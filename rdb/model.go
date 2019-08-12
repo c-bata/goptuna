@@ -8,8 +8,8 @@ import (
 
 const (
 	directionNotSet   = 0
-	directionMINIMIZE = 1
-	directionMAXIMIZE = 2
+	directionMinimize = 1
+	directionMaximize = 2
 )
 
 const (

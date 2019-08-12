@@ -45,9 +45,9 @@ func (s *Storage) CreateNewStudyID(name string) (int, error) {
 
 // SetStudyDirection sets study direction of the objective.
 func (s *Storage) SetStudyDirection(studyID int, direction goptuna.StudyDirection) error {
-	d := directionMINIMIZE
+	d := directionMinimize
 	if direction == goptuna.StudyDirectionMaximize {
-		d = directionMAXIMIZE
+		d = directionMaximize
 	}
 
 	result := s.db.Model(&studyModel{}).Where("study_id = ?", studyID).Update("direction", d)
@@ -150,8 +150,13 @@ func (s *Storage) CreateNewTrialID(studyID int) (int, error) {
 }
 
 func (s *Storage) createNewTrialNumber(studyID int, trialID int) (int, error) {
-	// todo: implement me
-	return -1, nil
+	var number int
+	err := s.db.Model(&trialSystemAttributeModel{}).Where("trial_id = ?", trialID).Count(&number).Error
+	if err != nil {
+		return -1, err
+	}
+	err = s.SetTrialSystemAttr(trialID, "_number", string(number))
+	return number, err
 }
 
 // SetTrialValue sets the value of trial.
@@ -247,25 +252,38 @@ func (s *Storage) GetBestTrial(studyID int) (goptuna.FrozenTrial, error) {
 
 // GetAllTrials returns the all trials.
 func (s *Storage) GetAllTrials(studyID int) ([]goptuna.FrozenTrial, error) {
-	panic("implement me")
+	var trials []trialModel
+
+	err := s.db.
+		Where("study_id = ?", studyID).
+		Preload("UserAttributes").
+		Preload("SystemAttributes").
+		Preload("TrialParams").
+		Preload("TrialValues").
+		Find(&trials).Error
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]goptuna.FrozenTrial, len(trials))
+	for i := range trials {
+		ft, err := ToFrozenTrial(trials[i])
+		if err != nil {
+			return nil, err
+		}
+		res[i] = ft
+	}
+	return res, nil
 }
 
 // GetStudyDirection returns study direction of the objective.
 func (s *Storage) GetStudyDirection(studyID int) (goptuna.StudyDirection, error) {
 	var study studyModel
-	result := s.db.First(&study, "study_id = ?", studyID)
-	if result.Error != nil {
-		return goptuna.StudyDirectionMinimize, result.Error
+	err := s.db.First(&study, "study_id = ?", studyID).Error
+	if err != nil {
+		return goptuna.StudyDirectionMinimize, err
 	}
-
-	switch study.Direction {
-	case directionMAXIMIZE:
-		return goptuna.StudyDirectionMaximize, nil
-	case directionMINIMIZE:
-		return goptuna.StudyDirectionMinimize, nil
-	default:
-		return goptuna.StudyDirectionMinimize, nil
-	}
+	return toGoptunaStudyDirection(study.Direction), nil
 }
 
 // GetTrial returns Trial.
