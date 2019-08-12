@@ -408,3 +408,73 @@ func TestStorage_GetAllStudySummaries(t *testing.T) {
 		t.Errorf("want studyID = %d, but got %#v", studyID, studies)
 	}
 }
+
+func TestStorage_GetBestTrial(t *testing.T) {
+	db, teardown, err := SetupSQLite3Test(t, "goptuna-test.db")
+	defer teardown()
+	if err != nil {
+		t.Errorf("failed to setup tests with %s", err)
+		return
+	}
+
+	storage := rdb.NewStorage(db)
+	studyID, err := storage.CreateNewStudyID("")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	// trial number 1 (not completed yet)
+	trialID, err := storage.CreateNewTrialID(studyID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	err = storage.SetTrialValue(trialID, 0.1)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	// trial number 2
+	trialID, err = storage.CreateNewTrialID(studyID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	err = storage.SetTrialValue(trialID, 0.3)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	err = storage.SetTrialState(trialID, goptuna.TrialStateComplete)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	// trial number 3
+	trialID, err = storage.CreateNewTrialID(studyID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	err = storage.SetTrialValue(trialID, 0.2)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	err = storage.SetTrialState(trialID, goptuna.TrialStateComplete)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	bestTrial, err := storage.GetBestTrial(studyID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	if bestTrial.Value == 0.2 && bestTrial.Number != 3 {
+		t.Errorf("want Trial(Value=0.2, Number: 3), but got %#v", bestTrial)
+	}
+}

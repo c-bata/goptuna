@@ -141,16 +141,18 @@ func (s *Storage) GetAllStudySummaries() ([]goptuna.StudySummary, error) {
 		var best *trialModel
 		var start *time.Time
 		for i := range study.Trials {
-			if best == nil {
-				best = &study.Trials[i]
-			}
-			if study.Direction == directionMaximize {
-				if best.Value < study.Trials[i].Value {
+			if study.Trials[i].State == trialStateComplete {
+				if best == nil {
 					best = &study.Trials[i]
 				}
-			} else {
-				if best.Value > study.Trials[i].Value {
-					best = &study.Trials[i]
+				if study.Direction == directionMaximize {
+					if best.Value < study.Trials[i].Value {
+						best = &study.Trials[i]
+					}
+				} else {
+					if best.Value > study.Trials[i].Value {
+						best = &study.Trials[i]
+					}
 				}
 			}
 
@@ -203,7 +205,7 @@ func (s *Storage) CreateNewTrialID(studyID int) (int, error) {
 
 func (s *Storage) createNewTrialNumber(studyID int, trialID int) (int, error) {
 	var number int
-	err := s.db.Model(&trialSystemAttributeModel{}).Where("trial_id = ?", trialID).Count(&number).Error
+	err := s.db.Model(&trialModel{}).Where("study_id = ?", studyID).Count(&number).Error
 	if err != nil {
 		return -1, err
 	}
@@ -368,7 +370,46 @@ func (s *Storage) GetTrialSystemAttrs(trialID int) (map[string]string, error) {
 
 // GetBestTrial returns the best trial.
 func (s *Storage) GetBestTrial(studyID int) (goptuna.FrozenTrial, error) {
-	panic("implement me")
+	var err error
+	var study studyModel
+	err = s.db.
+		Preload("Trials").
+		First(&study, "study_id = ?", studyID).Error
+	if err != nil {
+		return goptuna.FrozenTrial{}, err
+	}
+
+	if len(study.Trials) == 0 {
+		return goptuna.FrozenTrial{}, nil
+	}
+
+	var best *trialModel
+	for i := range study.Trials {
+		if study.Trials[i].State != trialStateComplete {
+			continue
+		}
+
+		if best == nil {
+			best = &study.Trials[i]
+		}
+		if study.Direction == directionMaximize {
+			if best.Value < study.Trials[i].Value {
+				best = &study.Trials[i]
+			}
+		} else {
+			if best.Value > study.Trials[i].Value {
+				best = &study.Trials[i]
+			}
+		}
+	}
+	var ft goptuna.FrozenTrial
+	if best != nil {
+		ft, err = s.GetTrial(best.ID)
+		if err != nil {
+			return goptuna.FrozenTrial{}, err
+		}
+	}
+	return ft, err
 }
 
 // GetAllTrials returns the all trials.
