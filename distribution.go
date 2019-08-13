@@ -232,6 +232,24 @@ func ToExternalRepresentation(distribution interface{}, ir float64) (interface{}
 	}
 }
 
+// ToInternalRepresentation converts to internal representation
+func ToInternalRepresentation(distribution interface{}, xr interface{}) (float64, error) {
+	switch d := distribution.(type) {
+	case UniformDistribution:
+		return d.ToInternalRepr(xr), nil
+	case LogUniformDistribution:
+		return d.ToInternalRepr(xr), nil
+	case IntUniformDistribution:
+		return d.ToInternalRepr(xr), nil
+	case DiscreteUniformDistribution:
+		return d.ToInternalRepr(xr), nil
+	case CategoricalDistribution:
+		return d.ToInternalRepr(xr), nil
+	default:
+		return -1, ErrUnknownDistribution
+	}
+}
+
 // DistributionToJSON serialize a distribution to JSON format.
 func DistributionToJSON(distribution interface{}) ([]byte, error) {
 	var ir struct {

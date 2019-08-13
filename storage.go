@@ -71,11 +71,6 @@ type FrozenTrial struct {
 	Distributions      map[string]interface{} `json:"distributions"`
 	UserAttrs          map[string]string      `json:"user_attrs"`
 	SystemAttrs        map[string]string      `json:"system_attrs"`
-	// Note: ParamsInIR is private in Optuna.
-	// But we need to keep public because this is accessed by TPE sampler.
-	// It couldn't access internal attributes from the external packages.
-	// https://github.com/pfnet/optuna/pull/462
-	ParamsInIR map[string]float64 `json:"params_in_internal_repr"`
 }
 
 var _ Storage = &InMemoryStorage{}
@@ -310,7 +305,6 @@ func (s *InMemoryStorage) CreateNewTrialID(studyID int) (int, error) {
 		Distributions:      make(map[string]interface{}, 8),
 		UserAttrs:          make(map[string]string, 8),
 		SystemAttrs:        make(map[string]string, 8),
-		ParamsInIR:         make(map[string]float64, 8),
 	})
 	return trialID, nil
 }
@@ -378,7 +372,6 @@ func (s *InMemoryStorage) SetTrialParam(
 
 	// Set param distribution
 	trial.Distributions[paramName] = distribution
-	trial.ParamsInIR[paramName] = paramValueInternal
 	var err error
 	trial.Params[paramName], err = ToExternalRepresentation(distribution, paramValueInternal)
 	if err != nil {
@@ -457,11 +450,16 @@ func (s *InMemoryStorage) GetTrialParam(trialID int, paramName string) (float64,
 
 	for i := range s.trials {
 		if s.trials[i].ID == trialID {
-			paramIR, ok := s.trials[i].ParamsInIR[paramName]
+			xr, ok := s.trials[i].Params[paramName]
 			if !ok {
 				return -1.0, errors.New("param doesn't exist")
 			}
-			return paramIR, nil
+			d, ok := s.trials[i].Distributions[paramName]
+			if !ok {
+				return -1.0, errors.New("distribution doesn't exist")
+			}
+			ir, err := ToInternalRepresentation(d, xr)
+			return ir, err
 		}
 	}
 	return -1, ErrInvalidTrialID
