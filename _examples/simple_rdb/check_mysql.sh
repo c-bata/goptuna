@@ -30,21 +30,22 @@ echo "DATABASES:"
 mysql --host 127.0.0.1 --port 3306 --user goptuna -ppassword -e "SHOW DATABASES;"
 
 
-go run ${REPOSITORY_ROOT}/cmd/main.go create-study --storage mysql://goptuna:password@localhost:3306/goptuna --study rdb
+go run ${REPOSITORY_ROOT}/cmd/main.go create-study --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/goptuna --study rdb
 
 echo "TABLES:"
 mysql --host 127.0.0.1 --port 3306 --user goptuna -ppassword -e "SHOW TABLES FROM goptuna;"
 
-go run ${DIR}/main.go mysql "goptuna:password@tcp(localhost:3306)/goptuna"
+go run ${DIR}/main.go mysql "goptuna:password@tcp(localhost:3306)/goptuna?parseTime=true"
 
 if [ -d ./venv ]; then
     source venv/bin/activate
+    pip install mysqlclient
 else
     python3.7 -m venv venv
     source venv/bin/activate
-    pip install optuna bokeh
+    pip install optuna bokeh mysqlclient
 fi
 
-optuna dashboard --storage mysql://goptuna:password@localhost:3306/goptuna --study rdb
+optuna dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/goptuna --study rdb
 
 docker stop goptuna-mysql

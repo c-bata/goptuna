@@ -46,6 +46,8 @@ func main() {
 	if err != nil {
 		logger.Fatal("failed to open db", zap.Error(err))
 	}
+	db.LogMode(true)
+
 	storage := rdb.NewStorage(db)
 	defer db.Close()
 
