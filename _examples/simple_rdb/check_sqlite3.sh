@@ -9,7 +9,7 @@ rm db.sqlite3
 set -e
 
 go run ${REPOSITORY_ROOT}/cmd/main.go create-study --storage sqlite:///db.sqlite3 --study rdb
-go run ${DIR}/main.go
+go run ${DIR}/main.go sqlite3 db.sqlite3
 
 if [ -d ./venv ]; then
     source venv/bin/activate

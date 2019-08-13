@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"math"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"go.uber.org/zap"
 
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
@@ -33,10 +35,19 @@ func main() {
 	}
 	defer logger.Sync()
 
-	db, err := gorm.Open("sqlite3", "db.sqlite3")
+	flag.Parse()
+	if len(flag.Args()) == 0 {
+		logger.Fatal("please pass dialect and dsn")
+	}
+	dialect := flag.Arg(0)
+	dsn := flag.Arg(1)
+
+	db, err := gorm.Open(dialect, dsn)
 	if err != nil {
 		logger.Fatal("failed to open db", zap.Error(err))
 	}
+	db.LogMode(true)
+
 	storage := rdb.NewStorage(db)
 	defer db.Close()
 

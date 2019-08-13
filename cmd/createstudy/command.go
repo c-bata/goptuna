@@ -30,7 +30,7 @@ func GetCommand() *cobra.Command {
 				os.Exit(1)
 			}
 
-			dialect, dbargs, err := sqlalchemy.ParseDatabaseURL(storageURL)
+			dialect, dbargs, err := sqlalchemy.ParseDatabaseURL(storageURL, nil)
 			if err != nil {
 				cmd.PrintErrln(err)
 				os.Exit(1)

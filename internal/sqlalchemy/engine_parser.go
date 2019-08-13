@@ -14,8 +14,13 @@ var (
 	ErrUnsupportedDialect = errors.New("unsupported dialect")
 )
 
+// EngineOption to set the DSN option
+type EngineOption struct {
+	ParseTime bool
+}
+
 // ParseDatabaseURL parse SQLAlchemy's Engine URL format and returns Go's dialect and args.
-func ParseDatabaseURL(url string) (string, []interface{}, error) {
+func ParseDatabaseURL(url string, opt *EngineOption) (string, []interface{}, error) {
 	// https://docs.sqlalchemy.org/en/13/core/engines.html
 	// dialect+driver://username:password@host:port/database
 	x := strings.SplitN(url, "://", 2)
@@ -41,7 +46,7 @@ func ParseDatabaseURL(url string) (string, []interface{}, error) {
 		dbargs, err = parseSQLiteArgs(x[1])
 	case "mysql":
 		godialect = "mysql"
-		dbargs, err = parseMySQLArgs(pydriver, x[1])
+		dbargs, err = parseMySQLArgs(pydriver, x[1], opt)
 	default:
 		return "", nil, ErrUnsupportedDialect
 	}
@@ -59,7 +64,7 @@ func parseSQLiteArgs(pyargs string) ([]interface{}, error) {
 	}, nil
 }
 
-func parseMySQLArgs(pydriver string, pyargs string) ([]interface{}, error) {
+func parseMySQLArgs(pydriver string, pyargs string, opt *EngineOption) ([]interface{}, error) {
 	var godsn string
 	var username, password string
 	var database string
@@ -120,6 +125,12 @@ func parseMySQLArgs(pydriver string, pyargs string) ([]interface{}, error) {
 			godsn = fmt.Sprintf("%s:%s@", username, password) + godsn
 		} else {
 			godsn = fmt.Sprintf("%s@", username) + godsn
+		}
+	}
+
+	if opt != nil {
+		if opt.ParseTime {
+			godsn += "?parseTime=true"
 		}
 	}
 
