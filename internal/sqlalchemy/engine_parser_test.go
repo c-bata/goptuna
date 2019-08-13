@@ -9,12 +9,16 @@ import (
 
 func TestParseDatabaseURL(t *testing.T) {
 	tests := []struct {
-		name        string
-		url         string
+		name   string
+		url    string
+		option *sqlalchemy.EngineOption
+
+		// Go DSN (Data Source Name)
+		// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
 		wantDialect string
 		wantArgs    []interface{}
 	}{
-		// Python Engine URL format.
+		// SQLiet3
 		// sqlite://<nohostname>/<path>
 		{
 			name:        "sqlite3 simple",
@@ -32,8 +36,7 @@ func TestParseDatabaseURL(t *testing.T) {
 				"db.sqlite3",
 			},
 		},
-		// Go DSN (Data Source Name)
-		// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
+		// MySQL
 		{
 			name:        "mysql",
 			url:         "mysql://scott:tiger@localhost/foo",
@@ -58,10 +61,21 @@ func TestParseDatabaseURL(t *testing.T) {
 				"username:password@unix(/var/lib/mysql/mysql.sock)/foo",
 			},
 		},
+		{
+			name: "mysql (with parsetime option)",
+			url:  "mysql+mysqldb://user:pass@localhost:6000/bar",
+			option: &sqlalchemy.EngineOption{
+				ParseTime: true,
+			},
+			wantDialect: "mysql",
+			wantArgs: []interface{}{
+				"user:pass@tcp(localhost:6000)/bar?parseTime=true",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotDialect, gotArgs, err := sqlalchemy.ParseDatabaseURL(tt.url)
+			gotDialect, gotArgs, err := sqlalchemy.ParseDatabaseURL(tt.url, tt.option)
 			if err != nil {
 				t.Errorf("ParseDatabaseURL() err = %s, want nil", err)
 			}
