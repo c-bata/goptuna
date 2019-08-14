@@ -69,34 +69,43 @@ func (s *Study) runTrial(objective FuncObjective) error {
 	}
 	evaluation, objerr := objective(trial)
 	if objerr != nil {
-		var state = TrialStateFail
+		var state TrialState
 		if objerr == ErrTrialPruned {
 			state = TrialStatePruned
 			if s.logger != nil {
-				s.logger.Error("Pruned trial")
+				s.logger.Info("Trial pruned", zap.Int("trialID", trialID))
 			}
 		} else {
+			state = TrialStateFail
 			if s.logger != nil {
-				s.logger.Error("Failed trial", zap.Error(objerr))
+				s.logger.Error("Trial failed", zap.Int("trialID", trialID), zap.Error(objerr))
 			}
 		}
-		saveerr := s.Storage.SetTrialState(trialID, state)
-		if saveerr != nil {
-			return saveerr
+
+		if err := s.Storage.SetTrialState(trialID, state); err != nil {
+			return err
 		}
 
-		if objerr != ErrTrialPruned && !s.ignoreObjectiveErr {
-			return fmt.Errorf("objective: %s", objerr)
+		if objerr == ErrTrialPruned {
+			return nil
 		}
+
+		if !s.ignoreObjectiveErr {
+			return objerr
+		}
+
 		return nil
 	}
 
 	if err = s.Storage.SetTrialValue(trialID, evaluation); err != nil {
+		_ = s.Storage.SetTrialState(trialID, TrialStateFail)
 		return err
 	}
 	if err = s.Report(trialID, evaluation); err != nil {
+		_ = s.Storage.SetTrialState(trialID, TrialStateFail)
 		return err
 	}
+
 	if err = s.Storage.SetTrialState(trialID, TrialStateComplete); err != nil {
 		return err
 	}
