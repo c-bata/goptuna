@@ -1,0 +1,49 @@
+name: Goptuna
+on:
+  pull_request:
+    branches:
+    - master
+jobs:
+  lint:
+    name: Lint checking on Ubuntu
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set up Go 1.12
+      uses: actions/setup-go@v1
+      with:
+        version: 1.12
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@master
+
+    - name: Running golangci-lint
+      env:
+        GO111MODULE: on
+        GOPATH: /home/runner/work/
+      run: |
+        go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+        $GOPATH/bin/golangci-lint run --no-config --disable-all --enable=goimports --enable=gocyclo --enable=govet --enable=misspell --enable=golint ./...
+
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+
+    steps:
+    - name: Set up Go 1.12
+      uses: actions/setup-go@v1
+      with:
+        version: 1.12
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@master
+
+    - name: Running go tests
+      env:
+        GO111MODULE: on
+      run: go test -race ./...
