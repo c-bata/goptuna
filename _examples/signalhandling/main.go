@@ -27,7 +27,6 @@ func objective(trial goptuna.Trial) (float64, error) {
 	cmd := exec.CommandContext(ctx, "sleep", "1")
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println("hooked?", trial.ID)
 		return -1, err
 	}
 	return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
