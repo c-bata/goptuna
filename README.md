@@ -101,6 +101,85 @@ func main() {
 
 <details>
 
+<summary>Distributed optimization using RDB storage backend with MySQL</summary>
+
+There is no complicated setup for distributed optimization but all Goptuna workers need to use same RDB storage backend.
+First, setup MySQL server like following to share the optimization result.
+
+```console
+$ cat mysql/my.cnf
+[mysqld]
+bind-address = 0.0.0.0
+default_authentication_plugin=mysql_native_password
+
+$ docker pull mysql:8.0
+$ docker run \
+  -d \
+  --rm \
+  -p 3306:3306 \
+  --mount type=volume,src=mysql,dst=/etc/mysql/conf.d \
+  -e MYSQL_USER=goptuna \
+  -e MYSQL_DATABASE=goptuna \
+  -e MYSQL_PASSWORD=password \
+  -e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
+  --name goptuna-mysql \
+  mysql:8.0
+```
+
+Then, create a study object using goptuna CLI
+
+```console
+$ goptuna create-study --storage mysql://goptuna:password@localhost:3306/yourdb --study yourstudy
+yourstudy
+```
+
+```mysql
+$ mysql --host 127.0.0.1 --port 3306 --user goptuna -ppassword -e "SELECT * FROM studies;"
++----------+------------+-----------+
+| study_id | study_name | direction |
++----------+------------+-----------+
+|        1 | yourstudy  | MINIMIZE  |
++----------+------------+-----------+
+1 row in set (0.00 sec)
+```
+
+Finally, run the Goptuna workers which contains following code.
+
+```go
+package main
+
+import ...
+
+func main() {
+    db, _ := gorm.Open(dialect, dsn)
+	storage := rdb.NewStorage(db)
+	defer db.Close()
+
+	study, _ := goptuna.LoadStudy(
+		"yourstudy",
+		goptuna.StudyOptionStorage(storage),
+		...,
+	)
+	_ = study.Optimize(objective, 50)
+    ...
+}
+```
+
+The schema of Goptuna RDB storage backend is compatible with Optuna's one.
+So you can check optimization result with Optuna's dashboard like following:
+
+```console
+$ pip install optuna bokeh mysqlclient
+$ optuna dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/goptuna --study rdb
+...
+```
+
+[shell script to reproduce this](./_examples/simple_rdb/check_mysql.sh)
+
+</details>
+
+<details>
+
 <summary>Receive notifications of each trials</summary>
 
 You can receive notifications of each trials via channel.
