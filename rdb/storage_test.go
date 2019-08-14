@@ -304,6 +304,72 @@ func TestStorage_GetAllTrials(t *testing.T) {
 	}
 }
 
+func TestStorage_SetTrialState(t *testing.T) {
+	db, teardown, err := SetupSQLite3Test(t, "goptuna-test.db")
+	defer teardown()
+	if err != nil {
+		t.Errorf("failed to setup tests with %s", err)
+		return
+	}
+
+	storage := rdb.NewStorage(db)
+	studyID, err := storage.CreateNewStudyID("")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+
+	trialID, err := storage.CreateNewTrialID(studyID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	err = storage.SetTrialValue(trialID, 0.1)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	trial, err := storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	before := trial.DatetimeComplete
+
+	err = storage.SetTrialState(trialID, goptuna.TrialStateRunning)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	trial, err = storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	after := trial.DatetimeComplete
+	if before.Unix() != after.Unix() {
+		t.Errorf("DatetimeComplete should not be updated, but changed: %s to %s",
+			before.String(), after.String())
+		return
+	}
+
+	err = storage.SetTrialState(trialID, goptuna.TrialStateComplete)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	trial, err = storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	after = trial.DatetimeComplete
+	if before.Unix() == after.Unix() {
+		t.Errorf("DatetimeComplete should be updated, but got %s", after.String())
+		return
+	}
+}
+
 func TestStorage_GetTrial(t *testing.T) {
 	db, teardown, err := SetupSQLite3Test(t, "goptuna-test.db")
 	defer teardown()
