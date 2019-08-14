@@ -152,3 +152,13 @@ func (t *Trial) SetUserAttr(key, value string) error {
 func (t *Trial) SetSystemAttr(key, value string) error {
 	return t.Study.Storage.SetTrialSystemAttr(t.ID, key, value)
 }
+
+// GetUserAttrs to store the value for the user.
+func (t *Trial) GetUserAttrs(key string) (map[string]string, error) {
+	return t.Study.Storage.GetStudyUserAttrs(t.ID)
+}
+
+// GetSystemAttrs to store the value for the system.
+func (t *Trial) GetSystemAttrs(key string) (map[string]string, error) {
+	return t.Study.Storage.GetStudySystemAttrs(t.ID)
+}
