@@ -182,12 +182,12 @@ func (s *Study) SetSystemAttr(key, value string) error {
 }
 
 // GetUserAttrs to store the value for the user.
-func (s *Study) GetUserAttrs(key string) (map[string]string, error) {
+func (s *Study) GetUserAttrs() (map[string]string, error) {
 	return s.Storage.GetStudyUserAttrs(s.ID)
 }
 
 // GetSystemAttrs to store the value for the system.
-func (s *Study) GetSystemAttrs(key string) (map[string]string, error) {
+func (s *Study) GetSystemAttrs() (map[string]string, error) {
 	return s.Storage.GetStudySystemAttrs(s.ID)
 }
 

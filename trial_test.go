@@ -3,6 +3,7 @@ package goptuna_test
 import (
 	"fmt"
 	"math"
+	"testing"
 
 	"github.com/c-bata/goptuna"
 )
@@ -116,4 +117,82 @@ func ExampleTrial_SuggestDiscreteUniform() {
 	}
 	// Output:
 	// sampled: 2.100000, 8.900000
+}
+
+func TestTrial_UserAttrs(t *testing.T) {
+	study, _ := goptuna.CreateStudy(
+		"example",
+		goptuna.StudyOptionStorage(goptuna.NewInMemoryStorage()),
+		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
+		goptuna.StudyOptionSampler(goptuna.NewRandomSearchSampler()),
+	)
+	trialID, err := study.Storage.CreateNewTrialID(study.ID)
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+		return
+	}
+	trial := goptuna.Trial{
+		Study: study,
+		ID:    trialID,
+	}
+
+	err = trial.SetUserAttr("hello", "world")
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+		return
+	}
+
+	attrs, err := trial.GetUserAttrs()
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+		return
+	}
+
+	hello, ok := attrs["hello"]
+	if !ok {
+		t.Errorf("'hello' doesn't exist in %#v", attrs)
+		return
+	}
+	if hello != "world" {
+		t.Errorf("should be 'world', but got '%s'", hello)
+	}
+}
+
+func TestTrial_SystemAttrs(t *testing.T) {
+	study, _ := goptuna.CreateStudy(
+		"example",
+		goptuna.StudyOptionStorage(goptuna.NewInMemoryStorage()),
+		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
+		goptuna.StudyOptionSampler(goptuna.NewRandomSearchSampler()),
+	)
+	trialID, err := study.Storage.CreateNewTrialID(study.ID)
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+		return
+	}
+	trial := goptuna.Trial{
+		Study: study,
+		ID:    trialID,
+	}
+
+	err = trial.SetSystemAttr("hello", "world")
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+		return
+	}
+
+	attrs, err := trial.GetSystemAttrs()
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+		return
+	}
+
+	hello, ok := attrs["hello"]
+	if !ok {
+		t.Errorf("'hello' doesn't exist in %#v", attrs)
+		return
+	}
+	if hello != "world" {
+		t.Errorf("should be 'world', but got '%s'", hello)
+	}
 }
