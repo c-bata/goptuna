@@ -144,7 +144,11 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 		if s.ctx != nil {
 			select {
 			case <-s.ctx.Done():
-				return s.ctx.Err()
+				err := s.ctx.Err()
+				if err != nil && s.logger != nil {
+					s.logger.Debug("context is canceled", zap.Error(err))
+				}
+				return err
 			default:
 				// do nothing
 			}
