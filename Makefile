@@ -23,7 +23,7 @@ fmt: $(SOURCES) ## Formatting source codes.
 
 .PHONY: lint
 lint: ## Run golint and go vet.
-	@$(ENV) golangci-lint run --no-config --disable-all --enable=gocyclo --enable=govet --enable=misspell --enable=golint ./...
+	@$(ENV) golangci-lint run --no-config --disable-all --enable=goimports --enable=gocyclo --enable=govet --enable=misspell --enable=golint ./...
 
 .PHONY: test
 test:  ## Run tests with race condition checking.
