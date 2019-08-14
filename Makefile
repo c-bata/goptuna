@@ -11,11 +11,10 @@ ENV := GO111MODULE=on
 
 .PHONY: setup
 setup:  ## Setup for required tools.
-	go get -u golang.org/x/lint/golint
 	go get -u golang.org/x/tools/cmd/goimports
-	go get -u github.com/client9/misspell/cmd/misspell
 	go get -u golang.org/x/tools/cmd/stringer
 	go get golang.org/x/tools/cmd/godoc
+	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 
 
 .PHONY: fmt
@@ -24,9 +23,7 @@ fmt: $(SOURCES) ## Formatting source codes.
 
 .PHONY: lint
 lint: ## Run golint and go vet.
-	@$(ENV) golint -set_exit_status=1 $(PKGS)
-	@$(ENV) go vet $(PKGS)
-	@$(ENV) misspell $(SOURCES)
+	@$(ENV) golangci-lint run --no-config --disable-all --enable=gocyclo --enable=govet --enable=misspell --enable=golint ./...
 
 .PHONY: test
 test:  ## Run tests with race condition checking.
