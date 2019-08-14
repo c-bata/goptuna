@@ -2,7 +2,6 @@ package goptuna
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"go.uber.org/zap"
@@ -57,52 +56,70 @@ func (s *Study) WithContext(ctx context.Context) {
 	s.ctx = ctx
 }
 
-func (s *Study) runTrial(objective FuncObjective) (int, error) {
+func (s *Study) runTrial(objective FuncObjective) error {
 	trialID, err := s.Storage.CreateNewTrialID(s.ID)
 	if err != nil {
-		return -1, err
+		return err
 	}
 
 	trial := Trial{
 		Study: s,
 		ID:    trialID,
 	}
+
+	var state TrialState
 	evaluation, objerr := objective(trial)
-	if objerr != nil {
-		var state = TrialStateFail
-		if objerr == ErrTrialPruned {
-			state = TrialStatePruned
-		}
-		saveerr := s.Storage.SetTrialState(trialID, state)
-		if saveerr != nil {
-			return trialID, saveerr
-		}
-
-		if objerr != ErrTrialPruned && !s.ignoreObjectiveErr {
-			return trialID, fmt.Errorf("objective: %s", objerr)
-		}
-		return trialID, nil
+	if objerr == ErrTrialPruned {
+		state = TrialStatePruned
+	} else if objerr != nil {
+		state = TrialStateFail
+	} else {
+		state = TrialStateComplete
 	}
 
-	if err = s.Storage.SetTrialValue(trialID, evaluation); err != nil {
-		return trialID, err
+	if s.logger != nil {
+		s.logger.Info("Trial finished",
+			zap.Int("trialID", trialID),
+			zap.String("state", state.String()),
+			zap.Float64("evaluationValue", evaluation),
+			zap.Error(objerr))
 	}
-	if err = s.Report(trialID, evaluation); err != nil {
-		return trialID, err
+
+	if state == TrialStateComplete {
+		err = s.Storage.SetTrialValue(trialID, evaluation)
+		if err != nil && s.logger != nil {
+			s.logger.Error("Failed to set trial value",
+				zap.Int("trialID", trialID),
+				zap.Float64("evaluationValue", evaluation),
+				zap.Error(err))
+		}
 	}
-	if err = s.Storage.SetTrialState(trialID, TrialStateComplete); err != nil {
-		return trialID, err
+
+	err = s.Storage.SetTrialState(trialID, state)
+	if err != nil {
+		if s.logger != nil {
+			s.logger.Error("Failed to set trial state",
+				zap.Int("trialID", trialID),
+				zap.String("state", state.String()),
+				zap.Error(err))
+		}
+		return err
 	}
-	return trialID, nil
+
+	err = s.notifyFinishedTrial(trialID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *Study) notifyFinishedTrial(trialID int) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if s.trialNotifyChan == nil && s.logger == nil {
+	if s.trialNotifyChan == nil {
 		return nil
 	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	trial, err := s.Storage.GetTrial(trialID)
 	if err != nil {
@@ -111,13 +128,6 @@ func (s *Study) notifyFinishedTrial(trialID int) error {
 
 	if s.trialNotifyChan != nil {
 		s.trialNotifyChan <- trial
-	}
-	if s.logger != nil {
-		s.logger.Info("Finished trial",
-			zap.Int("trialID", trialID),
-			zap.String("state", trial.State.String()),
-			zap.Float64("value", trial.Value),
-			zap.String("params", fmt.Sprintf("%v", trial.Params)))
 	}
 	return nil
 }
@@ -139,14 +149,7 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 				// do nothing
 			}
 		}
-
-		trialID, err := s.runTrial(objective)
-		if err != nil {
-			return err
-		}
-
-		err = s.notifyFinishedTrial(trialID)
-		if err != nil {
+		if err := s.runTrial(objective); err != nil {
 			return err
 		}
 	}
