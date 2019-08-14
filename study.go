@@ -171,6 +171,16 @@ func (s *Study) GetBestParams() (map[string]interface{}, error) {
 	return trial.Params, nil
 }
 
+// SetUserAttr to store the value for the user.
+func (s *Study) SetUserAttr(key, value string) error {
+	return s.Storage.SetTrialUserAttr(s.ID, key, value)
+}
+
+// SetSystemAttr to store the value for the system.
+func (s *Study) SetSystemAttr(key, value string) error {
+	return s.Storage.SetTrialSystemAttr(s.ID, key, value)
+}
+
 // CreateStudy creates a new Study object.
 func CreateStudy(
 	name string,
