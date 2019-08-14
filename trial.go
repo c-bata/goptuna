@@ -1,6 +1,9 @@
 package goptuna
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 //go:generate stringer -trimprefix TrialState -output stringer_trial_state.go -type=TrialState
 
@@ -161,4 +164,9 @@ func (t *Trial) GetUserAttrs() (map[string]string, error) {
 // GetSystemAttrs to store the value for the system.
 func (t *Trial) GetSystemAttrs() (map[string]string, error) {
 	return t.Study.Storage.GetTrialSystemAttrs(t.ID)
+}
+
+// GetContext returns a context which is registered at 'study.WithContext()'.
+func (t *Trial) GetContext() context.Context {
+	return t.Study.ctx
 }
