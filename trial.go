@@ -142,3 +142,23 @@ func (t *Trial) SuggestCategorical(name string, choices []string) (string, error
 	})
 	return choices[int(v)], err
 }
+
+// SetUserAttr to store the value for the user.
+func (t *Trial) SetUserAttr(key, value string) error {
+	return t.Study.Storage.SetTrialUserAttr(t.ID, key, value)
+}
+
+// SetSystemAttr to store the value for the system.
+func (t *Trial) SetSystemAttr(key, value string) error {
+	return t.Study.Storage.SetTrialSystemAttr(t.ID, key, value)
+}
+
+// GetUserAttrs to store the value for the user.
+func (t *Trial) GetUserAttrs() (map[string]string, error) {
+	return t.Study.Storage.GetTrialUserAttrs(t.ID)
+}
+
+// GetSystemAttrs to store the value for the system.
+func (t *Trial) GetSystemAttrs() (map[string]string, error) {
+	return t.Study.Storage.GetTrialSystemAttrs(t.ID)
+}

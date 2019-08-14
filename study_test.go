@@ -3,6 +3,7 @@ package goptuna_test
 import (
 	"fmt"
 	"math"
+	"testing"
 
 	"github.com/c-bata/goptuna"
 )
@@ -36,4 +37,62 @@ func ExampleStudy_Optimize() {
 	// Best trial: 0.03833
 	// x1: 2.182
 	// x2: -4.927
+}
+
+func TestStudy_SystemAttrs(t *testing.T) {
+	study, _ := goptuna.CreateStudy(
+		"example",
+		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
+		goptuna.StudyOptionSampler(goptuna.NewRandomSearchSampler()),
+	)
+
+	err := study.SetSystemAttr("hello", "world")
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+		return
+	}
+
+	attrs, err := study.GetSystemAttrs()
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+		return
+	}
+
+	hello, ok := attrs["hello"]
+	if !ok {
+		t.Errorf("'hello' doesn't exist")
+		return
+	}
+	if hello != "world" {
+		t.Errorf("should be 'world', but got '%s'", hello)
+	}
+}
+
+func TestStudy_UserAttrs(t *testing.T) {
+	study, _ := goptuna.CreateStudy(
+		"example",
+		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
+		goptuna.StudyOptionSampler(goptuna.NewRandomSearchSampler()),
+	)
+
+	err := study.SetUserAttr("hello", "world")
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+		return
+	}
+
+	attrs, err := study.GetUserAttrs()
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+		return
+	}
+
+	hello, ok := attrs["hello"]
+	if !ok {
+		t.Errorf("'hello' doesn't exist")
+		return
+	}
+	if hello != "world" {
+		t.Errorf("should be 'world', but got '%s'", hello)
+	}
 }
