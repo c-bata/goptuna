@@ -104,11 +104,19 @@ func (t *Trial) Number() (int, error) {
 	return t.Study.Storage.GetTrialNumberFromID(t.ID)
 }
 
-// SuggestUniform suggests a value for the continuous parameter.
+// SuggestUniform suggests a value from a uniform distribution.
 func (t *Trial) SuggestUniform(name string, low, high float64) (float64, error) {
 	return t.suggest(name, UniformDistribution{
 		High: high, Low: low,
 	})
+}
+
+// SuggestLogUniform suggests a value from a uniform distribution in the log domain.
+func (t *Trial) SuggestLogUniform(name string, low, high float64) (float64, error) {
+	v, err := t.suggest(name, LogUniformDistribution{
+		High: high, Low: low,
+	})
+	return v, err
 }
 
 // SuggestInt suggests an integer parameter.
@@ -117,6 +125,14 @@ func (t *Trial) SuggestInt(name string, low, high int) (int, error) {
 		High: high, Low: low,
 	})
 	return int(v), err
+}
+
+// SuggestDiscreteUniform suggests a value from a discrete uniform distribution.
+func (t *Trial) SuggestDiscreteUniform(name string, low, high, q float64) (float64, error) {
+	v, err := t.suggest(name, DiscreteUniformDistribution{
+		High: high, Low: low, Q: q,
+	})
+	return v, err
 }
 
 // SuggestCategorical suggests an categorical parameter.
