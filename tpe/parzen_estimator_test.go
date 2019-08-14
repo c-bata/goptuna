@@ -161,7 +161,7 @@ func TestNewParzenEstimatorShapeCheck(t *testing.T) {
 			actual := len(estimator.Weights)
 			expected := len(tt.args.mus)
 			if tt.args.params.ConsiderPrior {
-				expected += 1
+				expected++
 			}
 			if actual != expected {
 				t.Errorf("length of NewParzenEstimator().Weights = %d, want %v", actual, expected)
