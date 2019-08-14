@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/c-bata/goptuna"
@@ -46,24 +47,7 @@ func main() {
 	defer db.Close()
 	rdb.RunAutoMigrate(db)
 
-	// create a context with cancel function
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// handle signal
-	signalch := make(chan os.Signal, 1)
-	defer close(signalch)
-	signal.Notify(signalch, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-	go func() {
-		sig, ok := <-signalch
-		if !ok {
-			return
-		}
-		logger.Error("Catch a kill signal",
-			zap.String("signal", sig.String()))
-		cancel()
-	}()
-
+	// create a study
 	study, err := goptuna.CreateStudy(
 		"goptuna-example",
 		goptuna.StudyOptionStorage(rdb.NewStorage(db)),
@@ -73,9 +57,34 @@ func main() {
 	if err != nil {
 		logger.Fatal("failed to create study", zap.Error(err))
 	}
+
+	// create a context with cancel function
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	study.WithContext(ctx)
 
-	err = study.Optimize(objective, 10)
+	// set signal handler
+	signalch := make(chan os.Signal, 1)
+	defer close(signalch)
+	signal.Notify(signalch, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+	// run optimize with context
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		sig, ok := <-signalch
+		if !ok {
+			return
+		}
+		cancel()
+		logger.Error("Catch a kill signal", zap.String("signal", sig.String()))
+	}()
+	go func() {
+		defer wg.Done()
+		err = study.Optimize(objective, 10)
+	}()
+	wg.Wait()
 	if err != nil {
 		logger.Fatal("got error while run optimize", zap.Error(err))
 	}
