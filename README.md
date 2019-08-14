@@ -103,7 +103,7 @@ func main() {
 
 <summary>Distributed optimization using RDB storage backend with MySQL</summary>
 
-There is no complicated setup for distributed optimization but all Goptuna workers need to use same RDB storage backend.
+There is no complicated setup for distributed optimization but all Goptuna workers need to use the same RDB storage backend.
 First, setup MySQL server like following to share the optimization result.
 
 ```console
@@ -151,7 +151,7 @@ package main
 import ...
 
 func main() {
-    db, _ := gorm.Open(dialect, dsn)
+    db, _ := gorm.Open("mysql", "goptuna:password@tcp(localhost:3306)/yourdb?parseTime=true")
 	storage := rdb.NewStorage(db)
 	defer db.Close()
 
@@ -170,7 +170,7 @@ So you can check optimization result with Optuna's dashboard like following:
 
 ```console
 $ pip install optuna bokeh mysqlclient
-$ optuna dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/goptuna --study rdb
+$ optuna dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/yourdb --study yourstudy
 ...
 ```
 
