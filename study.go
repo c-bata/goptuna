@@ -57,10 +57,10 @@ func (s *Study) WithContext(ctx context.Context) {
 	s.ctx = ctx
 }
 
-func (s *Study) runTrial(objective FuncObjective) (int, error) {
+func (s *Study) runTrial(objective FuncObjective) error {
 	trialID, err := s.Storage.CreateNewTrialID(s.ID)
 	if err != nil {
-		return -1, err
+		return err
 	}
 
 	trial := Trial{
@@ -72,28 +72,39 @@ func (s *Study) runTrial(objective FuncObjective) (int, error) {
 		var state = TrialStateFail
 		if objerr == ErrTrialPruned {
 			state = TrialStatePruned
+			if s.logger != nil {
+				s.logger.Error("Pruned trial")
+			}
+		} else {
+			if s.logger != nil {
+				s.logger.Error("Failed trial", zap.Error(objerr))
+			}
 		}
 		saveerr := s.Storage.SetTrialState(trialID, state)
 		if saveerr != nil {
-			return trialID, saveerr
+			return saveerr
 		}
 
 		if objerr != ErrTrialPruned && !s.ignoreObjectiveErr {
-			return trialID, fmt.Errorf("objective: %s", objerr)
+			return fmt.Errorf("objective: %s", objerr)
 		}
-		return trialID, nil
+		return nil
 	}
 
 	if err = s.Storage.SetTrialValue(trialID, evaluation); err != nil {
-		return trialID, err
+		return err
 	}
 	if err = s.Report(trialID, evaluation); err != nil {
-		return trialID, err
+		return err
 	}
 	if err = s.Storage.SetTrialState(trialID, TrialStateComplete); err != nil {
-		return trialID, err
+		return err
 	}
-	return trialID, nil
+
+	if err = s.notifyFinishedTrial(trialID); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *Study) notifyFinishedTrial(trialID int) error {
@@ -139,14 +150,7 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 				// do nothing
 			}
 		}
-
-		trialID, err := s.runTrial(objective)
-		if err != nil {
-			return err
-		}
-
-		err = s.notifyFinishedTrial(trialID)
-		if err != nil {
+		if err := s.runTrial(objective); err != nil {
 			return err
 		}
 	}
