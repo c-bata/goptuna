@@ -416,7 +416,11 @@ func (s *Storage) GetTrialNumberFromID(trialID int) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	number, err := strconv.Atoi(attr.ValueJSON)
+	v, err := decodeAttrFromJSON(attr.ValueJSON)
+	if err != nil {
+		return -1, err
+	}
+	number, err := strconv.Atoi(v)
 	return number, err
 }
 
