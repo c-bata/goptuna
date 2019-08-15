@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"runtime"
 	"sync"
 	"syscall"
 
@@ -44,6 +45,7 @@ func main() {
 		logger.Fatal("failed to open db", zap.Error(err))
 	}
 	defer db.Close()
+	db.DB().SetMaxOpenConns(1)
 	rdb.RunAutoMigrate(db)
 
 	// create a study
@@ -54,7 +56,7 @@ func main() {
 		goptuna.StudyOptionSetLogger(logger),
 	)
 	if err != nil {
-		logger.Fatal("failed to create study", zap.Error(err))
+		logger.Fatal("Failed to create a study", zap.Error(err))
 	}
 
 	// create a context with cancel function
@@ -63,31 +65,39 @@ func main() {
 	study.WithContext(ctx)
 
 	// set signal handler
-	signalch := make(chan os.Signal, 1)
-	defer close(signalch)
-	signal.Notify(signalch, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	sigch := make(chan os.Signal, 1)
+	defer close(sigch)
+	signal.Notify(sigch, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	// run optimize with context
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		sig, ok := <-signalch
+		sig, ok := <-sigch
 		if !ok {
 			return
 		}
 		cancel()
 		logger.Error("Catch a kill signal", zap.String("signal", sig.String()))
 	}()
-	go func() {
-		defer wg.Done()
-		err = study.Optimize(objective, 10)
-	}()
-	wg.Wait()
-	if err != nil {
-		logger.Fatal("got error while run optimize", zap.Error(err))
-	}
 
+	// run optimize with multiple goroutine workers
+	concurrency := runtime.NumCPU() - 1
+	for i := 0; i < concurrency; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err = study.Optimize(objective, 100/concurrency)
+			if err != nil {
+				logger.Error("Optimize error", zap.Error(err))
+			}
+		}()
+	}
+	wg.Wait()
+
+	// print best hyper-parameters and the result
 	v, _ := study.GetBestValue()
-	fmt.Println("Best evaluation value:", v)
+	params, _ := study.GetBestParams()
+	logger.Info("result", zap.Float64("value", v),
+		zap.String("params", fmt.Sprintf("%#v", params)))
 }
