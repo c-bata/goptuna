@@ -6,7 +6,9 @@ REPOSITORY_ROOT=$(cd $(dirname $(dirname $(dirname $0))); pwd)
 
 rm db.sqlite3
 
-gtimeout 6 go run ${DIR}/main.go sqlite3 db.sqlite3  # brew install coreutils
+gtimeout 6 go run ${DIR}/main.go # brew install coreutils
+
+sleep 0.5
 
 echo ""
 echo "*** check trials ***"
