@@ -232,16 +232,6 @@ func (s *Storage) CreateNewTrialID(studyID int) (int, error) {
 	return trial.ID, err
 }
 
-func (s *Storage) createNewTrialNumber(studyID int, trialID int) (int, error) {
-	var number int
-	err := s.db.Model(&trialModel{}).Where("study_id = ?", studyID).Count(&number).Error
-	if err != nil {
-		return -1, err
-	}
-	err = s.SetTrialSystemAttr(trialID, "_number", strconv.Itoa(number))
-	return number, err
-}
-
 // SetTrialValue sets the value of trial.
 func (s *Storage) SetTrialValue(trialID int, value float64) error {
 	tx := s.db.Begin()
