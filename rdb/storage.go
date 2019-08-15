@@ -472,27 +472,118 @@ func (s *Storage) GetBestTrial(studyID int) (goptuna.FrozenTrial, error) {
 // GetAllTrials returns the all trials.
 func (s *Storage) GetAllTrials(studyID int) ([]goptuna.FrozenTrial, error) {
 	var trials []trialModel
-
-	err := s.db.
-		Where("study_id = ?", studyID).
-		Preload("UserAttributes").
-		Preload("SystemAttributes").
-		Preload("TrialParams").
-		Preload("TrialValues").
-		Find(&trials).Error
-	if err != nil {
+	var params []trialParamModel
+	var values []trialValueModel
+	var userAttrs []trialUserAttributeModel
+	var systemAttrs []trialSystemAttributeModel
+	if err := s.db.Find(&trials, "study_id = ?", studyID).Error; err != nil {
+		return nil, err
+	}
+	if err := s.db.
+		Joins("JOIN trials ON trial_params.trial_id = trials.trial_id").
+		Find(&params, "trials.study_id = ?", studyID).Error; err != nil {
+		return nil, err
+	}
+	if err := s.db.
+		Joins("JOIN trials ON trial_values.trial_id = trials.trial_id").
+		Find(&values, "trials.study_id = ?", studyID).Error; err != nil {
+		return nil, err
+	}
+	if err := s.db.
+		Joins("JOIN trials ON trial_user_attributes.trial_id = trials.trial_id").
+		Find(&userAttrs, "trials.study_id = ?", studyID).Error; err != nil {
+		return nil, err
+	}
+	if err := s.db.
+		Joins("JOIN trials ON trial_system_attributes.trial_id = trials.trial_id").
+		Find(&systemAttrs, "trials.study_id = ?", studyID).Error; err != nil {
 		return nil, err
 	}
 
-	res := make([]goptuna.FrozenTrial, len(trials))
+	// Following SQL might raise 'too many SQL variables' error.
+	// See https://github.com/c-bata/goptuna/issues/30 for more details.
+	// err := s.db.
+	// 	Where("study_id = ?", studyID).
+	// 	Preload("UserAttributes").
+	// 	Preload("SystemAttributes").
+	// 	Preload("TrialParams").
+	// 	Preload("TrialValues").
+	// 	Find(&trials).Error
+
+	return s.mergeTrialsORM(trials, params, values, userAttrs, systemAttrs)
+}
+
+func (s *Storage) mergeTrialsORM(
+	trials []trialModel,
+	params []trialParamModel,
+	values []trialValueModel,
+	userAttrs []trialUserAttributeModel,
+	systemAttrs []trialSystemAttributeModel,
+) ([]goptuna.FrozenTrial, error) {
+	idToTrials := make(map[int]trialModel, len(trials))
 	for i := range trials {
-		ft, err := toFrozenTrial(trials[i])
+		idToTrials[trials[i].ID] = trials[i]
+	}
+
+	defaultSize := 3
+	idToParams := make(map[int][]trialParamModel, len(trials))
+	for i := range params {
+		trialID := params[i].TrialParamReferTrial
+		l, ok := idToParams[trialID]
+		if !ok {
+			idToParams[trialID] = make([]trialParamModel, 0, defaultSize)
+		}
+		idToParams[trialID] = append(l, params[i])
+	}
+	idToValues := make(map[int][]trialValueModel, len(trials))
+	for i := range values {
+		trialID := values[i].TrialValueReferTrial
+		l, ok := idToValues[trialID]
+		if !ok {
+			idToValues[trialID] = make([]trialValueModel, 0, defaultSize)
+		}
+		idToValues[trialID] = append(l, values[i])
+	}
+	idToUserAttrs := make(map[int][]trialUserAttributeModel, len(trials))
+	for i := range userAttrs {
+		trialID := userAttrs[i].UserAttributeReferTrial
+		l, ok := idToUserAttrs[trialID]
+		if !ok {
+			idToUserAttrs[trialID] = make([]trialUserAttributeModel, 0, defaultSize)
+		}
+		idToUserAttrs[trialID] = append(l, userAttrs[i])
+	}
+	idToSystemAttrs := make(map[int][]trialSystemAttributeModel, len(trials))
+	for i := range systemAttrs {
+		trialID := systemAttrs[i].SystemAttributeReferTrial
+		l, ok := idToSystemAttrs[trialID]
+		if !ok {
+			idToSystemAttrs[trialID] = make([]trialSystemAttributeModel, 0, defaultSize)
+		}
+		idToSystemAttrs[trialID] = append(l, systemAttrs[i])
+	}
+
+	merged := make([]goptuna.FrozenTrial, 0, len(trials))
+	for trialID, trial := range idToTrials {
+		if v, ok := idToParams[trialID]; ok {
+			trial.TrialParams = v
+		}
+		if v, ok := idToValues[trialID]; ok {
+			trial.TrialValues = v
+		}
+		if v, ok := idToUserAttrs[trialID]; ok {
+			trial.UserAttributes = v
+		}
+		if v, ok := idToSystemAttrs[trialID]; ok {
+			trial.SystemAttributes = v
+		}
+		frozen, err := toFrozenTrial(trial)
 		if err != nil {
 			return nil, err
 		}
-		res[i] = ft
+		merged = append(merged, frozen)
 	}
-	return res, nil
+	return merged, nil
 }
 
 // GetStudyDirection returns study direction of the objective.
