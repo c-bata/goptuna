@@ -186,31 +186,50 @@ func (s *Storage) GetAllStudySummaries() ([]goptuna.StudySummary, error) {
 
 // CreateNewTrialID creates trial and returns trialID.
 func (s *Storage) CreateNewTrialID(studyID int) (int, error) {
+	tx := s.db.Begin()
+	if tx.Error != nil {
+		return -1, tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Create a new trial
 	start := time.Now()
 	trial := &trialModel{
 		TrialReferStudy: studyID,
 		State:           trialStateRunning,
 		DatetimeStart:   &start,
 	}
-	result := s.db.Create(trial)
-	if result.Error != nil {
-		return -1, result.Error
-	}
-	_, err := s.createNewTrialNumber(studyID, trial.ID)
-	if err != nil {
+	if err := tx.Create(trial).Error; err != nil {
+		tx.Rollback()
 		return -1, err
 	}
-	return trial.ID, nil
-}
 
-func (s *Storage) createNewTrialNumber(studyID int, trialID int) (int, error) {
+	// Calculate the trial number
 	var number int
-	err := s.db.Model(&trialModel{}).Where("study_id = ?", studyID).Count(&number).Error
+	err := tx.Model(&trialModel{}).
+		Where("study_id = ?", studyID).
+		Count(&number).Error
 	if err != nil {
+		tx.Rollback()
 		return -1, err
 	}
-	err = s.SetTrialSystemAttr(trialID, "_number", strconv.Itoa(number))
-	return number, err
+
+	// Set '_number' in trial_system_attributes.
+	err = tx.Create(&trialSystemAttributeModel{
+		SystemAttributeReferTrial: trial.ID,
+		Key:                       "_number",
+		ValueJSON:                 strconv.Itoa(number),
+	}).Error
+	if err != nil {
+		tx.Rollback()
+		return -1, err
+	}
+	err = tx.Commit().Error
+	return trial.ID, err
 }
 
 // SetTrialValue sets the value of trial.
