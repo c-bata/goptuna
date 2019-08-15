@@ -10,14 +10,25 @@ import (
 )
 
 func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
+	var err error
 	userAttrs := make(map[string]string, len(trial.UserAttributes))
 	for i := range trial.UserAttributes {
-		userAttrs[trial.UserAttributes[i].Key] = trial.UserAttributes[i].ValueJSON
+		userAttrs[trial.UserAttributes[i].Key], err = decodeAttrValue(trial.UserAttributes[i].ValueJSON)
+		if err != nil {
+			return goptuna.FrozenTrial{}, err
+		}
 	}
 
 	systemAttrs := make(map[string]string, len(trial.SystemAttributes))
 	for i := range trial.SystemAttributes {
-		systemAttrs[trial.SystemAttributes[i].Key] = trial.SystemAttributes[i].ValueJSON
+		if trial.SystemAttributes[i].Key == keyNumber {
+			systemAttrs[trial.SystemAttributes[i].Key] = trial.SystemAttributes[i].ValueJSON
+		} else {
+			systemAttrs[trial.SystemAttributes[i].Key], err = decodeAttrValue(trial.SystemAttributes[i].ValueJSON)
+			if err != nil {
+				return goptuna.FrozenTrial{}, err
+			}
+		}
 	}
 
 	paramsInIR := make(map[string]float64, len(trial.TrialParams))
@@ -39,7 +50,7 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 		}
 	}
 
-	numberStr, ok := systemAttrs["_number"]
+	numberStr, ok := systemAttrs[keyNumber]
 	if !ok {
 		return goptuna.FrozenTrial{}, errors.New("number is not exist in system attrs")
 	}
@@ -84,14 +95,21 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 }
 
 func toStudySummary(study studyModel, bestTrial goptuna.FrozenTrial, start time.Time) (goptuna.StudySummary, error) {
+	var err error
 	userAttrs := make(map[string]string, len(study.UserAttributes))
 	for i := range study.UserAttributes {
-		userAttrs[study.UserAttributes[i].Key] = study.UserAttributes[i].ValueJSON
+		userAttrs[study.UserAttributes[i].Key], err = decodeAttrValue(study.UserAttributes[i].ValueJSON)
+		if err != nil {
+			return goptuna.StudySummary{}, err
+		}
 	}
 
 	systemAttrs := make(map[string]string, len(study.SystemAttributes))
 	for i := range study.SystemAttributes {
-		systemAttrs[study.SystemAttributes[i].Key] = study.SystemAttributes[i].ValueJSON
+		systemAttrs[study.SystemAttributes[i].Key], err = decodeAttrValue(study.SystemAttributes[i].ValueJSON)
+		if err != nil {
+			return goptuna.StudySummary{}, err
+		}
 	}
 	return goptuna.StudySummary{
 		ID:            study.ID,
