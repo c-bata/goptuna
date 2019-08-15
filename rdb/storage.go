@@ -224,7 +224,7 @@ func (s *Storage) CreateNewTrialID(studyID int) (int, error) {
 	err = tx.Create(&trialSystemAttributeModel{
 		SystemAttributeReferTrial: trial.ID,
 		Key:                       keyNumber,
-		ValueJSON:                 encodeToOptunaInternalAttr(strconv.Itoa(number)),
+		ValueJSON:                 strconv.Itoa(number),
 	}).Error
 	if err != nil {
 		tx.Rollback()
@@ -393,7 +393,7 @@ func (s *Storage) GetTrialNumberFromID(trialID int) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	number, err := strconv.Atoi(decodeFromOptunaInternalAttr(attr.ValueJSON))
+	number, err := strconv.Atoi(attr.ValueJSON)
 	return number, err
 }
 

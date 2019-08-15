@@ -17,7 +17,11 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 
 	systemAttrs := make(map[string]string, len(trial.SystemAttributes))
 	for i := range trial.SystemAttributes {
-		systemAttrs[trial.SystemAttributes[i].Key] = decodeFromOptunaInternalAttr(trial.SystemAttributes[i].ValueJSON)
+		if trial.SystemAttributes[i].Key == keyNumber {
+			systemAttrs[trial.SystemAttributes[i].Key] = trial.SystemAttributes[i].ValueJSON
+		} else {
+			systemAttrs[trial.SystemAttributes[i].Key] = decodeFromOptunaInternalAttr(trial.SystemAttributes[i].ValueJSON)
+		}
 	}
 
 	paramsInIR := make(map[string]float64, len(trial.TrialParams))
