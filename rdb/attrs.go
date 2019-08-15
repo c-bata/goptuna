@@ -1,8 +1,8 @@
 package rdb
 
 import (
+	"encoding/base64"
 	"fmt"
-	"strings"
 )
 
 // See https://github.com/c-bata/goptuna/issues/34
@@ -10,14 +10,19 @@ import (
 
 // Caution "_number" in trial_system_attributes must not be encoded.
 
-func encodeToOptunaInternalAttr(xr string) string {
-	return fmt.Sprintf("\"%s\"", strings.Replace(xr, "\"", "\\\"", -1))
+func encodeAttrValue(xr string) string {
+	return fmt.Sprintf("\"%s\"",
+		base64.StdEncoding.EncodeToString([]byte(xr)))
 }
 
-func decodeFromOptunaInternalAttr(j string) string {
+func decodeAttrValue(j string) (string, error) {
 	l := len(j)
 	if l < 2 {
-		return j
+		return j, nil
 	}
-	return strings.Replace(j[1:l-1], "\\\"", "\"", -1)
+	encoded, err := base64.StdEncoding.DecodeString(j[1 : l-1])
+	if err != nil {
+		return "", err
+	}
+	return string(encoded), nil
 }
