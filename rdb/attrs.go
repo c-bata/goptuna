@@ -1,29 +1,21 @@
 package rdb
 
-import "encoding/json"
+import (
+	"fmt"
+	"strings"
+)
 
 // See https://github.com/c-bata/goptuna/issues/34
 // for the reason why we need following code.
 
-type attrJSONRepresentation struct {
-	Value string `json:"Value"`
+func encodeToOptunaInternalAttr(xr string) string {
+	return fmt.Sprintf("\"%s\"", strings.Replace(xr, "\"", "\\\"", -1))
 }
 
-func encodeToAttrJSON(xr string) (string, error) {
-	j, err := json.Marshal(&attrJSONRepresentation{
-		Value: xr,
-	})
-	if err != nil {
-		return "", err
+func decodeFromOptunaInternalAttr(j string) string {
+	l := len(j)
+	if l < 2 {
+		return j
 	}
-	return string(j), nil
-}
-
-func decodeAttrFromJSON(j string) (string, error) {
-	var r attrJSONRepresentation
-	err := json.Unmarshal([]byte(j), &r)
-	if err != nil {
-		return "", err
-	}
-	return r.Value, nil
+	return strings.Replace(j[1:l-1], "\\\"", "\"", -1)
 }

@@ -10,21 +10,14 @@ import (
 )
 
 func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
-	var err error
 	userAttrs := make(map[string]string, len(trial.UserAttributes))
 	for i := range trial.UserAttributes {
-		userAttrs[trial.UserAttributes[i].Key], err = decodeAttrFromJSON(trial.UserAttributes[i].ValueJSON)
-		if err != nil {
-			return goptuna.FrozenTrial{}, err
-		}
+		userAttrs[trial.UserAttributes[i].Key] = decodeFromOptunaInternalAttr(trial.UserAttributes[i].ValueJSON)
 	}
 
 	systemAttrs := make(map[string]string, len(trial.SystemAttributes))
 	for i := range trial.SystemAttributes {
-		systemAttrs[trial.SystemAttributes[i].Key], err = decodeAttrFromJSON(trial.SystemAttributes[i].ValueJSON)
-		if err != nil {
-			return goptuna.FrozenTrial{}, err
-		}
+		systemAttrs[trial.SystemAttributes[i].Key] = decodeFromOptunaInternalAttr(trial.SystemAttributes[i].ValueJSON)
 	}
 
 	paramsInIR := make(map[string]float64, len(trial.TrialParams))
@@ -91,21 +84,14 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 }
 
 func toStudySummary(study studyModel, bestTrial goptuna.FrozenTrial, start time.Time) (goptuna.StudySummary, error) {
-	var err error
 	userAttrs := make(map[string]string, len(study.UserAttributes))
 	for i := range study.UserAttributes {
-		userAttrs[study.UserAttributes[i].Key], err = decodeAttrFromJSON(study.UserAttributes[i].ValueJSON)
-		if err != nil {
-			return goptuna.StudySummary{}, err
-		}
+		userAttrs[study.UserAttributes[i].Key] = decodeFromOptunaInternalAttr(study.UserAttributes[i].ValueJSON)
 	}
 
 	systemAttrs := make(map[string]string, len(study.SystemAttributes))
 	for i := range study.SystemAttributes {
-		systemAttrs[study.SystemAttributes[i].Key], err = decodeAttrFromJSON(study.SystemAttributes[i].ValueJSON)
-		if err != nil {
-			return goptuna.StudySummary{}, err
-		}
+		systemAttrs[study.SystemAttributes[i].Key] = decodeFromOptunaInternalAttr(study.SystemAttributes[i].ValueJSON)
 	}
 	return goptuna.StudySummary{
 		ID:            study.ID,

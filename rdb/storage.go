@@ -1,7 +1,6 @@
 package rdb
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -59,27 +58,19 @@ func (s *Storage) SetStudyDirection(studyID int, direction goptuna.StudyDirectio
 
 // SetStudyUserAttr to store the value for the user.
 func (s *Storage) SetStudyUserAttr(studyID int, key string, value string) error {
-	j, err := encodeToAttrJSON(value)
-	if err != nil {
-		return fmt.Errorf("storage:%s", err)
-	}
 	return s.db.Create(&studyUserAttributeModel{
 		UserAttributeReferStudy: studyID,
 		Key:                     key,
-		ValueJSON:               j,
+		ValueJSON:               encodeToOptunaInternalAttr(value),
 	}).Error
 }
 
 // SetStudySystemAttr to store the value for the system.
 func (s *Storage) SetStudySystemAttr(studyID int, key string, value string) error {
-	j, err := encodeToAttrJSON(value)
-	if err != nil {
-		return fmt.Errorf("storage:%s", err)
-	}
 	return s.db.Create(&studySystemAttributeModel{
 		SystemAttributeReferStudy: studyID,
 		Key:                       key,
-		ValueJSON:                 j,
+		ValueJSON:                 encodeToOptunaInternalAttr(value),
 	}).Error
 }
 
@@ -114,11 +105,7 @@ func (s *Storage) GetStudyUserAttrs(studyID int) (map[string]string, error) {
 
 	res := make(map[string]string, len(attrs))
 	for i := range attrs {
-		v, err := decodeAttrFromJSON(attrs[i].ValueJSON)
-		if err != nil {
-			return nil, fmt.Errorf("storage:%s", err)
-		}
-		res[attrs[i].Key] = v
+		res[attrs[i].Key] = decodeFromOptunaInternalAttr(attrs[i].ValueJSON)
 	}
 	return res, nil
 }
@@ -133,11 +120,7 @@ func (s *Storage) GetStudySystemAttrs(studyID int) (map[string]string, error) {
 
 	res := make(map[string]string, len(attrs))
 	for i := range attrs {
-		v, err := decodeAttrFromJSON(attrs[i].ValueJSON)
-		if err != nil {
-			return nil, fmt.Errorf("storage:%s", err)
-		}
-		res[attrs[i].Key] = v
+		res[attrs[i].Key] = decodeFromOptunaInternalAttr(attrs[i].ValueJSON)
 	}
 	return res, nil
 }
@@ -236,17 +219,12 @@ func (s *Storage) CreateNewTrialID(studyID int) (int, error) {
 		tx.Rollback()
 		return -1, err
 	}
-	j, err := encodeToAttrJSON(strconv.Itoa(number))
-	if err != nil {
-		tx.Rollback()
-		return -1, err
-	}
 
 	// Set '_number' in trial_system_attributes.
 	err = tx.Create(&trialSystemAttributeModel{
 		SystemAttributeReferTrial: trial.ID,
 		Key:                       keyNumber,
-		ValueJSON:                 j,
+		ValueJSON:                 encodeToOptunaInternalAttr(strconv.Itoa(number)),
 	}).Error
 	if err != nil {
 		tx.Rollback()
@@ -392,27 +370,19 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 
 // SetTrialUserAttr to store the value for the user.
 func (s *Storage) SetTrialUserAttr(trialID int, key string, value string) error {
-	j, err := encodeToAttrJSON(value)
-	if err != nil {
-		return fmt.Errorf("storage:%s", err)
-	}
 	return s.db.Create(&trialUserAttributeModel{
 		UserAttributeReferTrial: trialID,
 		Key:                     key,
-		ValueJSON:               j,
+		ValueJSON:               encodeToOptunaInternalAttr(value),
 	}).Error
 }
 
 // SetTrialSystemAttr to store the value for the system.
 func (s *Storage) SetTrialSystemAttr(trialID int, key string, value string) error {
-	j, err := encodeToAttrJSON(value)
-	if err != nil {
-		return fmt.Errorf("storage:%s", err)
-	}
 	return s.db.Create(&trialSystemAttributeModel{
 		SystemAttributeReferTrial: trialID,
 		Key:                       key,
-		ValueJSON:                 j,
+		ValueJSON:                 encodeToOptunaInternalAttr(value),
 	}).Error
 }
 
@@ -423,11 +393,7 @@ func (s *Storage) GetTrialNumberFromID(trialID int) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	v, err := decodeAttrFromJSON(attr.ValueJSON)
-	if err != nil {
-		return -1, err
-	}
-	number, err := strconv.Atoi(v)
+	number, err := strconv.Atoi(decodeFromOptunaInternalAttr(attr.ValueJSON))
 	return number, err
 }
 
@@ -460,11 +426,7 @@ func (s *Storage) GetTrialUserAttrs(trialID int) (map[string]string, error) {
 
 	res := make(map[string]string, len(attrs))
 	for i := range attrs {
-		v, err := decodeAttrFromJSON(attrs[i].ValueJSON)
-		if err != nil {
-			return nil, fmt.Errorf("storage:%s", err)
-		}
-		res[attrs[i].Key] = v
+		res[attrs[i].Key] = decodeFromOptunaInternalAttr(attrs[i].ValueJSON)
 	}
 	return res, nil
 }
@@ -479,11 +441,7 @@ func (s *Storage) GetTrialSystemAttrs(trialID int) (map[string]string, error) {
 
 	res := make(map[string]string, len(attrs))
 	for i := range attrs {
-		v, err := decodeAttrFromJSON(attrs[i].ValueJSON)
-		if err != nil {
-			return nil, fmt.Errorf("storage:%s", err)
-		}
-		res[attrs[i].Key] = v
+		res[attrs[i].Key] = decodeFromOptunaInternalAttr(attrs[i].ValueJSON)
 	}
 	return res, nil
 }
