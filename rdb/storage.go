@@ -13,6 +13,8 @@ import (
 
 var _ goptuna.Storage = &Storage{}
 
+const keyNumber = "_number"
+
 // NewStorage returns new RDB storage.
 func NewStorage(db *gorm.DB) *Storage {
 	return &Storage{
@@ -234,12 +236,17 @@ func (s *Storage) CreateNewTrialID(studyID int) (int, error) {
 		tx.Rollback()
 		return -1, err
 	}
+	j, err := encodeToAttrJSON(strconv.Itoa(number))
+	if err != nil {
+		tx.Rollback()
+		return -1, err
+	}
 
 	// Set '_number' in trial_system_attributes.
 	err = tx.Create(&trialSystemAttributeModel{
 		SystemAttributeReferTrial: trial.ID,
-		Key:                       "_number",
-		ValueJSON:                 strconv.Itoa(number),
+		Key:                       keyNumber,
+		ValueJSON:                 j,
 	}).Error
 	if err != nil {
 		tx.Rollback()
@@ -412,7 +419,7 @@ func (s *Storage) SetTrialSystemAttr(trialID int, key string, value string) erro
 // GetTrialNumberFromID returns the trial's number.
 func (s *Storage) GetTrialNumberFromID(trialID int) (int, error) {
 	var attr trialSystemAttributeModel
-	err := s.db.First(&attr, "trial_id = ? AND key = ?", trialID, "_number").Error
+	err := s.db.First(&attr, "trial_id = ? AND key = ?", trialID, keyNumber).Error
 	if err != nil {
 		return -1, err
 	}

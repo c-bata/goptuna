@@ -46,7 +46,7 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 		}
 	}
 
-	numberStr, ok := systemAttrs["_number"]
+	numberStr, ok := systemAttrs[keyNumber]
 	if !ok {
 		return goptuna.FrozenTrial{}, errors.New("number is not exist in system attrs")
 	}
