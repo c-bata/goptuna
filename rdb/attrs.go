@@ -6,24 +6,24 @@ import "encoding/json"
 // for the reason why we need following code.
 
 type attrJSONRepresentation struct {
-	value string `json:"value"`
+	Value string `json:"Value"`
 }
 
-func encodeToAttrJSON(j string) (string, error) {
-	var r attrJSONRepresentation
-	err := json.Unmarshal([]byte(j), &r)
-	if err != nil {
-		return "", err
-	}
-	return r.value, nil
-}
-
-func decodeAttrFromJSON(xr string) (string, error) {
+func encodeToAttrJSON(xr string) (string, error) {
 	j, err := json.Marshal(&attrJSONRepresentation{
-		value: xr,
+		Value: xr,
 	})
 	if err != nil {
 		return "", err
 	}
 	return string(j), nil
+}
+
+func decodeAttrFromJSON(j string) (string, error) {
+	var r attrJSONRepresentation
+	err := json.Unmarshal([]byte(j), &r)
+	if err != nil {
+		return "", err
+	}
+	return r.Value, nil
 }
