@@ -33,7 +33,7 @@ func (i TrialState) IsFinished() bool {
 // Note that this object is seamlessly instantiated and passed to the objective function behind;
 // hence, in typical use cases, library users do not care about instantiation of this object.
 type Trial struct {
-	Study *Study
+	Study *InTrialStudy
 	ID    int
 	state TrialState
 	value float64
@@ -45,8 +45,7 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 		return 0.0, err
 	}
 
-	inTrialStudy := ToInTrialStudy(t.Study)
-	v, err := t.Study.Sampler.Sample(inTrialStudy, trial, name, distribution)
+	v, err := t.Study.Sampler.Sample(t.Study, trial, name, distribution)
 	if err != nil {
 		return 0.0, err
 	}
@@ -77,8 +76,8 @@ func (t *Trial) Report(value float64, step int) error {
 // the trial should be pruned at the given step.
 func (t *Trial) ShouldPrune(value float64) (bool, error) {
 	if t.Study.Pruner == nil {
-		if t.Study.logger != nil {
-			t.Study.logger.Warn("Although it's not registered pruner, but you calls ShouldPrune method")
+		if t.Study.Logger != nil {
+			t.Study.Logger.Warn("Although it's not registered pruner, but you calls ShouldPrune method")
 		}
 		return false, nil
 	}

@@ -67,7 +67,7 @@ func (s *Study) runTrial(objective FuncObjective) error {
 	}
 
 	trial := Trial{
-		Study: s,
+		Study: ToInTrialStudy(s),
 		ID:    trialID,
 	}
 
@@ -210,7 +210,11 @@ func ToInTrialStudy(study *Study) *InTrialStudy {
 	return &InTrialStudy{
 		ID:      study.ID,
 		Name:    study.Name,
+		Sampler: study.Sampler,
 		Storage: study.Storage,
+		Pruner:  study.Pruner,
+		Logger:  study.logger,
+		ctx:     study.ctx,
 	}
 }
 
@@ -225,6 +229,10 @@ type InTrialStudy struct {
 	ID      int
 	Name    string
 	Storage Storage
+	Sampler Sampler
+	Pruner  Pruner
+	Logger  *zap.Logger
+	ctx     context.Context
 }
 
 // BestTrial returns the best trial in the InTrialStudy.

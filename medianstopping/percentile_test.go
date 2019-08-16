@@ -19,7 +19,7 @@ func TestPercentilePruner_PruneWithOneTrial(t *testing.T) {
 	}
 
 	trial := goptuna.Trial{
-		Study: study,
+		Study: goptuna.ToInTrialStudy(study),
 		ID:    trialID,
 	}
 	err = trial.Report(1, 1)
@@ -159,6 +159,7 @@ func TestPercentilePruner_Prune(t *testing.T) {
 				t.Errorf("should be err=nil, but got %s", err)
 				return
 			}
+			inTrialStudy := goptuna.ToInTrialStudy(study)
 			for _, v := range tt.intermediateValues {
 				trialID, err := study.Storage.CreateNewTrialID(study.ID)
 				if err != nil {
@@ -166,7 +167,7 @@ func TestPercentilePruner_Prune(t *testing.T) {
 					return
 				}
 				trial := goptuna.Trial{
-					Study: study,
+					Study: inTrialStudy,
 					ID:    trialID,
 				}
 				err = trial.Report(v, 1)
@@ -194,7 +195,7 @@ func TestPercentilePruner_Prune(t *testing.T) {
 				return
 			}
 			trial := goptuna.Trial{
-				Study: study,
+				Study: inTrialStudy,
 				ID:    trialID,
 			}
 			prune, err := p.Prune(study.Storage, study.ID, trialID, 1)

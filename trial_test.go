@@ -163,7 +163,7 @@ func TestTrial_UserAttrs(t *testing.T) {
 		return
 	}
 	trial := goptuna.Trial{
-		Study: study,
+		Study: goptuna.ToInTrialStudy(study),
 		ID:    trialID,
 	}
 
@@ -202,7 +202,7 @@ func TestTrial_SystemAttrs(t *testing.T) {
 		return
 	}
 	trial := goptuna.Trial{
-		Study: study,
+		Study: goptuna.ToInTrialStudy(study),
 		ID:    trialID,
 	}
 
