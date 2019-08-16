@@ -110,6 +110,9 @@ func (s *Study) runTrial(objective FuncObjective) error {
 	if err != nil {
 		return err
 	}
+	if !s.ignoreObjectiveErr && objerr != nil {
+		return objerr
+	}
 	return nil
 }
 

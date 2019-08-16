@@ -1,122 +1,155 @@
 package goptuna_test
 
 import (
-	"fmt"
 	"math"
 	"testing"
 
 	"github.com/c-bata/goptuna"
 )
 
-func ExampleTrial_SuggestUniform() {
-	sampler := goptuna.NewRandomSearchSampler(
-		goptuna.RandomSearchSamplerOptionSeed(0),
-	)
-	study, err := goptuna.CreateStudy(
-		"example",
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
-		goptuna.StudyOptionSampler(sampler),
-	)
-	if err != nil {
-		panic(err)
+func TestTrial_Suggest(t *testing.T) {
+	tests := []struct {
+		name      string
+		objective goptuna.FuncObjective
+		wantErr   bool
+	}{
+		{
+			name: "SuggestUniform",
+			objective: func(trial goptuna.Trial) (float64, error) {
+				// low is larger than high
+				x1, err := trial.SuggestUniform("x", -10, 10)
+				if err != nil {
+					return -1, err
+				}
+				return math.Pow(x1-2, 2), nil
+			},
+			wantErr: false,
+		},
+		{
+			name: "SuggestUniform: low is larger than high",
+			objective: func(trial goptuna.Trial) (float64, error) {
+				// low is larger than high
+				x1, err := trial.SuggestUniform("x", 10, -10)
+				if err != nil {
+					return -1, err
+				}
+				return math.Pow(x1-2, 2), nil
+			},
+			wantErr: true,
+		},
+		{
+			name: "SuggestLogUniform",
+			objective: func(trial goptuna.Trial) (float64, error) {
+				x1, err := trial.SuggestLogUniform("x", 1e5, 1e10)
+				if err != nil {
+					return -1, err
+				}
+				return math.Pow(x1-2, 2), nil
+			},
+			wantErr: false,
+		},
+		{
+			name: "SuggestLogUniform: low is larger than high",
+			objective: func(trial goptuna.Trial) (float64, error) {
+				x1, err := trial.SuggestLogUniform("x", 1e10, 1e5)
+				if err != nil {
+					return -1, err
+				}
+				return math.Pow(x1-2, 2), nil
+			},
+			wantErr: true,
+		},
+		{
+			name: "SuggestDiscreteUniform",
+			objective: func(trial goptuna.Trial) (float64, error) {
+				x1, err := trial.SuggestDiscreteUniform("x", -10, 10, 0.5)
+				if err != nil {
+					return -1, err
+				}
+				return math.Pow(x1-2, 2), nil
+			},
+			wantErr: false,
+		},
+		{
+			name: "SuggestDiscreteUniform: low is larger than high",
+			objective: func(trial goptuna.Trial) (float64, error) {
+				x1, err := trial.SuggestDiscreteUniform("x", 10, -10, 0.5)
+				if err != nil {
+					return -1, err
+				}
+				return math.Pow(x1-2, 2), nil
+			},
+			wantErr: true,
+		},
+		{
+			name: "SuggestInt",
+			objective: func(trial goptuna.Trial) (float64, error) {
+				x1, err := trial.SuggestInt("x", -10, 10)
+				if err != nil {
+					return -1, err
+				}
+				return math.Pow(float64(x1-2), 2), nil
+			},
+			wantErr: false,
+		},
+		{
+			name: "SuggestInt: low is larger than high",
+			objective: func(trial goptuna.Trial) (float64, error) {
+				x1, err := trial.SuggestInt("x", 10, -10)
+				if err != nil {
+					return -1, err
+				}
+				return math.Pow(float64(x1-2), 2), nil
+			},
+			wantErr: true,
+		},
+		{
+			name: "SuggestCategorical",
+			objective: func(trial goptuna.Trial) (float64, error) {
+				x1, err := trial.SuggestCategorical("x", []string{"foo", "bar", "baz"})
+				if err != nil {
+					return -1, err
+				}
+				if x1 == "foo" {
+					return 0, nil
+				} else {
+					return 1, nil
+				}
+			},
+			wantErr: false,
+		},
+		{
+			name: "SuggestCategorical: 'choices' must contains one or more elements",
+			objective: func(trial goptuna.Trial) (float64, error) {
+				x1, err := trial.SuggestCategorical("x", []string{})
+				if err != nil {
+					return -1, err
+				}
+				if x1 == "foo" {
+					return 0, nil
+				} else {
+					return 1, nil
+				}
+			},
+			wantErr: true,
+		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sampler := goptuna.NewRandomSearchSampler(
+				goptuna.RandomSearchSamplerOptionSeed(0),
+			)
+			study, err := goptuna.CreateStudy(tt.name,
+				goptuna.StudyOptionIgnoreObjectiveErr(false),
+				goptuna.StudyOptionSampler(sampler))
 
-	objective := func(trial goptuna.Trial) (float64, error) {
-		x1, _ := trial.SuggestUniform("x1", -10, 10)
-		x2, _ := trial.SuggestUniform("x2", -10, 10)
-		fmt.Printf("sampled: %.3f, %.3f\n", x1, x2)
-		return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
+			err = study.Optimize(tt.objective, 1)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Trial.SuggestUniform() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
 	}
-
-	err = study.Optimize(objective, 1)
-	if err != nil {
-		panic(err)
-	}
-	// Output:
-	// sampled: 8.904, -5.101
-}
-
-func ExampleTrial_SuggestLogUniform() {
-	sampler := goptuna.NewRandomSearchSampler(
-		goptuna.RandomSearchSamplerOptionSeed(1),
-	)
-	study, err := goptuna.CreateStudy(
-		"example",
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
-		goptuna.StudyOptionSampler(sampler),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	objective := func(trial goptuna.Trial) (float64, error) {
-		x1, _ := trial.SuggestLogUniform("x1", 1e-5, 1e10)
-		x2, _ := trial.SuggestLogUniform("x2", 1e-5, 1e10)
-		fmt.Printf("sampled: %f, %f\n", x1, x2)
-		return math.Pow(x1-1e5, 2) + math.Pow(x2-1e3, 2), nil
-	}
-
-	err = study.Optimize(objective, 1)
-	if err != nil {
-		panic(err)
-	}
-	// Output:
-	// sampled: 11746.387394, 1281257205.189628
-}
-
-func ExampleTrial_SuggestInt() {
-	sampler := goptuna.NewRandomSearchSampler(
-		goptuna.RandomSearchSamplerOptionSeed(1),
-	)
-	study, err := goptuna.CreateStudy(
-		"example",
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
-		goptuna.StudyOptionSampler(sampler),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	objective := func(trial goptuna.Trial) (float64, error) {
-		x1, _ := trial.SuggestInt("x1", -10, 10)
-		x2, _ := trial.SuggestInt("x2", -10, 10)
-		fmt.Printf("sampled: %d, %d\n", x1, x2)
-		return math.Pow(float64(x1-2), 2) + math.Pow(float64(x2+5), 2), nil
-	}
-
-	err = study.Optimize(objective, 1)
-	if err != nil {
-		panic(err)
-	}
-	// Output:
-	// sampled: -9, -3
-}
-
-func ExampleTrial_SuggestDiscreteUniform() {
-	sampler := goptuna.NewRandomSearchSampler(
-		goptuna.RandomSearchSamplerOptionSeed(1),
-	)
-	study, err := goptuna.CreateStudy(
-		"example",
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
-		goptuna.StudyOptionSampler(sampler),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	objective := func(trial goptuna.Trial) (float64, error) {
-		x1, _ := trial.SuggestDiscreteUniform("x1", -10, 10, 0.1)
-		x2, _ := trial.SuggestDiscreteUniform("x2", -10, 10, 0.1)
-		fmt.Printf("sampled: %f, %f\n", x1, x2)
-		return math.Pow(x1-5, 2) + math.Pow(x2+3, 2), nil
-	}
-	err = study.Optimize(objective, 1)
-	if err != nil {
-		panic(err)
-	}
-	// Output:
-	// sampled: 2.100000, 8.900000
 }
 
 func TestTrial_UserAttrs(t *testing.T) {
