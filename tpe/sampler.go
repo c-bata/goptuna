@@ -500,7 +500,9 @@ func (s *Sampler) Sample(
 
 func getObservationPairs(study *goptuna.Study, paramName string) ([]float64, [][2]float64, error) {
 	var sign float64 = 1
-	if study.Direction() == goptuna.StudyDirectionMaximize {
+	if direction, err := study.Direction(); err != nil {
+		return nil, nil, err
+	} else if direction == goptuna.StudyDirectionMaximize {
 		sign = -1
 	}
 

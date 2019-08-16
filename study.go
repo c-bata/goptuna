@@ -2,6 +2,7 @@ package goptuna
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"go.uber.org/zap"
@@ -22,10 +23,13 @@ const (
 
 // Study corresponds to an optimization task, i.e., a set of trials.
 type Study struct {
-	ID                 int
-	Storage            Storage
-	Sampler            Sampler
-	Pruner             Pruner
+	ID      int
+	Storage Storage
+	Sampler Sampler
+	Pruner  Pruner
+	Name    string
+	// The 'direction' field is only for CreateStudy with StudyOptionDirection.
+	// Please access to Study.Direction() if you want to get it.
 	direction          StudyDirection
 	logger             *zap.Logger
 	ignoreObjectiveErr bool
@@ -40,8 +44,8 @@ func (s *Study) GetTrials() ([]FrozenTrial, error) {
 }
 
 // Direction returns the direction of objective function value
-func (s *Study) Direction() StudyDirection {
-	return s.direction
+func (s *Study) Direction() (StudyDirection, error) {
+	return s.Storage.GetStudyDirection(s.ID)
 }
 
 // Report reports an objective function value
@@ -201,6 +205,61 @@ func (s *Study) GetSystemAttrs() (map[string]string, error) {
 	return s.Storage.GetStudySystemAttrs(s.ID)
 }
 
+// ToInTrialStudy converts Study to InTrialStudy.
+func ToInTrialStudy(study *Study) *InTrialStudy {
+	return &InTrialStudy{
+		ID:      study.ID,
+		Name:    study.Name,
+		Storage: study.Storage,
+	}
+}
+
+// InTrialStudy is an object to access a study instance inside a trial instance safely.
+//
+// To prevent unexpected recursive calls of Study.Optimize(), this component
+// does not allow to call it unlike Study component
+//
+// Note that this object is created within Goptuna library, so
+// it is not intended that library users directly use this constructor.
+type InTrialStudy struct {
+	ID      int
+	Name    string
+	Storage Storage
+}
+
+// BestTrial returns the best trial in the InTrialStudy.
+func (s *InTrialStudy) BestTrial() (FrozenTrial, error) {
+	return s.Storage.GetBestTrial(s.ID)
+}
+
+// GetBestValue return the best objective value.
+func (s *InTrialStudy) GetBestValue() (float64, error) {
+	trial, err := s.BestTrial()
+	if err != nil {
+		return 0.0, err
+	}
+	return trial.Value, nil
+}
+
+// GetBestParams return parameters of the best trial.
+func (s *InTrialStudy) GetBestParams() (map[string]interface{}, error) {
+	trial, err := s.BestTrial()
+	if err != nil {
+		return nil, err
+	}
+	return trial.Params, nil
+}
+
+// Direction returns the direction.
+func (s *InTrialStudy) Direction() (StudyDirection, error) {
+	return s.Storage.GetStudyDirection(s.ID)
+}
+
+// Trials returns all trials.
+func (s *InTrialStudy) Trials() ([]FrozenTrial, error) {
+	return s.Storage.GetAllTrials(s.ID)
+}
+
 // CreateStudy creates a new Study object.
 func CreateStudy(
 	name string,
@@ -210,6 +269,7 @@ func CreateStudy(
 	sampler := NewRandomSearchSampler()
 	study := &Study{
 		ID:                 0,
+		Name:               name,
 		Storage:            storage,
 		Sampler:            sampler,
 		Pruner:             nil,
@@ -248,7 +308,6 @@ func LoadStudy(
 		Storage:            storage,
 		Sampler:            sampler,
 		Pruner:             nil,
-		direction:          "",
 		logger:             nil,
 		ignoreObjectiveErr: false,
 	}
@@ -276,8 +335,13 @@ func LoadStudy(
 type StudyOption func(study *Study) error
 
 // StudyOptionSetDirection change the direction of optimize
+// TODO(c-bata): Rename to StudyOptionDirection.
 func StudyOptionSetDirection(direction StudyDirection) StudyOption {
 	return func(s *Study) error {
+		if direction != StudyDirectionMinimize &&
+			direction != StudyDirectionMaximize {
+			return errors.New("invalid direction")
+		}
 		s.direction = direction
 		return nil
 	}
