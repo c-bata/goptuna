@@ -112,9 +112,8 @@ func TestTrial_Suggest(t *testing.T) {
 				}
 				if x1 == "foo" {
 					return 0, nil
-				} else {
-					return 1, nil
 				}
+				return 1, nil
 			},
 			wantErr: false,
 		},
@@ -127,9 +126,8 @@ func TestTrial_Suggest(t *testing.T) {
 				}
 				if x1 == "foo" {
 					return 0, nil
-				} else {
-					return 1, nil
 				}
+				return 1, nil
 			},
 			wantErr: true,
 		},
