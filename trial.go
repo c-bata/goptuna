@@ -57,10 +57,6 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 	if err != nil {
 		return 0.0, err
 	}
-	if trial.ParamsInIR == nil {
-		trial.ParamsInIR = make(map[string]float64, 8)
-	}
-	trial.ParamsInIR[name] = v
 
 	err = t.Study.Storage.SetTrialParam(trial.ID, name, v, distribution)
 	return v, err

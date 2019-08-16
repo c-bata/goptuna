@@ -31,12 +31,9 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 		}
 	}
 
-	paramsInIR := make(map[string]float64, len(trial.TrialParams))
 	distributions := make(map[string]interface{}, len(trial.TrialParams))
 	paramsInXR := make(map[string]interface{}, len(trial.TrialParams))
 	for i := range trial.TrialParams {
-		// paramsInIR
-		paramsInIR[trial.TrialParams[i].Name] = trial.TrialParams[i].Value
 		// distributions
 		d, err := goptuna.JSONToDistribution([]byte(trial.TrialParams[i].DistributionJSON))
 		if err != nil {
@@ -90,7 +87,6 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 		Distributions:      distributions,
 		UserAttrs:          userAttrs,
 		SystemAttrs:        systemAttrs,
-		ParamsInIR:         paramsInIR,
 	}, nil
 }
 
