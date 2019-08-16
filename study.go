@@ -256,7 +256,7 @@ func (s *InTrialStudy) Direction() (StudyDirection, error) {
 }
 
 // Trials returns all trials.
-func (s *InTrialStudy) Trials() ([]FrozenTrial, error) {
+func (s *InTrialStudy) GetTrials() ([]FrozenTrial, error) {
 	return s.Storage.GetAllTrials(s.ID)
 }
 

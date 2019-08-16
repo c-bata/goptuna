@@ -463,7 +463,7 @@ func (s *Sampler) sampleCategorical(distribution goptuna.CategoricalDistribution
 
 // Sample a parameter for a given distribution.
 func (s *Sampler) Sample(
-	study *goptuna.Study,
+	study *goptuna.InTrialStudy,
 	trial goptuna.FrozenTrial,
 	paramName string,
 	paramDistribution interface{},
@@ -498,7 +498,7 @@ func (s *Sampler) Sample(
 	return 0, goptuna.ErrUnknownDistribution
 }
 
-func getObservationPairs(study *goptuna.Study, paramName string) ([]float64, [][2]float64, error) {
+func getObservationPairs(study *goptuna.InTrialStudy, paramName string) ([]float64, [][2]float64, error) {
 	var sign float64 = 1
 	if direction, err := study.Direction(); err != nil {
 		return nil, nil, err

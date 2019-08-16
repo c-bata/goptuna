@@ -69,6 +69,7 @@ func TestRandomSearchSampler_SampleLogUniform(t *testing.T) {
 		High: 1,
 	}
 
+	inTrialStudy := goptuna.ToInTrialStudy(study)
 	points := make([]float64, 100)
 	for i := 0; i < 100; i++ {
 		trialID, err := study.Storage.CreateNewTrialID(study.ID)
@@ -81,7 +82,7 @@ func TestRandomSearchSampler_SampleLogUniform(t *testing.T) {
 			t.Errorf("should not be err, but got %s", err)
 			return
 		}
-		sampled, err := study.Sampler.Sample(study, trial, "x", distribution)
+		sampled, err := study.Sampler.Sample(inTrialStudy, trial, "x", distribution)
 		if err != nil {
 			t.Errorf("should not be err, but got %s", err)
 			return
@@ -123,6 +124,7 @@ func TestRandomSearchSampler_SampleDiscreteUniform(t *testing.T) {
 	}
 
 	points := make([]float64, 100)
+	inTrialStudy := goptuna.ToInTrialStudy(study)
 	for i := 0; i < 100; i++ {
 		trialID, err := study.Storage.CreateNewTrialID(study.ID)
 		if err != nil {
@@ -134,7 +136,7 @@ func TestRandomSearchSampler_SampleDiscreteUniform(t *testing.T) {
 			t.Errorf("should not be err, but got %s", err)
 			return
 		}
-		sampled, err := study.Sampler.Sample(study, trial, "x", distribution)
+		sampled, err := study.Sampler.Sample(inTrialStudy, trial, "x", distribution)
 		if err != nil {
 			t.Errorf("should not be err, but got %s", err)
 			return

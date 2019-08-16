@@ -10,7 +10,7 @@ import (
 // Sampler returns the next search points
 type Sampler interface {
 	// Sample a parameter for a given distribution.
-	Sample(*Study, FrozenTrial, string, interface{}) (float64, error)
+	Sample(*InTrialStudy, FrozenTrial, string, interface{}) (float64, error)
 }
 
 var _ Sampler = &RandomSearchSampler{}
@@ -44,7 +44,7 @@ func NewRandomSearchSampler(opts ...RandomSearchSamplerOption) *RandomSearchSamp
 
 // Sample a parameter for a given distribution.
 func (s *RandomSearchSampler) Sample(
-	study *Study,
+	study *InTrialStudy,
 	trial FrozenTrial,
 	paramName string,
 	paramDistribution interface{},

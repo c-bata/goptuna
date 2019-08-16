@@ -45,7 +45,8 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 		return 0.0, err
 	}
 
-	v, err := t.Study.Sampler.Sample(t.Study, trial, name, distribution)
+	inTrialStudy := ToInTrialStudy(t.Study)
+	v, err := t.Study.Sampler.Sample(inTrialStudy, trial, name, distribution)
 	if err != nil {
 		return 0.0, err
 	}

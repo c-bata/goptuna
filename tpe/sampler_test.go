@@ -121,6 +121,7 @@ func TestSampler_SampleLogUniform(t *testing.T) {
 		High: 1,
 	}
 
+	inTrialStudy := goptuna.ToInTrialStudy(study)
 	points := make([]float64, 100)
 	for i := 0; i < 100; i++ {
 		trialID, err := study.Storage.CreateNewTrialID(study.ID)
@@ -133,7 +134,7 @@ func TestSampler_SampleLogUniform(t *testing.T) {
 			t.Errorf("should not be err, but got %s", err)
 			return
 		}
-		sampled, err := study.Sampler.Sample(study, trial, "x", distribution)
+		sampled, err := study.Sampler.Sample(inTrialStudy, trial, "x", distribution)
 		if err != nil {
 			t.Errorf("should not be err, but got %s", err)
 			return
@@ -174,6 +175,7 @@ func TestSampler_SampleDiscreteUniform(t *testing.T) {
 		Q:    0.1,
 	}
 
+	inTrialStudy := goptuna.ToInTrialStudy(study)
 	points := make([]float64, 100)
 	for i := 0; i < 100; i++ {
 		trialID, err := study.Storage.CreateNewTrialID(study.ID)
@@ -186,7 +188,7 @@ func TestSampler_SampleDiscreteUniform(t *testing.T) {
 			t.Errorf("should not be err, but got %s", err)
 			return
 		}
-		sampled, err := study.Sampler.Sample(study, trial, "x", distribution)
+		sampled, err := study.Sampler.Sample(inTrialStudy, trial, "x", distribution)
 		if err != nil {
 			t.Errorf("should not be err, but got %s", err)
 			return
@@ -239,7 +241,8 @@ func TestGetObservationPairs_MINIMIZE(t *testing.T) {
 		return
 	}
 
-	values, scores, err := tpe.ExportGetObservationPairs(study, "x")
+	inTrialStudy := goptuna.ToInTrialStudy(study)
+	values, scores, err := tpe.ExportGetObservationPairs(inTrialStudy, "x")
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
 	}
@@ -286,7 +289,8 @@ func TestGetObservationPairs_MAXIMIZE(t *testing.T) {
 		return
 	}
 
-	values, scores, err := tpe.ExportGetObservationPairs(study, "x")
+	inTrialStudy := goptuna.ToInTrialStudy(study)
+	values, scores, err := tpe.ExportGetObservationPairs(inTrialStudy, "x")
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
 	}
