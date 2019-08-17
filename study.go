@@ -2,9 +2,10 @@ package goptuna
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"os"
 	"sync"
-
-	"go.uber.org/zap"
 )
 
 // FuncObjective is a type of objective function
@@ -27,7 +28,7 @@ type Study struct {
 	Sampler            Sampler
 	Pruner             Pruner
 	direction          StudyDirection
-	logger             *zap.Logger
+	logger             Logger
 	ignoreObjectiveErr bool
 	trialNotifyChan    chan FrozenTrial
 	mu                 sync.RWMutex
@@ -77,28 +78,34 @@ func (s *Study) runTrial(objective FuncObjective) error {
 		state = TrialStateComplete
 	}
 
+	if objerr != nil {
+		s.logger.Error("Objective function returns error",
+			fmt.Sprintf("err=%s", err))
+	}
+
 	s.logger.Info("Trial finished",
-		zap.Int("trialID", trialID),
-		zap.String("state", state.String()),
-		zap.Float64("evaluationValue", evaluation),
-		zap.Error(objerr))
+		fmt.Sprintf("trialID=%d", trialID),
+		fmt.Sprintf("state=%s", state.String()),
+		fmt.Sprintf("evaluation=%f", evaluation))
 
 	if state == TrialStateComplete {
 		err = s.Storage.SetTrialValue(trialID, evaluation)
 		if err != nil {
 			s.logger.Error("Failed to set trial value",
-				zap.Int("trialID", trialID),
-				zap.Float64("evaluationValue", evaluation),
-				zap.Error(err))
+				fmt.Sprintf("trialID=%d", trialID),
+				fmt.Sprintf("state=%s", state.String()),
+				fmt.Sprintf("evaluation=%f", evaluation),
+				fmt.Sprintf("err=%s", err))
 		}
 	}
 
 	err = s.Storage.SetTrialState(trialID, state)
 	if err != nil {
 		s.logger.Error("Failed to set trial state",
-			zap.Int("trialID", trialID),
-			zap.String("state", state.String()),
-			zap.Error(err))
+			fmt.Sprintf("trialID=%d", trialID),
+			fmt.Sprintf("state=%s", state.String()),
+			fmt.Sprintf("evaluation=%f", evaluation),
+			fmt.Sprintf("err=%s", err))
 		return err
 	}
 
@@ -144,7 +151,7 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 			select {
 			case <-s.ctx.Done():
 				err := s.ctx.Err()
-				s.logger.Debug("context is canceled", zap.Error(err))
+				s.logger.Debug("context is canceled", err)
 				return err
 			default:
 				// do nothing
@@ -203,12 +210,16 @@ func CreateStudy(
 	storage := NewInMemoryStorage()
 	sampler := NewRandomSearchSampler()
 	study := &Study{
-		ID:                 0,
-		Storage:            storage,
-		Sampler:            sampler,
-		Pruner:             nil,
-		direction:          StudyDirectionMinimize,
-		logger:             zap.NewNop(),
+		ID:        0,
+		Storage:   storage,
+		Sampler:   sampler,
+		Pruner:    nil,
+		direction: StudyDirectionMinimize,
+		logger: &StdLogger{
+			Logger: log.New(os.Stdout, "", log.LstdFlags),
+			Level:  LoggerLevelDebug,
+			Color:  true,
+		},
 		ignoreObjectiveErr: false,
 	}
 
@@ -238,12 +249,16 @@ func LoadStudy(
 	storage := NewInMemoryStorage()
 	sampler := NewRandomSearchSampler()
 	study := &Study{
-		ID:                 0,
-		Storage:            storage,
-		Sampler:            sampler,
-		Pruner:             nil,
-		direction:          "",
-		logger:             zap.NewNop(),
+		ID:        0,
+		Storage:   storage,
+		Sampler:   sampler,
+		Pruner:    nil,
+		direction: "",
+		logger: &StdLogger{
+			Logger: log.New(os.Stdout, "", log.LstdFlags),
+			Level:  LoggerLevelDebug,
+			Color:  true,
+		},
 		ignoreObjectiveErr: false,
 	}
 
@@ -277,10 +292,14 @@ func StudyOptionSetDirection(direction StudyDirection) StudyOption {
 	}
 }
 
-// StudyOptionSetLogger sets zap.Logger.
-func StudyOptionSetLogger(logger *zap.Logger) StudyOption {
+// StudyOptionLogger sets Logger.
+func StudyOptionLogger(logger Logger) StudyOption {
 	return func(s *Study) error {
-		s.logger = logger
+		if logger == nil {
+			s.logger = &StdLogger{Logger: nil}
+		} else {
+			s.logger = logger
+		}
 		return nil
 	}
 }
@@ -325,3 +344,7 @@ func StudyOptionSetTrialNotifyChannel(notify chan FrozenTrial) StudyOption {
 		return nil
 	}
 }
+
+// StudyOptionSetLogger sets Logger.
+// Deprecated: please use StudyOptionLogger instead.
+var StudyOptionSetLogger = StudyOptionLogger

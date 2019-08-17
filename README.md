@@ -34,12 +34,11 @@ It makes the modularity high, and the user can dynamically construct the search 
 package main
 
 import (
-    "fmt"
+    "log"
     "math"
 
     "github.com/c-bata/goptuna"
     "github.com/c-bata/goptuna/tpe"
-    "go.uber.org/zap"
 )
 
 func objective(trial goptuna.Trial) (float64, error) {
@@ -49,20 +48,22 @@ func objective(trial goptuna.Trial) (float64, error) {
 }
 
 func main() {
-    logger, _ := zap.NewDevelopment()
-    defer logger.Sync()
-
-    study, _ := goptuna.CreateStudy(
+    study, err := goptuna.CreateStudy(
         "goptuna-example",
         goptuna.StudyOptionSampler(tpe.NewSampler()),
-        goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
-        goptuna.StudyOptionSetLogger(logger),
     )
-    _ = study.Optimize(objective, 100)
+    if err != nil {
+        log.Fatal("failed to create study:", err)
+    }
+    err = study.Optimize(objective, 100)
+    if err != nil {
+        log.Fatal("failed to optimize:", err)
+    }
 
     v, _ := study.GetBestValue()
     params, _ := study.GetBestParams()
-    fmt.Println("result:", v, params)
+    log.Printf("Best evaluation=%f (x1=%f, x2=%f)",
+        v, params["x1"].(float64), params["x2"].(float64))
 }
 ```
 
@@ -152,15 +153,15 @@ import ...
 
 func main() {
     db, _ := gorm.Open("mysql", "goptuna:password@tcp(localhost:3306)/yourdb?parseTime=true")
-	storage := rdb.NewStorage(db)
-	defer db.Close()
+    storage := rdb.NewStorage(db)
+    defer db.Close()
 
-	study, _ := goptuna.LoadStudy(
-		"yourstudy",
-		goptuna.StudyOptionStorage(storage),
-		...,
-	)
-	_ = study.Optimize(objective, 50)
+    study, _ := goptuna.LoadStudy(
+        "yourstudy",
+        goptuna.StudyOptionStorage(storage),
+        ...,
+    )
+    _ = study.Optimize(objective, 50)
     ...
 }
 ```

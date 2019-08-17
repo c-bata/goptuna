@@ -2,14 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"math"
-	"os"
 
 	"github.com/c-bata/goptuna"
 	"github.com/c-bata/goptuna/tpe"
-	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -20,16 +17,9 @@ func objective(trial goptuna.Trial) (float64, error) {
 }
 
 func main() {
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		os.Exit(1)
-	}
-	defer logger.Sync()
-
 	study, _ := goptuna.CreateStudy(
 		"goptuna-example",
 		goptuna.StudyOptionSampler(tpe.NewSampler()),
-		goptuna.StudyOptionSetLogger(logger),
 	)
 
 	eg, ctx := errgroup.WithContext(context.Background())
@@ -40,12 +30,11 @@ func main() {
 		})
 	}
 	if err := eg.Wait(); err != nil {
-		log.Println("error", err)
-		os.Exit(1)
+		log.Fatal("Optimize error", err)
 	}
 
 	v, _ := study.GetBestValue()
 	params, _ := study.GetBestParams()
-	fmt.Println("best value:", v)
-	fmt.Println("best params:", params)
+	log.Printf("Best evaluation=%f (x1=%f, x2=%f)",
+		v, params["x1"].(float64), params["x2"].(float64))
 }
