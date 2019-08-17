@@ -77,17 +77,15 @@ func (s *Study) runTrial(objective FuncObjective) error {
 		state = TrialStateComplete
 	}
 
-	if s.logger != nil {
-		s.logger.Info("Trial finished",
-			zap.Int("trialID", trialID),
-			zap.String("state", state.String()),
-			zap.Float64("evaluationValue", evaluation),
-			zap.Error(objerr))
-	}
+	s.logger.Info("Trial finished",
+		zap.Int("trialID", trialID),
+		zap.String("state", state.String()),
+		zap.Float64("evaluationValue", evaluation),
+		zap.Error(objerr))
 
 	if state == TrialStateComplete {
 		err = s.Storage.SetTrialValue(trialID, evaluation)
-		if err != nil && s.logger != nil {
+		if err != nil {
 			s.logger.Error("Failed to set trial value",
 				zap.Int("trialID", trialID),
 				zap.Float64("evaluationValue", evaluation),
@@ -97,12 +95,10 @@ func (s *Study) runTrial(objective FuncObjective) error {
 
 	err = s.Storage.SetTrialState(trialID, state)
 	if err != nil {
-		if s.logger != nil {
-			s.logger.Error("Failed to set trial state",
-				zap.Int("trialID", trialID),
-				zap.String("state", state.String()),
-				zap.Error(err))
-		}
+		s.logger.Error("Failed to set trial state",
+			zap.Int("trialID", trialID),
+			zap.String("state", state.String()),
+			zap.Error(err))
 		return err
 	}
 
@@ -148,9 +144,7 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 			select {
 			case <-s.ctx.Done():
 				err := s.ctx.Err()
-				if err != nil && s.logger != nil {
-					s.logger.Debug("context is canceled", zap.Error(err))
-				}
+				s.logger.Debug("context is canceled", zap.Error(err))
 				return err
 			default:
 				// do nothing
@@ -214,7 +208,7 @@ func CreateStudy(
 		Sampler:            sampler,
 		Pruner:             nil,
 		direction:          StudyDirectionMinimize,
-		logger:             nil,
+		logger:             zap.NewNop(),
 		ignoreObjectiveErr: false,
 	}
 
@@ -249,7 +243,7 @@ func LoadStudy(
 		Sampler:            sampler,
 		Pruner:             nil,
 		direction:          "",
-		logger:             nil,
+		logger:             zap.NewNop(),
 		ignoreObjectiveErr: false,
 	}
 
