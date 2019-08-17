@@ -153,15 +153,15 @@ import ...
 
 func main() {
     db, _ := gorm.Open("mysql", "goptuna:password@tcp(localhost:3306)/yourdb?parseTime=true")
-	storage := rdb.NewStorage(db)
-	defer db.Close()
+    storage := rdb.NewStorage(db)
+    defer db.Close()
 
-	study, _ := goptuna.LoadStudy(
-		"yourstudy",
-		goptuna.StudyOptionStorage(storage),
-		...,
-	)
-	_ = study.Optimize(objective, 50)
+    study, _ := goptuna.LoadStudy(
+        "yourstudy",
+        goptuna.StudyOptionStorage(storage),
+        ...,
+    )
+    _ = study.Optimize(objective, 50)
     ...
 }
 ```
