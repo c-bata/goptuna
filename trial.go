@@ -76,9 +76,7 @@ func (t *Trial) Report(value float64, step int) error {
 // the trial should be pruned at the given step.
 func (t *Trial) ShouldPrune(value float64) (bool, error) {
 	if t.Study.Pruner == nil {
-		if t.Study.logger != nil {
-			t.Study.logger.Warn("Although it's not registered pruner, but you calls ShouldPrune method")
-		}
+		t.Study.logger.Warn("Although it's not registered pruner, but you calls ShouldPrune method")
 		return false, nil
 	}
 
