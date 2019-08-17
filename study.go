@@ -344,3 +344,7 @@ func StudyOptionSetTrialNotifyChannel(notify chan FrozenTrial) StudyOption {
 		return nil
 	}
 }
+
+// StudyOptionSetLogger sets Logger.
+// Deprecated: please use StudyOptionLogger instead.
+var StudyOptionSetLogger = StudyOptionLogger

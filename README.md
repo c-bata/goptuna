@@ -52,18 +52,18 @@ func main() {
         "goptuna-example",
         goptuna.StudyOptionSampler(tpe.NewSampler()),
     )
-	if err != nil {
-		log.Fatal("failed to create study:", err)
-	}
+    if err != nil {
+        log.Fatal("failed to create study:", err)
+    }
     err = study.Optimize(objective, 100)
-	if err != nil {
-		log.Fatal("failed to optimize:", err)
-	}
+    if err != nil {
+        log.Fatal("failed to optimize:", err)
+    }
 
     v, _ := study.GetBestValue()
     params, _ := study.GetBestParams()
-	log.Printf("Best evaluation=%f (x1=%f, x2=%f)",
-		v, params["x1"].(float64), params["x2"].(float64))
+    log.Printf("Best evaluation=%f (x1=%f, x2=%f)",
+        v, params["x1"].(float64), params["x2"].(float64))
 }
 ```
 
