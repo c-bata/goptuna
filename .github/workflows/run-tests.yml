@@ -1,4 +1,4 @@
-name: Goptuna
+name: Run tests and lint checks
 on:
   pull_request:
     branches:
@@ -24,7 +24,7 @@ jobs:
         GOPATH: /home/runner/work/
       run: |
         go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-        $GOPATH/bin/golangci-lint run --no-config --disable-all --enable=goimports --enable=gocyclo --enable=govet --enable=misspell --enable=golint ./...
+        GOCILINT=${GOPATH}/bin/golangci-lint make lint
 
   test:
     name: Test on ${{ matrix.os }}
@@ -44,6 +44,4 @@ jobs:
       uses: actions/checkout@master
 
     - name: Running go tests
-      env:
-        GO111MODULE: on
-      run: go test -race ./...
+      run: make test
