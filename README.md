@@ -64,14 +64,15 @@ func main() {
 
     // Print the best evaluation value and the parameters.
     v, _ := study.GetBestValue()
-    params, _ := study.GetBestParams()
-    log.Printf("Best evaluation=%f (x1=%f, x2=%f)",
-        v, params["x1"].(float64), params["x2"].(float64))
-
-    // $ go run main.go
-    // ...
-    // 2019/08/18 00:54:51 Best evaluation=0.038327 (x1=2.181604, x2=-4.926880)
+    p, _ := study.GetBestParams()
+    log.Printf("Best evaluation=%f (x1=%f, x2=%f)", v, p["x1"].(float64), p["x2"].(float64))
 }
+```
+
+```console
+$ go run main.go
+...
+2019/08/18 00:54:51 Best evaluation=0.038327 (x1=2.181604, x2=-4.926880)
 ```
 
 **Advanced usages**
