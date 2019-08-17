@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"math"
 	"os"
@@ -47,6 +46,6 @@ func main() {
 
 	v, _ := study.GetBestValue()
 	params, _ := study.GetBestParams()
-	fmt.Println("best value:", v)
-	fmt.Println("best params:", params)
+	log.Printf("Best evaluation=%f (x1=%f, x2=%f)",
+		v, params["x1"].(float64), params["x2"].(float64))
 }

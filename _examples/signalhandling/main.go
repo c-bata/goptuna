@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"math"
 	"os"
 	"os/exec"
@@ -14,8 +14,6 @@ import (
 	"github.com/c-bata/goptuna"
 	"github.com/c-bata/goptuna/rdb"
 	"github.com/jinzhu/gorm"
-	"go.uber.org/zap"
-
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
@@ -34,15 +32,9 @@ func objective(trial goptuna.Trial) (float64, error) {
 }
 
 func main() {
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		os.Exit(1)
-	}
-	defer logger.Sync()
-
 	db, err := gorm.Open("sqlite3", "db.sqlite3")
 	if err != nil {
-		logger.Fatal("failed to open db", zap.Error(err))
+		log.Fatal("failed to open database:", err)
 	}
 	defer db.Close()
 	db.DB().SetMaxOpenConns(1)
@@ -53,10 +45,9 @@ func main() {
 		"goptuna-example",
 		goptuna.StudyOptionStorage(rdb.NewStorage(db)),
 		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
-		goptuna.StudyOptionSetLogger(logger),
 	)
 	if err != nil {
-		logger.Fatal("Failed to create a study", zap.Error(err))
+		log.Fatal("failed to create a study:", err)
 	}
 
 	// create a context with cancel function
@@ -78,18 +69,21 @@ func main() {
 			return
 		}
 		cancel()
-		logger.Error("Catch a kill signal", zap.String("signal", sig.String()))
+		log.Println("Catch a kill signal:", sig.String())
 	}()
 
 	// run optimize with multiple goroutine workers
 	concurrency := runtime.NumCPU() - 1
+	if concurrency == 0 {
+		concurrency = 1
+	}
 	for i := 0; i < concurrency; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			err = study.Optimize(objective, 100/concurrency)
 			if err != nil {
-				logger.Error("Optimize error", zap.Error(err))
+				log.Fatal("Optimize error:", err)
 			}
 		}()
 	}
@@ -98,6 +92,6 @@ func main() {
 	// print best hyper-parameters and the result
 	v, _ := study.GetBestValue()
 	params, _ := study.GetBestParams()
-	logger.Info("result", zap.Float64("value", v),
-		zap.String("params", fmt.Sprintf("%#v", params)))
+	log.Printf("Best evaluation=%f (x1=%f, x2=%f)",
+		v, params["x1"].(float64), params["x2"].(float64))
 }
