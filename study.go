@@ -292,10 +292,14 @@ func StudyOptionSetDirection(direction StudyDirection) StudyOption {
 	}
 }
 
-// StudyOptionSetLogger sets Logger.
+// StudyOptionLogger sets Logger.
 func StudyOptionLogger(logger Logger) StudyOption {
 	return func(s *Study) error {
-		s.logger = logger
+		if logger == nil {
+			s.logger = &StdLogger{Logger: nil}
+		} else {
+			s.logger = logger
+		}
 		return nil
 	}
 }

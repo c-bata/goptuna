@@ -15,9 +15,7 @@ func ExampleStudy_Optimize() {
 	study, _ := goptuna.CreateStudy(
 		"example",
 		goptuna.StudyOptionSampler(sampler),
-		goptuna.StudyOptionLogger(&goptuna.StdLogger{
-			Logger: nil,
-		}),
+		goptuna.StudyOptionLogger(nil),
 	)
 
 	objective := func(trial goptuna.Trial) (float64, error) {
