@@ -56,7 +56,7 @@ func (l *StdLogger) Debug(msg string, fields ...interface{}) {
 
 	prefix := "[DEBUG] "
 	if l.Color {
-		prefix = "\033[1;36m" + prefix + "\033[0m "
+		prefix = "\033[1;36m" + prefix + "\033[0m"
 	}
 	l.write(fmt.Sprintf("%s%s:", prefix, msg), fields...)
 }
@@ -70,7 +70,7 @@ func (l *StdLogger) Info(msg string, fields ...interface{}) {
 
 	prefix := "[INFO] "
 	if l.Color {
-		prefix = "\033[1;34m" + prefix + "\033[0m "
+		prefix = "\033[1;34m" + prefix + "\033[0m"
 	}
 	l.write(fmt.Sprintf("%s%s:", prefix, msg), fields...)
 }
@@ -84,7 +84,7 @@ func (l *StdLogger) Warn(msg string, fields ...interface{}) {
 
 	prefix := "[WARN] "
 	if l.Color {
-		prefix = "\033[1;33m" + prefix + "\033[0m "
+		prefix = "\033[1;33m" + prefix + "\033[0m"
 	}
 	l.write(fmt.Sprintf("%s%s:", prefix, msg), fields...)
 }
@@ -97,7 +97,7 @@ func (l *StdLogger) Error(msg string, fields ...interface{}) {
 
 	prefix := "[ERROR] "
 	if l.Color {
-		prefix = "\033[1;31m" + prefix + "\033[0m "
+		prefix = "\033[1;31m" + prefix + "\033[0m"
 	}
 	l.write(fmt.Sprintf("%s%s:", prefix, msg), fields...)
 }
