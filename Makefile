@@ -3,6 +3,11 @@ REVISION := $(shell git rev-parse --short HEAD)
 LDFLAGS := -X 'main.version=$(VERSION)' \
            -X 'main.revision=$(REVISION)'
 
+GOIMPORTS ?= GO111MODULE=on goimports
+GOCILINT ?= GO111MODULE=on golangci-lint
+GO ?= GO111MODULE=on go
+GODOC ?= GO111MODULE=on godoc
+
 .DEFAULT_GOAL := help
 
 PKGS := $(shell go list ./...)
@@ -23,35 +28,35 @@ fmt: $(SOURCES) ## Formatting source codes.
 
 .PHONY: lint
 lint: ## Run golint and go vet.
-	@$(ENV) golangci-lint run --no-config --disable-all --enable=goimports --enable=gocyclo --enable=govet --enable=misspell --enable=golint ./...
+	@$(GOCILINT) run --no-config --disable-all --enable=goimports --enable=gocyclo --enable=govet --enable=misspell --enable=golint ./...
 
 .PHONY: test
 test:  ## Run tests with race condition checking.
-	@$(ENV) go test -race ./...
+	@$(GO) test -race ./...
 
 .PHONY: bench
 bench:  ## Run benchmarks.
-	@$(ENV) go test -bench=. -run=- -benchmem ./...
+	@$(GO) test -bench=. -run=- -benchmem ./...
 
 .PHONY: coverage
 cover:  ## Run the tests.
-	@$(ENV) go test -coverprofile=coverage.o ./...
-	@$(ENV) go tool cover -func=coverage.o
+	@$(GO) test -coverprofile=coverage.o ./...
+	@$(GO) tool cover -func=coverage.o
 
 .PHONY: godoc
 godoc: ## Run godoc http server
-	@$(ENV) echo "Please open http://localhost:6060/pkg/github.com/c-bata/goptuna/"
-	$(ENV) godoc -http=localhost:6060
+	@echo "Please open http://localhost:6060/pkg/github.com/c-bata/goptuna/"
+	$(GODOC) -http=localhost:6060
 
 .PHONY: generate
 generate: ## Run go generate
-	@$(ENV) go generate ./...
+	@$(GO) generate ./...
 
 .PHONY: build
 build: ## Build example command lines.
 	mkdir -p ./bin/
-	$(ENV) go build -o ./bin/goptuna -ldflags "$(LDFLAGS)" cmd/main.go
-	$(ENV) ./_examples/build.sh
+	$(GO) build -o ./bin/goptuna -ldflags "$(LDFLAGS)" cmd/main.go
+	./_examples/build.sh
 
 .PHONY: help
 help: ## Show help text

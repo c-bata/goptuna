@@ -26,7 +26,7 @@ func main() {
 	study.WithContext(ctx)
 	for i := 0; i < 5; i++ {
 		eg.Go(func() error {
-			return study.Optimize(objective, 100)
+			return study.Optimize(objective, 20)
 		})
 	}
 	if err := eg.Wait(); err != nil {
