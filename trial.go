@@ -93,7 +93,7 @@ func (t *Trial) ShouldPrune(value float64) (bool, error) {
 	if maxStep == -1 {
 		return false, errors.New("there is no reported intermediate values")
 	}
-	return t.Study.Pruner.Prune(t.Study.Storage, t.Study.ID, t.ID, maxStep)
+	return t.Study.Pruner.Prune(t.Study, trial, maxStep)
 }
 
 // Number return trial's number which is consecutive and unique in a study.
