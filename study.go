@@ -216,9 +216,9 @@ func CreateStudy(
 		Pruner:    nil,
 		direction: StudyDirectionMinimize,
 		logger: &StdLogger{
-			Logger:    log.New(os.Stdout, "", log.LstdFlags),
-			Level:     LoggerLevelDebug,
-			WithColor: true,
+			Logger: log.New(os.Stdout, "", log.LstdFlags),
+			Level:  LoggerLevelDebug,
+			Color:  true,
 		},
 		ignoreObjectiveErr: false,
 	}
@@ -255,9 +255,9 @@ func LoadStudy(
 		Pruner:    nil,
 		direction: "",
 		logger: &StdLogger{
-			Logger:    log.New(os.Stdout, "", log.LstdFlags),
-			Level:     LoggerLevelDebug,
-			WithColor: true,
+			Logger: log.New(os.Stdout, "", log.LstdFlags),
+			Level:  LoggerLevelDebug,
+			Color:  true,
 		},
 		ignoreObjectiveErr: false,
 	}

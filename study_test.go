@@ -14,8 +14,10 @@ func ExampleStudy_Optimize() {
 	)
 	study, _ := goptuna.CreateStudy(
 		"example",
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionSampler(sampler),
+		goptuna.StudyOptionLogger(&goptuna.StdLogger{
+			Logger: nil,
+		}),
 	)
 
 	objective := func(trial goptuna.Trial) (float64, error) {
@@ -31,8 +33,8 @@ func ExampleStudy_Optimize() {
 	params, _ := study.GetBestParams()
 
 	fmt.Printf("Best trial: %.5f\n", value)
-	fmt.Printf("x1: %.3f\n", params["x1"])
-	fmt.Printf("x2: %.3f\n", params["x2"])
+	fmt.Printf("x1: %.3f\n", params["x1"].(float64))
+	fmt.Printf("x2: %.3f\n", params["x2"].(float64))
 	// Output:
 	// Best trial: 0.03833
 	// x1: 2.182

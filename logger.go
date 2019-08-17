@@ -2,7 +2,6 @@ package goptuna
 
 import (
 	"fmt"
-	"io"
 	"log"
 )
 
@@ -27,20 +26,12 @@ const (
 	LoggerLevelError
 )
 
-func NewStdLogger(out io.Writer) *StdLogger {
-	return &StdLogger{
-		Logger:    log.New(out, "", log.LstdFlags),
-		Level:     LoggerLevelDebug,
-		WithColor: true,
-	}
-}
-
 var _ Logger = &StdLogger{}
 
 type StdLogger struct {
-	Logger    *log.Logger
-	Level     LoggerLevel
-	WithColor bool
+	Logger *log.Logger
+	Level  LoggerLevel
+	Color  bool
 }
 
 func (l *StdLogger) write(msg string, fields ...interface{}) {
@@ -52,13 +43,13 @@ func (l *StdLogger) write(msg string, fields ...interface{}) {
 }
 
 func (l *StdLogger) Debug(msg string, fields ...interface{}) {
-	if l.Level > LoggerLevelDiscard {
+	if l.Level > LoggerLevelDebug {
 		return
 	}
 
 	prefix := "[DEBUG] "
-	if l.WithColor {
-		prefix = "\033[1;31m" + prefix + "\033[0m "
+	if l.Color {
+		prefix = "\033[1;36m" + prefix + "\033[0m "
 	}
 	l.write(fmt.Sprintf("%s%s:", prefix, msg), fields...)
 }
@@ -69,7 +60,7 @@ func (l *StdLogger) Warn(msg string, fields ...interface{}) {
 	}
 
 	prefix := "[WARN] "
-	if l.WithColor {
+	if l.Color {
 		prefix = "\033[1;33m" + prefix + "\033[0m "
 	}
 	l.write(fmt.Sprintf("%s%s:", prefix, msg), fields...)
@@ -81,7 +72,7 @@ func (l *StdLogger) Info(msg string, fields ...interface{}) {
 	}
 
 	prefix := "[INFO] "
-	if l.WithColor {
+	if l.Color {
 		prefix = "\033[1;34m" + prefix + "\033[0m "
 	}
 	l.write(fmt.Sprintf("%s%s:", prefix, msg), fields...)
@@ -93,8 +84,8 @@ func (l *StdLogger) Error(msg string, fields ...interface{}) {
 	}
 
 	prefix := "[ERROR] "
-	if l.WithColor {
-		prefix = "\033[1;36m" + prefix + "\033[0m "
+	if l.Color {
+		prefix = "\033[1;31m" + prefix + "\033[0m "
 	}
 	l.write(fmt.Sprintf("%s%s:", prefix, msg), fields...)
 }
