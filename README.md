@@ -15,7 +15,7 @@ Currently following algorithms are implemented:
 * Tree-structured Parzen Estimators (TPE)
 * Median Stopping Rule (Google Vizier)
 
-See the blog post for more details: [Practical bayesian optimization in Go using Goptuna](https://medium.com/@c_bata_/practical-bayesian-optimization-in-go-using-goptuna-edf97195fcb5).
+See the blog post for more details: [Practical bayesian optimization using Goptuna](https://medium.com/@c_bata_/practical-bayesian-optimization-in-go-using-goptuna-edf97195fcb5).
 
 ## Installation
 
@@ -41,9 +41,14 @@ import (
     "github.com/c-bata/goptuna/tpe"
 )
 
+// Define an objective function we want to minimize.
 func objective(trial goptuna.Trial) (float64, error) {
+    // Define a search space of the input values.
     x1, _ := trial.SuggestUniform("x1", -10, 10)
     x2, _ := trial.SuggestUniform("x2", -10, 10)
+
+    // Here is a two-dimensional quadratic function.
+    // F(x1, x2) = (x1 - 2)^2 + (x2 + 5)^2
     return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
 }
 
@@ -52,19 +57,25 @@ func main() {
         "goptuna-example",
         goptuna.StudyOptionSampler(tpe.NewSampler()),
     )
-    if err != nil {
-        log.Fatal("failed to create study:", err)
-    }
-    err = study.Optimize(objective, 100)
-    if err != nil {
-        log.Fatal("failed to optimize:", err)
-    }
+    if err != nil { ... }
 
+    // Run an objective function 100 times to find a global minimum.
+    err = study.Optimize(objective, 100)
+    if err != nil { ... }
+
+    // Print the best evaluation value and the parameters.
+    // Mathematically, argmin F(x1, x2) is (x1, x2) = (+2, -5).
     v, _ := study.GetBestValue()
-    params, _ := study.GetBestParams()
-    log.Printf("Best evaluation=%f (x1=%f, x2=%f)",
-        v, params["x1"].(float64), params["x2"].(float64))
+    p, _ := study.GetBestParams()
+    log.Printf("Best evaluation value=%f (x1=%f, x2=%f)",
+        v, p["x1"].(float64), p["x2"].(float64))
 }
+```
+
+```console
+$ go run main.go
+...
+2019/08/18 00:54:51 Best evaluation=0.038327 (x1=2.181604, x2=-4.926880)
 ```
 
 **Advanced usages**
