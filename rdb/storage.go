@@ -278,6 +278,9 @@ func (s *Storage) SetTrialValue(trialID int, value float64) error {
 }
 
 // SetTrialIntermediateValue sets the intermediate value of trial.
+// While sets the intermediate value, trial.value is also updated.
+// This is essentially the same with Optuna (at v0.14.0).
+// See https://github.com/pfnet/optuna/blob/v0.14.0/optuna/trial.py#L371-L373
 func (s *Storage) SetTrialIntermediateValue(trialID int, step int, value float64) error {
 	tx := s.db.Begin()
 	defer func() {
@@ -289,19 +292,40 @@ func (s *Storage) SetTrialIntermediateValue(trialID int, step int, value float64
 		return tx.Error
 	}
 
+	// Check whether trial is finished.
 	var trial trialModel
 	err := tx.First(&trial, "trial_id = ?", trialID).Error
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
+	state, err := toStateExternalRepresentation(trial.State)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if state.IsFinished() {
+		tx.Rollback()
+		return goptuna.ErrTrialCannotBeUpdated
+	}
 
-	result := tx.First(&trialValueModel{}, "trial_id = ? AND step = ?", trialID, step)
-	if result.Error != nil && !result.RecordNotFound() {
+	// Update the value of trial
+	err = tx.Model(&trialModel{}).
+		Where("trial_id = ?", trialID).
+		Update("value", value).Error
+	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
+	// If trial value is already exist, then do rollback.
+	result := tx.First(&trialValueModel{}, "trial_id = ? AND step = ?", trialID, step)
+	if !(result.Error != nil && result.RecordNotFound()) {
+		tx.Rollback()
+		return err
+	}
+
+	// Set trial intermediate value
 	err = tx.Create(&trialValueModel{
 		TrialValueReferTrial: trialID,
 		Step:                 step,

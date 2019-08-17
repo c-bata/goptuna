@@ -64,11 +64,7 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 
 // Report an intermediate value of an objective function
 func (t *Trial) Report(value float64, step int) error {
-	err := t.Study.Storage.SetTrialIntermediateValue(t.ID, step, value)
-	if err != nil {
-		return err
-	}
-	return t.Study.Storage.SetTrialValue(t.ID, value)
+	return t.Study.Storage.SetTrialIntermediateValue(t.ID, step, value)
 }
 
 // ShouldPrune judges whether the trial should be pruned.
