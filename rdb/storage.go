@@ -279,8 +279,6 @@ func (s *Storage) SetTrialValue(trialID int, value float64) error {
 
 // SetTrialIntermediateValue sets the intermediate value of trial.
 // While sets the intermediate value, trial.value is also updated.
-// This is essentially the same with Optuna (at v0.14.0).
-// See https://github.com/pfnet/optuna/blob/v0.14.0/optuna/trial.py#L371-L373
 func (s *Storage) SetTrialIntermediateValue(trialID int, step int, value float64) error {
 	tx := s.db.Begin()
 	defer func() {
@@ -310,6 +308,8 @@ func (s *Storage) SetTrialIntermediateValue(trialID int, step int, value float64
 	}
 
 	// Update the value of trial
+	// This is essentially the same with Optuna (at v0.14.0).
+	// See https://github.com/pfnet/optuna/blob/v0.14.0/optuna/trial.py#L371-L373
 	err = tx.Model(&trialModel{}).
 		Where("trial_id = ?", trialID).
 		Update("value", value).Error

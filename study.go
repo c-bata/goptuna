@@ -71,6 +71,7 @@ func (s *Study) runTrial(objective FuncObjective) (int, error) {
 	var state TrialState
 	if objerr == ErrTrialPruned {
 		state = TrialStatePruned
+		objerr = nil
 	} else if objerr != nil {
 		state = TrialStateFail
 	} else {
@@ -95,8 +96,8 @@ func (s *Study) runTrial(objective FuncObjective) (int, error) {
 				fmt.Sprintf("trialID=%d", trialID),
 				fmt.Sprintf("state=%s", state.String()),
 				fmt.Sprintf("evaluation=%f", evaluation))
+			return trialID, err
 		}
-		return trialID, err
 	}
 
 	err = s.Storage.SetTrialState(trialID, state)
