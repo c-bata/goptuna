@@ -80,13 +80,15 @@ func (s *Study) runTrial(objective FuncObjective) (int, error) {
 
 	if objerr != nil {
 		s.logger.Error("Objective function returns error",
+			fmt.Sprintf("trialID=%d", trialID),
+			fmt.Sprintf("state=%s", state.String()),
 			fmt.Sprintf("err=%s", objerr))
+	} else {
+		s.logger.Info("Trial finished",
+			fmt.Sprintf("trialID=%d", trialID),
+			fmt.Sprintf("state=%s", state.String()),
+			fmt.Sprintf("evaluation=%f", evaluation))
 	}
-
-	s.logger.Info("Trial finished",
-		fmt.Sprintf("trialID=%d", trialID),
-		fmt.Sprintf("state=%s", state.String()),
-		fmt.Sprintf("evaluation=%f", evaluation))
 
 	if state == TrialStateComplete {
 		// The trial.value of pruned trials are already set at trial.Report().
@@ -95,7 +97,8 @@ func (s *Study) runTrial(objective FuncObjective) (int, error) {
 			s.logger.Error("Failed to set trial value",
 				fmt.Sprintf("trialID=%d", trialID),
 				fmt.Sprintf("state=%s", state.String()),
-				fmt.Sprintf("evaluation=%f", evaluation))
+				fmt.Sprintf("evaluation=%f", evaluation),
+				fmt.Sprintf("err=%s", err))
 			return trialID, err
 		}
 	}
