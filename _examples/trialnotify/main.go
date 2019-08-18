@@ -21,7 +21,7 @@ func main() {
 	study, _ := goptuna.CreateStudy(
 		"goptuna-example",
 		goptuna.StudyOptionSampler(tpe.NewSampler()),
-		goptuna.StudyOptionIgnoreObjectiveErr(true),
+		goptuna.StudyOptionIgnoreError(true),
 		goptuna.StudyOptionSetTrialNotifyChannel(trialchan),
 	)
 

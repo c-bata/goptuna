@@ -138,7 +138,7 @@ func TestTrial_Suggest(t *testing.T) {
 				goptuna.RandomSearchSamplerOptionSeed(0),
 			)
 			study, err := goptuna.CreateStudy(tt.name,
-				goptuna.StudyOptionIgnoreObjectiveErr(false),
+				goptuna.StudyOptionIgnoreError(false),
 				goptuna.StudyOptionSampler(sampler))
 
 			err = study.Optimize(tt.objective, 1)

@@ -2,11 +2,14 @@ package goptuna
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"sync"
 )
+
+var errCreateNewTrial = errors.New("failed to create a new trial")
 
 // FuncObjective is a type of objective function
 type FuncObjective func(trial Trial) (float64, error)
@@ -23,16 +26,16 @@ const (
 
 // Study corresponds to an optimization task, i.e., a set of trials.
 type Study struct {
-	ID                 int
-	Storage            Storage
-	Sampler            Sampler
-	Pruner             Pruner
-	direction          StudyDirection
-	logger             Logger
-	ignoreObjectiveErr bool
-	trialNotifyChan    chan FrozenTrial
-	mu                 sync.RWMutex
-	ctx                context.Context
+	ID                int
+	Storage           Storage
+	Sampler           Sampler
+	Pruner            Pruner
+	direction         StudyDirection
+	logger            Logger
+	ignoreErr         bool
+	trialNotification chan FrozenTrial
+	mu                sync.RWMutex
+	ctx               context.Context
 }
 
 // GetTrials returns all trials in this study.
@@ -45,11 +48,6 @@ func (s *Study) Direction() StudyDirection {
 	return s.direction
 }
 
-// Report reports an objective function value
-func (s *Study) Report(trialID int, value float64) error {
-	return s.Storage.SetTrialValue(trialID, value)
-}
-
 // WithContext sets a context and it might cancel the execution of Optimize.
 func (s *Study) WithContext(ctx context.Context) {
 	s.mu.Lock()
@@ -57,21 +55,23 @@ func (s *Study) WithContext(ctx context.Context) {
 	s.ctx = ctx
 }
 
-func (s *Study) runTrial(objective FuncObjective) error {
+func (s *Study) runTrial(objective FuncObjective) (int, error) {
 	trialID, err := s.Storage.CreateNewTrialID(s.ID)
 	if err != nil {
-		return err
+		s.logger.Error("failed to create a new trial",
+			fmt.Sprintf("err=%s", err))
+		return -1, errCreateNewTrial
 	}
 
 	trial := Trial{
 		Study: s,
 		ID:    trialID,
 	}
-
-	var state TrialState
 	evaluation, objerr := objective(trial)
+	var state TrialState
 	if objerr == ErrTrialPruned {
 		state = TrialStatePruned
+		objerr = nil
 	} else if objerr != nil {
 		state = TrialStateFail
 	} else {
@@ -80,15 +80,18 @@ func (s *Study) runTrial(objective FuncObjective) error {
 
 	if objerr != nil {
 		s.logger.Error("Objective function returns error",
-			fmt.Sprintf("err=%s", err))
+			fmt.Sprintf("trialID=%d", trialID),
+			fmt.Sprintf("state=%s", state.String()),
+			fmt.Sprintf("err=%s", objerr))
+	} else {
+		s.logger.Info("Trial finished",
+			fmt.Sprintf("trialID=%d", trialID),
+			fmt.Sprintf("state=%s", state.String()),
+			fmt.Sprintf("evaluation=%f", evaluation))
 	}
 
-	s.logger.Info("Trial finished",
-		fmt.Sprintf("trialID=%d", trialID),
-		fmt.Sprintf("state=%s", state.String()),
-		fmt.Sprintf("evaluation=%f", evaluation))
-
 	if state == TrialStateComplete {
+		// The trial.value of pruned trials are already set at trial.Report().
 		err = s.Storage.SetTrialValue(trialID, evaluation)
 		if err != nil {
 			s.logger.Error("Failed to set trial value",
@@ -96,6 +99,7 @@ func (s *Study) runTrial(objective FuncObjective) error {
 				fmt.Sprintf("state=%s", state.String()),
 				fmt.Sprintf("evaluation=%f", evaluation),
 				fmt.Sprintf("err=%s", err))
+			return trialID, err
 		}
 	}
 
@@ -106,36 +110,9 @@ func (s *Study) runTrial(objective FuncObjective) error {
 			fmt.Sprintf("state=%s", state.String()),
 			fmt.Sprintf("evaluation=%f", evaluation),
 			fmt.Sprintf("err=%s", err))
-		return err
+		return trialID, err
 	}
-
-	err = s.notifyFinishedTrial(trialID)
-	if err != nil {
-		return err
-	}
-	if !s.ignoreObjectiveErr && objerr != nil {
-		return objerr
-	}
-	return nil
-}
-
-func (s *Study) notifyFinishedTrial(trialID int) error {
-	if s.trialNotifyChan == nil {
-		return nil
-	}
-
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	trial, err := s.Storage.GetTrial(trialID)
-	if err != nil {
-		return err
-	}
-
-	if s.trialNotifyChan != nil {
-		s.trialNotifyChan <- trial
-	}
-	return nil
+	return trialID, objerr
 }
 
 // Optimize optimizes an objective function.
@@ -145,7 +122,6 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 		if evaluateCnt >= evaluateMax {
 			break
 		}
-		evaluateCnt++
 
 		if s.ctx != nil {
 			select {
@@ -157,7 +133,28 @@ func (s *Study) Optimize(objective FuncObjective, evaluateMax int) error {
 				// do nothing
 			}
 		}
-		if err := s.runTrial(objective); err != nil {
+		// Evaluate an objective function
+		trialID, err := s.runTrial(objective)
+		if err == errCreateNewTrial {
+			continue
+		}
+		evaluateCnt++
+
+		// Send trial notification
+		if s.trialNotification != nil {
+			frozen, gerr := s.Storage.GetTrial(trialID)
+			if gerr != nil {
+				s.logger.Error("Failed to send trial notification",
+					fmt.Sprintf("trialID=%d", trialID),
+					fmt.Sprintf("err=%s", gerr))
+				if !s.ignoreErr {
+					return gerr
+				}
+			}
+			s.trialNotification <- frozen
+		}
+
+		if !s.ignoreErr && err != nil {
 			return err
 		}
 	}
@@ -220,7 +217,7 @@ func CreateStudy(
 			Level:  LoggerLevelDebug,
 			Color:  true,
 		},
-		ignoreObjectiveErr: false,
+		ignoreErr: false,
 	}
 
 	for _, opt := range opts {
@@ -259,7 +256,7 @@ func LoadStudy(
 			Level:  LoggerLevelDebug,
 			Color:  true,
 		},
-		ignoreObjectiveErr: false,
+		ignoreErr: false,
 	}
 
 	for _, opt := range opts {
@@ -328,11 +325,11 @@ func StudyOptionPruner(pruner Pruner) StudyOption {
 	}
 }
 
-// StudyOptionIgnoreObjectiveErr sets the option to ignore error returned from objective function
-// If true, Optimize method continues to run new trial.
-func StudyOptionIgnoreObjectiveErr(ignore bool) StudyOption {
+// StudyOptionIgnoreError is an option to continue even if
+// it receive error while running Optimize method.
+func StudyOptionIgnoreError(ignore bool) StudyOption {
 	return func(s *Study) error {
-		s.ignoreObjectiveErr = ignore
+		s.ignoreErr = ignore
 		return nil
 	}
 }
@@ -340,7 +337,7 @@ func StudyOptionIgnoreObjectiveErr(ignore bool) StudyOption {
 // StudyOptionSetTrialNotifyChannel to subscribe the finished trials.
 func StudyOptionSetTrialNotifyChannel(notify chan FrozenTrial) StudyOption {
 	return func(s *Study) error {
-		s.trialNotifyChan = notify
+		s.trialNotification = notify
 		return nil
 	}
 }
