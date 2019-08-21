@@ -21,6 +21,9 @@ func NewPercentilePruner(q float64) (*PercentilePruner, error) {
 	}, nil
 }
 
+// This is a compile-time assertion to check PercentilePruner implements Pruner interface.
+var _ goptuna.Pruner = &PercentilePruner{}
+
 // PercentilePruner to keep the specified percentile of the trials.
 type PercentilePruner struct {
 	Percentile     float64
@@ -28,8 +31,8 @@ type PercentilePruner struct {
 	NWarmUpSteps   int
 }
 
-func getCompletedTrials(storage goptuna.Storage, studyID int) ([]goptuna.FrozenTrial, error) {
-	trials, err := storage.GetAllTrials(studyID)
+func getCompletedTrials(study *goptuna.Study) ([]goptuna.FrozenTrial, error) {
+	trials, err := study.Storage.GetAllTrials(study.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -103,8 +106,8 @@ func getPercentileIntermediateResultOverSteps(
 }
 
 // Prune if the best intermediate value is in the bottom percentile among trials at the same step.
-func (p *PercentilePruner) Prune(storage goptuna.Storage, studyID, trialID, step int) (bool, error) {
-	completedTrials, err := getCompletedTrials(storage, studyID)
+func (p *PercentilePruner) Prune(study *goptuna.Study, trial goptuna.FrozenTrial, step int) (bool, error) {
+	completedTrials, err := getCompletedTrials(study)
 	if err != nil {
 		return false, err
 	}
@@ -119,15 +122,11 @@ func (p *PercentilePruner) Prune(storage goptuna.Storage, studyID, trialID, step
 		return false, nil
 	}
 
-	trial, err := storage.GetTrial(trialID)
-	if err != nil {
-		return false, err
-	}
 	if len(trial.IntermediateValues) == 0 {
 		return false, nil
 	}
 
-	direction, err := storage.GetStudyDirection(studyID)
+	direction, err := study.Storage.GetStudyDirection(study.ID)
 	if err != nil {
 		return false, err
 	}

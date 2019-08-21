@@ -32,7 +32,11 @@ func TestPercentilePruner_PruneWithOneTrial(t *testing.T) {
 		NStartUpTrials: 0,
 		NWarmUpSteps:   0,
 	}
-	prune, err := pruner.Prune(study.Storage, study.ID, trialID, 1)
+	ft, err := study.Storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	prune, err := pruner.Prune(study, ft, 1)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -197,7 +201,12 @@ func TestPercentilePruner_Prune(t *testing.T) {
 				Study: study,
 				ID:    trialID,
 			}
-			prune, err := p.Prune(study.Storage, study.ID, trialID, 1)
+			ft, err := study.Storage.GetTrial(trialID)
+			if err != nil {
+				t.Errorf("should be err=nil, but got %s", err)
+				return
+			}
+			prune, err := p.Prune(study, ft, 1)
 			if err != nil || prune {
 				t.Errorf("A pruner is not activated if a trial has no intermediate values., %v %s", prune, err)
 				return
@@ -210,7 +219,12 @@ func TestPercentilePruner_Prune(t *testing.T) {
 				return
 			}
 
-			got, err := p.Prune(study.Storage, study.ID, trialID, 1)
+			ft, err = study.Storage.GetTrial(trialID)
+			if err != nil {
+				t.Errorf("should be err=nil, but got %s", err)
+				return
+			}
+			got, err := p.Prune(study, ft, 1)
 			if err != nil {
 				t.Errorf("should be err=nil, but got %s", err)
 				return
