@@ -73,6 +73,7 @@ type FrozenTrial struct {
 	SystemAttrs        map[string]string      `json:"system_attrs"`
 }
 
+// GetLatestStep returns the latest step in intermediate values.
 func (t FrozenTrial) GetLatestStep() (step int, exist bool) {
 	if len(t.IntermediateValues) == 0 {
 		return -1, false
