@@ -73,6 +73,19 @@ type FrozenTrial struct {
 	SystemAttrs        map[string]string      `json:"system_attrs"`
 }
 
+func (t FrozenTrial) GetLatestStep() (step int, exist bool) {
+	if len(t.IntermediateValues) == 0 {
+		return -1, false
+	}
+	var maxStep int
+	for k := range t.IntermediateValues {
+		if k > maxStep {
+			maxStep = k
+		}
+	}
+	return maxStep, true
+}
+
 var _ Storage = &InMemoryStorage{}
 
 // InMemoryStorageStudyID is a study id for in memory storage backend.
