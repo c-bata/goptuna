@@ -53,11 +53,6 @@ func (p *OptunaPruner) Prune(study *goptuna.Study, trial goptuna.FrozenTrial) (b
 			return false, nil
 		}
 
-		if math.IsNaN(value) {
-			// todo(c-bata): need to check this line.
-			return true, nil
-		}
-
 		var err error
 		if allTrials == nil {
 			allTrials, err = study.GetTrials()

@@ -302,3 +302,344 @@ func TestOptunaPruner_FirstTrialIsNotPruned(t *testing.T) {
 		t.Errorf("completed_rung_4 should not be exist")
 	}
 }
+
+func TestOptunaPruner_MinResource(t *testing.T) {
+	var isexit = func(x map[string]string, key string) bool {
+		for k := range x {
+			if k == key {
+				return true
+			}
+		}
+		return false
+	}
+	study, err := goptuna.CreateStudy("optuna-pruner")
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+
+	// min_resource=1: The rung 0 ends at step 1.
+	pruner := &successivehalving.OptunaPruner{
+		MinResource:          1,
+		ReductionFactor:      2,
+		MinEarlyStoppingRate: 0,
+	}
+	trialID, err := study.Storage.CreateNewTrialID(study.ID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	trial := goptuna.Trial{
+		Study: study,
+		ID:    trialID,
+	}
+	err = trial.Report(1, 1)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	ft, err := study.Storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	prune, err := pruner.Prune(study, ft)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	if prune {
+		t.Errorf("should not be activated if a trial has no intermediate values, but got prune() = %v", prune)
+	}
+
+	if !isexit(ft.SystemAttrs, "completed_rung_0") {
+		t.Errorf("completed_rung_0 should be exist")
+	}
+	if isexit(ft.SystemAttrs, "completed_rung_1") {
+		t.Errorf("completed_rung_1 should not be exist")
+	}
+
+	// min_resource=2: The rung 0 ends at step 2.
+	pruner = &successivehalving.OptunaPruner{
+		MinResource:          2,
+		ReductionFactor:      2,
+		MinEarlyStoppingRate: 0,
+	}
+	trialID, err = study.Storage.CreateNewTrialID(study.ID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	trial = goptuna.Trial{
+		Study: study,
+		ID:    trialID,
+	}
+	err = trial.Report(1, 1)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	ft, err = study.Storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	prune, err = pruner.Prune(study, ft)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	if prune {
+		t.Errorf("should not be activated if a trial has no intermediate values, but got prune() = %v", prune)
+	}
+	if isexit(ft.SystemAttrs, "completed_rung_0") {
+		t.Errorf("completed_rung_0 should not be exist")
+	}
+
+	err = trial.Report(1, 2)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	ft, err = study.Storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	prune, err = pruner.Prune(study, ft)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	if prune {
+		t.Errorf("should not be activated if a trial has no intermediate values, but got prune() = %v", prune)
+	}
+	if !isexit(ft.SystemAttrs, "completed_rung_0") {
+		t.Errorf("completed_rung_0 should not exist")
+	}
+	if isexit(ft.SystemAttrs, "completed_rung_1") {
+		t.Errorf("completed_rung_1 should not be exist")
+	}
+}
+
+func TestOptunaPruner_ReductionFactor(t *testing.T) {
+	var isexit = func(x map[string]string, key string) bool {
+		for k := range x {
+			if k == key {
+				return true
+			}
+		}
+		return false
+	}
+	study, err := goptuna.CreateStudy("optuna-pruner")
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+
+	// reduction_factor=2: The rung 0 ends at step 1.
+	pruner := &successivehalving.OptunaPruner{
+		MinResource:          1,
+		ReductionFactor:      2,
+		MinEarlyStoppingRate: 0,
+	}
+	trialID, err := study.Storage.CreateNewTrialID(study.ID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	trial := goptuna.Trial{
+		Study: study,
+		ID:    trialID,
+	}
+	err = trial.Report(1, 1)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	ft, err := study.Storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	prune, err := pruner.Prune(study, ft)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	if prune {
+		t.Errorf("should not be activated if a trial has no intermediate values, but got prune() = %v", prune)
+	}
+	if !isexit(ft.SystemAttrs, "completed_rung_0") {
+		t.Errorf("completed_rung_0 should be exist")
+	}
+	if isexit(ft.SystemAttrs, "completed_rung_1") {
+		t.Errorf("completed_rung_1 should not be exist")
+	}
+
+	// reduction_factor=3: The rung 1 ends at step 3.
+	pruner = &successivehalving.OptunaPruner{
+		MinResource:          1,
+		ReductionFactor:      3,
+		MinEarlyStoppingRate: 0,
+	}
+	trialID, err = study.Storage.CreateNewTrialID(study.ID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	trial = goptuna.Trial{
+		Study: study,
+		ID:    trialID,
+	}
+	err = trial.Report(1, 1)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	ft, err = study.Storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	prune, err = pruner.Prune(study, ft)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	if prune {
+		t.Errorf("should not be activated if a trial has no intermediate values, but got prune() = %v", prune)
+	}
+	if !isexit(ft.SystemAttrs, "completed_rung_0") {
+		t.Errorf("completed_rung_0 should be exist")
+	}
+	if isexit(ft.SystemAttrs, "completed_rung_1") {
+		t.Errorf("completed_rung_1 should not be exist")
+	}
+
+	err = trial.Report(1, 2)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	ft, err = study.Storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	prune, err = pruner.Prune(study, ft)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	if prune {
+		t.Errorf("should not be activated if a trial has no intermediate values, but got prune() = %v", prune)
+	}
+	if isexit(ft.SystemAttrs, "completed_rung_1") {
+		t.Errorf("completed_rung_1 should not be exist")
+	}
+
+	err = trial.Report(1, 3)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	ft, err = study.Storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	prune, err = pruner.Prune(study, ft)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	if prune {
+		t.Errorf("should not be activated if a trial has no intermediate values, but got prune() = %v", prune)
+	}
+	if !isexit(ft.SystemAttrs, "completed_rung_1") {
+		t.Errorf("completed_rung_1 should be exist")
+	}
+	if isexit(ft.SystemAttrs, "completed_rung_2") {
+		t.Errorf("completed_rung_2 should not be exist")
+	}
+}
+
+func TestOptunaPruner_MinEarlyStoppingRate(t *testing.T) {
+	var isexit = func(x map[string]string, key string) bool {
+		for k := range x {
+			if k == key {
+				return true
+			}
+		}
+		return false
+	}
+	study, err := goptuna.CreateStudy("optuna-pruner")
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+
+	// min_early_stopping_rate=0: The rung 0 ends at step 1.
+	pruner := &successivehalving.OptunaPruner{
+		MinResource:          1,
+		ReductionFactor:      2,
+		MinEarlyStoppingRate: 0,
+	}
+	trialID, err := study.Storage.CreateNewTrialID(study.ID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	trial := goptuna.Trial{
+		Study: study,
+		ID:    trialID,
+	}
+	err = trial.Report(1, 1)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	ft, err := study.Storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	prune, err := pruner.Prune(study, ft)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	if prune {
+		t.Errorf("should not be activated if a trial has no intermediate values, but got prune() = %v", prune)
+	}
+	if !isexit(ft.SystemAttrs, "completed_rung_0") {
+		t.Errorf("completed_rung_0 should be exist")
+	}
+
+	// min_early_stopping_rate=1: The rung 0 ends at step 2.
+	pruner = &successivehalving.OptunaPruner{
+		MinResource:          1,
+		ReductionFactor:      2,
+		MinEarlyStoppingRate: 1,
+	}
+	trialID, err = study.Storage.CreateNewTrialID(study.ID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	trial = goptuna.Trial{
+		Study: study,
+		ID:    trialID,
+	}
+	err = trial.Report(1, 1)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	ft, err = study.Storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	prune, err = pruner.Prune(study, ft)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	if prune {
+		t.Errorf("should not be activated if a trial has no intermediate values, but got prune() = %v", prune)
+	}
+	if isexit(ft.SystemAttrs, "completed_rung_0") {
+		t.Errorf("completed_rung_0 should not be exist")
+	}
+	if isexit(ft.SystemAttrs, "completed_rung_1") {
+		t.Errorf("completed_rung_1 should not be exist")
+	}
+
+	err = trial.Report(1, 2)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	ft, err = study.Storage.GetTrial(trialID)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	prune, err = pruner.Prune(study, ft)
+	if err != nil {
+		t.Errorf("should be err=nil, but got %s", err)
+	}
+	if prune {
+		t.Errorf("should not be activated if a trial has no intermediate values, but got prune() = %v", prune)
+	}
+	if !isexit(ft.SystemAttrs, "completed_rung_0") {
+		t.Errorf("completed_rung_0 should be exist")
+	}
+	if isexit(ft.SystemAttrs, "completed_rung_1") {
+		t.Errorf("completed_rung_1 should not be exist")
+	}
+}
