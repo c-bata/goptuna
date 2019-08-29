@@ -106,7 +106,7 @@ func getPercentileIntermediateResultOverSteps(
 }
 
 // Prune if the best intermediate value is in the bottom percentile among trials at the same step.
-func (p *PercentilePruner) Prune(study *goptuna.Study, trial goptuna.FrozenTrial, step int) (bool, error) {
+func (p *PercentilePruner) Prune(study *goptuna.Study, trial goptuna.FrozenTrial) (bool, error) {
 	completedTrials, err := getCompletedTrials(study)
 	if err != nil {
 		return false, err
@@ -116,6 +116,11 @@ func (p *PercentilePruner) Prune(study *goptuna.Study, trial goptuna.FrozenTrial
 		return false, nil
 	}
 	if ntrials < p.NStartUpTrials {
+		return false, nil
+	}
+
+	step, exist := trial.GetLatestStep()
+	if !exist {
 		return false, nil
 	}
 	if step <= p.NWarmUpSteps {
