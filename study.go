@@ -56,7 +56,7 @@ func (s *Study) WithContext(ctx context.Context) {
 }
 
 func (s *Study) runTrial(objective FuncObjective) (int, error) {
-	trialID, err := s.Storage.CreateNewTrialID(s.ID)
+	trialID, err := s.Storage.CreateNewTrial(s.ID)
 	if err != nil {
 		s.logger.Error("failed to create a new trial",
 			fmt.Sprintf("err=%s", err))
@@ -226,7 +226,7 @@ func CreateStudy(
 		}
 	}
 
-	studyID, err := study.Storage.CreateNewStudyID(name)
+	studyID, err := study.Storage.CreateNewStudy(name)
 	if err != nil {
 		return nil, err
 	}

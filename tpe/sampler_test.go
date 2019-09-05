@@ -123,7 +123,7 @@ func TestSampler_SampleLogUniform(t *testing.T) {
 
 	points := make([]float64, 100)
 	for i := 0; i < 100; i++ {
-		trialID, err := study.Storage.CreateNewTrialID(study.ID)
+		trialID, err := study.Storage.CreateNewTrial(study.ID)
 		if err != nil {
 			t.Errorf("should not be err, but got %s", err)
 			return
@@ -176,7 +176,7 @@ func TestSampler_SampleDiscreteUniform(t *testing.T) {
 
 	points := make([]float64, 100)
 	for i := 0; i < 100; i++ {
-		trialID, err := study.Storage.CreateNewTrialID(study.ID)
+		trialID, err := study.Storage.CreateNewTrial(study.ID)
 		if err != nil {
 			t.Errorf("should not be err, but got %s", err)
 			return

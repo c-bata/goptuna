@@ -7,9 +7,9 @@ import (
 	"github.com/c-bata/goptuna"
 )
 
-func ExampleInMemoryStorage_CreateNewStudyID() {
+func ExampleInMemoryStorage_CreateNewStudy() {
 	storage := goptuna.NewInMemoryStorage()
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		panic(err)
 	}
@@ -21,7 +21,7 @@ func ExampleInMemoryStorage_CreateNewStudyID() {
 
 func ExampleInMemoryStorage_SetStudyUserAttr() {
 	storage := goptuna.NewInMemoryStorage()
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +43,7 @@ func ExampleInMemoryStorage_SetStudyUserAttr() {
 
 func ExampleInMemoryStorage_SetStudySystemAttr() {
 	storage := goptuna.NewInMemoryStorage()
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		panic(err)
 	}
@@ -64,11 +64,11 @@ func ExampleInMemoryStorage_SetStudySystemAttr() {
 
 func ExampleInMemoryStorage_SetTrialUserAttr() {
 	storage := goptuna.NewInMemoryStorage()
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		panic(err)
 	}
-	trialID, err := storage.CreateNewTrialID(studyID)
+	trialID, err := storage.CreateNewTrial(studyID)
 	if err != nil {
 		panic(err)
 	}
@@ -91,11 +91,11 @@ func ExampleInMemoryStorage_SetTrialUserAttr() {
 
 func ExampleInMemoryStorage_SetTrialSystemAttr() {
 	storage := goptuna.NewInMemoryStorage()
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		panic(err)
 	}
-	trialID, err := storage.CreateNewTrialID(studyID)
+	trialID, err := storage.CreateNewTrial(studyID)
 	if err != nil {
 		panic(err)
 	}
@@ -117,11 +117,11 @@ func ExampleInMemoryStorage_SetTrialSystemAttr() {
 
 func ExampleInMemoryStorage_GetStudyIDFromTrialID() {
 	storage := goptuna.NewInMemoryStorage()
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		panic(err)
 	}
-	trialID, err := storage.CreateNewTrialID(studyID)
+	trialID, err := storage.CreateNewTrial(studyID)
 	if err != nil {
 		panic(err)
 	}
@@ -137,7 +137,7 @@ func ExampleInMemoryStorage_GetStudyIDFromTrialID() {
 
 func TestMemoryStorage_GetAllStudySummaries(t *testing.T) {
 	storage := goptuna.NewInMemoryStorage()
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
 		return
@@ -149,7 +149,7 @@ func TestMemoryStorage_GetAllStudySummaries(t *testing.T) {
 		return
 	}
 
-	trialID, err := storage.CreateNewTrialID(studyID)
+	trialID, err := storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
 		return
@@ -164,7 +164,7 @@ func TestMemoryStorage_GetAllStudySummaries(t *testing.T) {
 		t.Errorf("should be nil, but got %s", err)
 		return
 	}
-	trialID, err = storage.CreateNewTrialID(studyID)
+	trialID, err = storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
 		return

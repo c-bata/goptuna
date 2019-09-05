@@ -14,7 +14,7 @@ var DefaultStudyNamePrefix = "no-name-"
 // This interface is not supposed to be directly accessed by library users.
 type Storage interface {
 	// Basic study manipulation
-	CreateNewStudyID(name string) (int, error)
+	CreateNewStudy(name string) (int, error)
 	SetStudyDirection(studyID int, direction StudyDirection) error
 	SetStudyUserAttr(studyID int, key string, value string) error
 	SetStudySystemAttr(studyID int, key string, value string) error
@@ -27,7 +27,7 @@ type Storage interface {
 	GetStudySystemAttrs(studyID int) (map[string]string, error)
 	GetAllStudySummaries() ([]StudySummary, error)
 	// Basic trial manipulation
-	CreateNewTrialID(studyID int) (int, error)
+	CreateNewTrial(studyID int) (int, error)
 	SetTrialValue(trialID int, value float64) error
 	SetTrialIntermediateValue(trialID int, step int, value float64) error
 	SetTrialParam(trialID int, paramName string, paramValueInternal float64,
@@ -134,8 +134,8 @@ type InMemoryStorage struct {
 	mu sync.RWMutex
 }
 
-// CreateNewStudyID creates study and returns studyID.
-func (s *InMemoryStorage) CreateNewStudyID(name string) (int, error) {
+// CreateNewStudy creates study and returns studyID.
+func (s *InMemoryStorage) CreateNewStudy(name string) (int, error) {
 	if name != "" {
 		s.studyName = name
 	}
@@ -296,8 +296,8 @@ func (s *InMemoryStorage) checkStudyID(studyID int) bool {
 	return studyID == InMemoryStorageStudyID
 }
 
-// CreateNewTrialID creates trial and returns trialID.
-func (s *InMemoryStorage) CreateNewTrialID(studyID int) (int, error) {
+// CreateNewTrial creates trial and returns trialID.
+func (s *InMemoryStorage) CreateNewTrial(studyID int) (int, error) {
 	if !s.checkStudyID(studyID) {
 		return -1, ErrInvalidStudyID
 	}
