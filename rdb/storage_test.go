@@ -46,7 +46,7 @@ func TestStorage_CreateNewStudyID(t *testing.T) {
 		return
 	}
 	if got != 1 {
-		t.Errorf("Storage.CreateNewStudyID() = %v, want %v", got, 1)
+		t.Errorf("Storage.CreateNewStudy() = %v, want %v", got, 1)
 	}
 
 	// different study name
@@ -56,13 +56,13 @@ func TestStorage_CreateNewStudyID(t *testing.T) {
 		return
 	}
 	if got != 2 {
-		t.Errorf("Storage.CreateNewStudyID() = %v, want %v", got, 1)
+		t.Errorf("Storage.CreateNewStudy() = %v, want %v", got, 1)
 	}
 
 	// duplicate study name
 	got, err = s.CreateNewStudyID("study1")
 	if err == nil {
-		t.Errorf("Storage.CreateNewStudyID() error = %v, want duplicate error", err)
+		t.Errorf("Storage.CreateNewStudy() error = %v, want duplicate error", err)
 		return
 	}
 }

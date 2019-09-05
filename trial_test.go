@@ -157,7 +157,7 @@ func TestTrial_UserAttrs(t *testing.T) {
 		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionSampler(goptuna.NewRandomSearchSampler()),
 	)
-	trialID, err := study.Storage.CreateNewTrialID(study.ID)
+	trialID, err := study.Storage.CreateNewTrial(study.ID)
 	if err != nil {
 		t.Errorf("err: %v != nil", err)
 		return
@@ -196,7 +196,7 @@ func TestTrial_SystemAttrs(t *testing.T) {
 		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionSampler(goptuna.NewRandomSearchSampler()),
 	)
-	trialID, err := study.Storage.CreateNewTrialID(study.ID)
+	trialID, err := study.Storage.CreateNewTrial(study.ID)
 	if err != nil {
 		t.Errorf("err: %v != nil", err)
 		return

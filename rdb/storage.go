@@ -26,7 +26,7 @@ type Storage struct {
 	db *gorm.DB
 }
 
-// CreateNewStudyID creates study and returns studyID.
+// CreateNewStudy creates study and returns studyID.
 func (s *Storage) CreateNewStudyID(name string) (int, error) {
 	if name == "" {
 		u, err := uuid.NewUUID()
@@ -192,7 +192,7 @@ func (s *Storage) GetAllStudySummaries() ([]goptuna.StudySummary, error) {
 	return res, nil
 }
 
-// CreateNewTrialID creates trial and returns trialID.
+// CreateNewTrial creates trial and returns trialID.
 func (s *Storage) CreateNewTrialID(studyID int) (int, error) {
 	tx := s.db.Begin()
 	if tx.Error != nil {

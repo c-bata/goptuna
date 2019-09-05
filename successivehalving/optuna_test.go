@@ -40,7 +40,7 @@ func TestOptunaPruner_IntermediateValues(t *testing.T) {
 			}
 
 			// A pruner is not activated at a first trial.
-			trialID, err := study.Storage.CreateNewTrialID(study.ID)
+			trialID, err := study.Storage.CreateNewTrial(study.ID)
 			if err != nil {
 				t.Errorf("should be err=nil, but got %s", err)
 			}
@@ -65,7 +65,7 @@ func TestOptunaPruner_IntermediateValues(t *testing.T) {
 			}
 
 			// A pruner is not activated if a trial has no intermediate values.
-			trialID, err = study.Storage.CreateNewTrialID(study.ID)
+			trialID, err = study.Storage.CreateNewTrial(study.ID)
 			if err != nil {
 				t.Errorf("should be err=nil, but got %s", err)
 			}
@@ -119,7 +119,7 @@ func TestOptunaPruner_RungCheck(t *testing.T) {
 
 	// Report 7 trials in advance.
 	for i := 0; i < 7; i++ {
-		trialID, err := study.Storage.CreateNewTrialID(study.ID)
+		trialID, err := study.Storage.CreateNewTrial(study.ID)
 		if err != nil {
 			t.Errorf("should be err=nil, but got %s", err)
 		}
@@ -151,7 +151,7 @@ func TestOptunaPruner_RungCheck(t *testing.T) {
 	}
 
 	// Report a trial that has the 7-th value from bottom.
-	trialID, err := study.Storage.CreateNewTrialID(study.ID)
+	trialID, err := study.Storage.CreateNewTrial(study.ID)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -179,7 +179,7 @@ func TestOptunaPruner_RungCheck(t *testing.T) {
 	}
 
 	// Report a trial that has the third value from bottom.
-	trialID, err = study.Storage.CreateNewTrialID(study.ID)
+	trialID, err = study.Storage.CreateNewTrial(study.ID)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -207,7 +207,7 @@ func TestOptunaPruner_RungCheck(t *testing.T) {
 	}
 
 	// Report a trial that has the lowest value.
-	trialID, err = study.Storage.CreateNewTrialID(study.ID)
+	trialID, err = study.Storage.CreateNewTrial(study.ID)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -247,7 +247,7 @@ func TestOptunaPruner_FirstTrialIsNotPruned(t *testing.T) {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
 
-	trialID, err := study.Storage.CreateNewTrialID(study.ID)
+	trialID, err := study.Storage.CreateNewTrial(study.ID)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -323,7 +323,7 @@ func TestOptunaPruner_MinResource(t *testing.T) {
 		ReductionFactor:      2,
 		MinEarlyStoppingRate: 0,
 	}
-	trialID, err := study.Storage.CreateNewTrialID(study.ID)
+	trialID, err := study.Storage.CreateNewTrial(study.ID)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -360,7 +360,7 @@ func TestOptunaPruner_MinResource(t *testing.T) {
 		ReductionFactor:      2,
 		MinEarlyStoppingRate: 0,
 	}
-	trialID, err = study.Storage.CreateNewTrialID(study.ID)
+	trialID, err = study.Storage.CreateNewTrial(study.ID)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -430,7 +430,7 @@ func TestOptunaPruner_ReductionFactor(t *testing.T) {
 		ReductionFactor:      2,
 		MinEarlyStoppingRate: 0,
 	}
-	trialID, err := study.Storage.CreateNewTrialID(study.ID)
+	trialID, err := study.Storage.CreateNewTrial(study.ID)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -466,7 +466,7 @@ func TestOptunaPruner_ReductionFactor(t *testing.T) {
 		ReductionFactor:      3,
 		MinEarlyStoppingRate: 0,
 	}
-	trialID, err = study.Storage.CreateNewTrialID(study.ID)
+	trialID, err = study.Storage.CreateNewTrial(study.ID)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -558,7 +558,7 @@ func TestOptunaPruner_MinEarlyStoppingRate(t *testing.T) {
 		ReductionFactor:      2,
 		MinEarlyStoppingRate: 0,
 	}
-	trialID, err := study.Storage.CreateNewTrialID(study.ID)
+	trialID, err := study.Storage.CreateNewTrial(study.ID)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -591,7 +591,7 @@ func TestOptunaPruner_MinEarlyStoppingRate(t *testing.T) {
 		ReductionFactor:      2,
 		MinEarlyStoppingRate: 1,
 	}
-	trialID, err = study.Storage.CreateNewTrialID(study.ID)
+	trialID, err = study.Storage.CreateNewTrial(study.ID)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
