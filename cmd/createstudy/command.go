@@ -69,7 +69,7 @@ func GetCommand() *cobra.Command {
 			}
 
 			storage := rdb.NewStorage(db)
-			studyID, err := storage.CreateNewStudyID(studyName)
+			studyID, err := storage.CreateNewStudy(studyName)
 			if err != nil {
 				cmd.PrintErrln(err)
 				os.Exit(1)

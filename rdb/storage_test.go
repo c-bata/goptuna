@@ -31,7 +31,7 @@ func SetupSQLite3Test(t *testing.T, sqlitePath string) (*gorm.DB, func(), error)
 	}, nil
 }
 
-func TestStorage_CreateNewStudyID(t *testing.T) {
+func TestStorage_CreateNewStudy(t *testing.T) {
 	db, teardown, err := SetupSQLite3Test(t, "goptuna-test.db")
 	defer teardown()
 	if err != nil {
@@ -40,7 +40,7 @@ func TestStorage_CreateNewStudyID(t *testing.T) {
 	}
 
 	s := rdb.NewStorage(db)
-	got, err := s.CreateNewStudyID("study1")
+	got, err := s.CreateNewStudy("study1")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -50,7 +50,7 @@ func TestStorage_CreateNewStudyID(t *testing.T) {
 	}
 
 	// different study name
-	got, err = s.CreateNewStudyID("study2")
+	got, err = s.CreateNewStudy("study2")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -60,7 +60,7 @@ func TestStorage_CreateNewStudyID(t *testing.T) {
 	}
 
 	// duplicate study name
-	got, err = s.CreateNewStudyID("study1")
+	got, err = s.CreateNewStudy("study1")
 	if err == nil {
 		t.Errorf("Storage.CreateNewStudy() error = %v, want duplicate error", err)
 		return
@@ -76,7 +76,7 @@ func TestStorage_StudyDirection(t *testing.T) {
 	}
 
 	s := rdb.NewStorage(db)
-	studyID, err := s.CreateNewStudyID("study")
+	studyID, err := s.CreateNewStudy("study")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -119,7 +119,7 @@ func TestStorage_StudyUserAttrs(t *testing.T) {
 	}
 
 	storage := rdb.NewStorage(db)
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -151,7 +151,7 @@ func TestStorage_StudySystemAttrs(t *testing.T) {
 	}
 
 	storage := rdb.NewStorage(db)
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -183,12 +183,12 @@ func TestStorage_TrialUserAttrs(t *testing.T) {
 	}
 
 	storage := rdb.NewStorage(db)
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
 	}
-	trialID, err := storage.CreateNewTrialID(studyID)
+	trialID, err := storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -220,12 +220,12 @@ func TestStorage_TrialSystemAttrs(t *testing.T) {
 	}
 
 	storage := rdb.NewStorage(db)
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
 	}
-	trialID, err := storage.CreateNewTrialID(studyID)
+	trialID, err := storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -256,12 +256,12 @@ func TestStorage_GetAllTrials(t *testing.T) {
 	}
 
 	storage := rdb.NewStorage(db)
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
 	}
-	trialID, err := storage.CreateNewTrialID(studyID)
+	trialID, err := storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -291,7 +291,7 @@ func TestStorage_GetAllTrials(t *testing.T) {
 		return
 	}
 
-	trialID, err = storage.CreateNewTrialID(studyID)
+	trialID, err = storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -313,13 +313,13 @@ func TestStorage_SetTrialState(t *testing.T) {
 	}
 
 	storage := rdb.NewStorage(db)
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
 	}
 
-	trialID, err := storage.CreateNewTrialID(studyID)
+	trialID, err := storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -379,12 +379,12 @@ func TestStorage_GetTrial(t *testing.T) {
 	}
 
 	storage := rdb.NewStorage(db)
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
 	}
-	trialID, err := storage.CreateNewTrialID(studyID)
+	trialID, err := storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -443,7 +443,7 @@ func TestStorage_GetAllStudySummaries(t *testing.T) {
 	}
 
 	storage := rdb.NewStorage(db)
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -484,13 +484,13 @@ func TestStorage_GetBestTrial(t *testing.T) {
 	}
 
 	storage := rdb.NewStorage(db)
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
 	}
 	// trial number 1 (not completed yet)
-	trialID, err := storage.CreateNewTrialID(studyID)
+	trialID, err := storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -502,7 +502,7 @@ func TestStorage_GetBestTrial(t *testing.T) {
 	}
 
 	// trial number 2
-	trialID, err = storage.CreateNewTrialID(studyID)
+	trialID, err = storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -519,7 +519,7 @@ func TestStorage_GetBestTrial(t *testing.T) {
 	}
 
 	// trial number 3
-	trialID, err = storage.CreateNewTrialID(studyID)
+	trialID, err = storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -554,13 +554,13 @@ func TestStorage_SetTrialIntermediateValue(t *testing.T) {
 	}
 
 	storage := rdb.NewStorage(db)
-	studyID, err := storage.CreateNewStudyID("")
+	studyID, err := storage.CreateNewStudy("")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
 	}
 	// trial number 1 (not completed yet)
-	trialID, err := storage.CreateNewTrialID(studyID)
+	trialID, err := storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return

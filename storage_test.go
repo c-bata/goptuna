@@ -7,7 +7,7 @@ import (
 	"github.com/c-bata/goptuna"
 )
 
-func ExampleInMemoryStorage_CreateNewStudyID() {
+func ExampleInMemoryStorage_CreateNewStudy() {
 	storage := goptuna.NewInMemoryStorage()
 	studyID, err := storage.CreateNewStudy("")
 	if err != nil {

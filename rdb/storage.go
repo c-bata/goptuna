@@ -27,7 +27,7 @@ type Storage struct {
 }
 
 // CreateNewStudy creates study and returns studyID.
-func (s *Storage) CreateNewStudyID(name string) (int, error) {
+func (s *Storage) CreateNewStudy(name string) (int, error) {
 	if name == "" {
 		u, err := uuid.NewUUID()
 		if err != nil {
@@ -193,7 +193,7 @@ func (s *Storage) GetAllStudySummaries() ([]goptuna.StudySummary, error) {
 }
 
 // CreateNewTrial creates trial and returns trialID.
-func (s *Storage) CreateNewTrialID(studyID int) (int, error) {
+func (s *Storage) CreateNewTrial(studyID int) (int, error) {
 	tx := s.db.Begin()
 	if tx.Error != nil {
 		return -1, tx.Error
