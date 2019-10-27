@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/c-bata/goptuna/cmd/deletestudy"
+
 	"github.com/c-bata/goptuna/cmd/createstudy"
 	"github.com/spf13/cobra"
 
@@ -23,6 +25,7 @@ var (
 
 func main() {
 	rootCmd.AddCommand(createstudy.GetCommand())
+	rootCmd.AddCommand(deletestudy.GetCommand())
 	if version != "" && revision != "" {
 		rootCmd.Version = fmt.Sprintf("%s (rev: %s)", version, revision)
 	}

@@ -1,11 +1,8 @@
-package createstudy
+package deletestudy
 
 import (
-	"fmt"
 	"os"
-	"strings"
 
-	"github.com/c-bata/goptuna"
 	"github.com/c-bata/goptuna/internal/sqlalchemy"
 	"github.com/c-bata/goptuna/rdb"
 	"github.com/jinzhu/gorm"
@@ -15,9 +12,9 @@ import (
 // GetCommand returns the cobra's command for create-study sub-command.
 func GetCommand() *cobra.Command {
 	command := &cobra.Command{
-		Use:     "create-study",
-		Short:   "Create a study in your relational database storage.",
-		Example: "  goptuna create-study --storage sqlite:///example.db",
+		Use:     "delete-study",
+		Short:   "Delete a study in your relational database storage.",
+		Example: "  goptuna delete-study --storage sqlite:///example.db --study study",
 		Run: func(cmd *cobra.Command, args []string) {
 			storageURL, err := cmd.Flags().GetString("storage")
 			if err != nil {
@@ -42,50 +39,24 @@ func GetCommand() *cobra.Command {
 			}
 			defer db.Close()
 
-			withoutMigrate, err := cmd.Flags().GetBool("without-migration")
-			if err != nil {
-				cmd.PrintErrln(err)
-				os.Exit(1)
-			}
-			if !withoutMigrate {
-				rdb.RunAutoMigrate(db)
-			}
-
 			studyName, err := cmd.Flags().GetString("study")
 			if err != nil {
 				cmd.PrintErrln(err)
 				os.Exit(1)
 			}
 
-			direction := goptuna.StudyDirectionMinimize
-			directionStr, err := cmd.Flags().GetString("direction")
-			if err != nil {
-				cmd.PrintErrln(err)
-				os.Exit(1)
-			}
-			if strings.ToLower(directionStr) == "maximize" {
-				direction = goptuna.StudyDirectionMaximize
-			}
-
 			storage := rdb.NewStorage(db)
-			studyID, err := storage.CreateNewStudy(studyName)
+			studyID, err := storage.GetStudyIDFromName(studyName)
 			if err != nil {
 				cmd.PrintErrln(err)
 				os.Exit(1)
 			}
 
-			studyName, err = storage.GetStudyNameFromID(studyID)
+			err = storage.DeleteStudy(studyID)
 			if err != nil {
 				cmd.PrintErrln(err)
 				os.Exit(1)
 			}
-
-			err = storage.SetStudyDirection(studyID, direction)
-			if err != nil {
-				cmd.PrintErrln(err)
-				os.Exit(1)
-			}
-			fmt.Println(studyName)
 		},
 	}
 	command.Flags().StringP(
@@ -93,12 +64,5 @@ func GetCommand() *cobra.Command {
 	command.Flags().StringP(
 		"study", "", "",
 		"A human-readable name of a study to distinguish it from others.")
-	command.Flags().StringP(
-		"direction", "", "minimize",
-		"Set study direction.")
-	// http://gorm.io/docs/migration.html
-	command.Flags().BoolP(
-		"without-migration", "", false,
-		"Run create-study without running Auto-Migration. Auto-Migration will ONLY create tables, missing columns and missing indexes, and WON’T change existing column’s type or delete unused columns to protect your data.")
 	return command
 }
