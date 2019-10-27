@@ -278,6 +278,18 @@ func LoadStudy(
 	return study, nil
 }
 
+// DeleteStudy delete a study object.
+func DeleteStudy(
+	name string,
+	storage Storage,
+) error {
+	studyID, err := storage.GetStudyIDFromName(name)
+	if err != nil {
+		return err
+	}
+	return storage.DeleteStudy(studyID)
+}
+
 // StudyOption to pass the custom option
 type StudyOption func(study *Study) error
 
