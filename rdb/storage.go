@@ -43,6 +43,13 @@ func (s *Storage) CreateNewStudy(name string) (int, error) {
 	return study.ID, err
 }
 
+// DeleteNewStudy creates study and returns studyID.
+func (s *Storage) DeleteStudy(studyID int) error {
+	return s.db.Delete(&studyModel{
+		ID: studyID,
+	}).Error
+}
+
 // SetStudyDirection sets study direction of the objective.
 func (s *Storage) SetStudyDirection(studyID int, direction goptuna.StudyDirection) error {
 	d := directionMinimize

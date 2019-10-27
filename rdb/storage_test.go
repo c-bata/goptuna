@@ -67,6 +67,58 @@ func TestStorage_CreateNewStudy(t *testing.T) {
 	}
 }
 
+func TestStorage_DeleteStudy(t *testing.T) {
+	db, teardown, err := SetupSQLite3Test(t, "goptuna-test.db")
+	defer teardown()
+	if err != nil {
+		t.Errorf("failed to setup tests with %s", err)
+		return
+	}
+
+	s := rdb.NewStorage(db)
+	got, err := s.CreateNewStudy("study1")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	if got != 1 {
+		t.Errorf("Storage.CreateNewStudy() = %v, want %v", got, 1)
+	}
+	got, err = s.CreateNewStudy("study2")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
+	if got != 2 {
+		t.Errorf("Storage.CreateNewStudy() = %v, want %v", got, 1)
+	}
+
+	summaries, err := s.GetAllStudySummaries()
+	if err != nil {
+		t.Errorf("Storage.GetAllStudySummaries() error = %v, want nil", err)
+		return
+	}
+	if len(summaries) != 2 {
+		t.Errorf("Must be two studies.")
+	}
+
+	// duplicate study name
+	err = s.DeleteStudy(1)
+	if err != nil {
+		t.Errorf("Storage.DeleteNewStudy() error = %v, want nil", err)
+		return
+	}
+
+	summaries, err = s.GetAllStudySummaries()
+	if err != nil {
+		t.Errorf("Storage.GetAllStudySummaries() error = %v, want nil", err)
+		return
+	}
+	if len(summaries) != 1 {
+		t.Errorf("Must be one study.")
+	}
+}
+
 func TestStorage_StudyDirection(t *testing.T) {
 	db, teardown, err := SetupSQLite3Test(t, "goptuna-test.db")
 	defer teardown()
