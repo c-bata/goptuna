@@ -15,6 +15,7 @@ var DefaultStudyNamePrefix = "no-name-"
 type Storage interface {
 	// Basic study manipulation
 	CreateNewStudy(name string) (int, error)
+	DeleteStudy(studyID int) error
 	SetStudyDirection(studyID int, direction StudyDirection) error
 	SetStudyUserAttr(studyID int, key string, value string) error
 	SetStudySystemAttr(studyID int, key string, value string) error
@@ -140,6 +141,22 @@ func (s *InMemoryStorage) CreateNewStudy(name string) (int, error) {
 		s.studyName = name
 	}
 	return InMemoryStorageStudyID, nil
+}
+
+// DeleteStudy deletes a study.
+func (s *InMemoryStorage) DeleteStudy(studyID int) error {
+	if !s.checkStudyID(studyID) {
+		return ErrInvalidStudyID
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.direction = StudyDirectionMinimize
+	s.trials = make([]FrozenTrial, 0, 128)
+	s.userAttrs = make(map[string]string, 8)
+	s.systemAttrs = make(map[string]string, 8)
+	s.studyName = DefaultStudyNamePrefix + InMemoryStorageStudyUUID
+	return nil
 }
 
 // SetStudyDirection sets study direction of the objective.
