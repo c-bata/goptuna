@@ -34,6 +34,7 @@ type Study struct {
 	logger            Logger
 	ignoreErr         bool
 	trialNotification chan FrozenTrial
+	loadIfExists      bool
 	mu                sync.RWMutex
 	ctx               context.Context
 }
@@ -226,6 +227,13 @@ func CreateStudy(
 		}
 	}
 
+	if study.loadIfExists {
+		study, err := LoadStudy(name, opts...)
+		if err == nil {
+			return study, nil
+		}
+	}
+
 	studyID, err := study.Storage.CreateNewStudy(name)
 	if err != nil {
 		return nil, err
@@ -350,6 +358,14 @@ func StudyOptionIgnoreError(ignore bool) StudyOption {
 func StudyOptionSetTrialNotifyChannel(notify chan FrozenTrial) StudyOption {
 	return func(s *Study) error {
 		s.trialNotification = notify
+		return nil
+	}
+}
+
+// StudyOptionLoadIfExists to load the study if exists.
+func StudyOptionLoadIfExists(loadIfExists bool) StudyOption {
+	return func(s *Study) error {
+		s.loadIfExists = loadIfExists
 		return nil
 	}
 }

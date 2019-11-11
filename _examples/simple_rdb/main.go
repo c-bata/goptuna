@@ -36,11 +36,12 @@ func main() {
 	storage := rdb.NewStorage(db)
 	defer db.Close()
 
-	study, err := goptuna.LoadStudy(
+	study, err := goptuna.CreateStudy(
 		"rdb",
 		goptuna.StudyOptionStorage(storage),
 		goptuna.StudyOptionSampler(tpe.NewSampler()),
 		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
+		goptuna.StudyOptionLoadIfExists(true),
 	)
 	if err != nil {
 		log.Fatal("failed to create study", err)
