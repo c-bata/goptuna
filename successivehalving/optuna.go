@@ -26,7 +26,7 @@ func NewOptunaPruner() *OptunaPruner {
 var _ goptuna.Pruner = &OptunaPruner{}
 
 // OptunaPruner is Optuna-flavored Asynchronous Successive Halving Algorithm.
-// See https://github.com/pfnet/optuna/pull/404 for details.
+// See https://github.com/optuna/optuna/pull/404 for details.
 type OptunaPruner struct {
 	MinResource          int
 	ReductionFactor      int

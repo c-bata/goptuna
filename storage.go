@@ -378,7 +378,7 @@ func (s *InMemoryStorage) SetTrialIntermediateValue(trialID int, step int, value
 	}
 
 	// This is essentially the same with Optuna (at v0.14.0).
-	// See https://github.com/pfnet/optuna/blob/v0.14.0/optuna/trial.py#L371-L373
+	// See https://github.com/optuna/optuna/blob/v0.14.0/optuna/trial.py#L371-L373
 	trial.Value = value
 
 	trial.IntermediateValues[step] = value
