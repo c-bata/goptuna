@@ -27,7 +27,7 @@ func TestOptunaPruner_IntermediateValues(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pruner := &successivehalving.OptunaPruner{
+			pruner := &successivehalving.Pruner{
 				MinResource:          1,
 				ReductionFactor:      2,
 				MinEarlyStoppingRate: 0,
@@ -106,7 +106,7 @@ func TestOptunaPruner_IntermediateValues(t *testing.T) {
 }
 
 func TestOptunaPruner_RungCheck(t *testing.T) {
-	pruner := &successivehalving.OptunaPruner{
+	pruner := &successivehalving.Pruner{
 		MinResource:          1,
 		ReductionFactor:      2,
 		MinEarlyStoppingRate: 0,
@@ -236,7 +236,7 @@ func TestOptunaPruner_RungCheck(t *testing.T) {
 }
 
 func TestOptunaPruner_FirstTrialIsNotPruned(t *testing.T) {
-	pruner := &successivehalving.OptunaPruner{
+	pruner := &successivehalving.Pruner{
 		MinResource:          1,
 		ReductionFactor:      2,
 		MinEarlyStoppingRate: 0,
@@ -318,7 +318,7 @@ func TestOptunaPruner_MinResource(t *testing.T) {
 	}
 
 	// min_resource=1: The rung 0 ends at step 1.
-	pruner := &successivehalving.OptunaPruner{
+	pruner := &successivehalving.Pruner{
 		MinResource:          1,
 		ReductionFactor:      2,
 		MinEarlyStoppingRate: 0,
@@ -355,7 +355,7 @@ func TestOptunaPruner_MinResource(t *testing.T) {
 	}
 
 	// min_resource=2: The rung 0 ends at step 2.
-	pruner = &successivehalving.OptunaPruner{
+	pruner = &successivehalving.Pruner{
 		MinResource:          2,
 		ReductionFactor:      2,
 		MinEarlyStoppingRate: 0,
@@ -425,7 +425,7 @@ func TestOptunaPruner_ReductionFactor(t *testing.T) {
 	}
 
 	// reduction_factor=2: The rung 0 ends at step 1.
-	pruner := &successivehalving.OptunaPruner{
+	pruner := &successivehalving.Pruner{
 		MinResource:          1,
 		ReductionFactor:      2,
 		MinEarlyStoppingRate: 0,
@@ -461,7 +461,7 @@ func TestOptunaPruner_ReductionFactor(t *testing.T) {
 	}
 
 	// reduction_factor=3: The rung 1 ends at step 3.
-	pruner = &successivehalving.OptunaPruner{
+	pruner = &successivehalving.Pruner{
 		MinResource:          1,
 		ReductionFactor:      3,
 		MinEarlyStoppingRate: 0,
@@ -553,7 +553,7 @@ func TestOptunaPruner_MinEarlyStoppingRate(t *testing.T) {
 	}
 
 	// min_early_stopping_rate=0: The rung 0 ends at step 1.
-	pruner := &successivehalving.OptunaPruner{
+	pruner := &successivehalving.Pruner{
 		MinResource:          1,
 		ReductionFactor:      2,
 		MinEarlyStoppingRate: 0,
@@ -586,7 +586,7 @@ func TestOptunaPruner_MinEarlyStoppingRate(t *testing.T) {
 	}
 
 	// min_early_stopping_rate=1: The rung 0 ends at step 2.
-	pruner = &successivehalving.OptunaPruner{
+	pruner = &successivehalving.Pruner{
 		MinResource:          1,
 		ReductionFactor:      2,
 		MinEarlyStoppingRate: 1,
