@@ -13,28 +13,38 @@ import (
 
 var errRungNotFound = errors.New("rung not found")
 
-// NewOptunaPruner is a constructor for OptunaPruner.
-func NewOptunaPruner() *OptunaPruner {
-	return &OptunaPruner{
+// NewPruner is a constructor for Pruner.
+func NewPruner(opts ...Option) (*Pruner, error) {
+	pruner := &Pruner{
 		MinResource:          1,
 		ReductionFactor:      4,
 		MinEarlyStoppingRate: 0,
 	}
+
+	for _, opt := range opts {
+		if err := opt(pruner); err != nil {
+			return nil, err
+		}
+	}
+	return pruner, nil
 }
 
 // This is a compile-time assertion to check PercentilePruner implements Pruner interface.
-var _ goptuna.Pruner = &OptunaPruner{}
+var _ goptuna.Pruner = &Pruner{}
 
-// OptunaPruner is Optuna-flavored Asynchronous Successive Halving Algorithm.
-// See https://github.com/optuna/optuna/pull/404 for details.
-type OptunaPruner struct {
+// Pruner using Optuna flavored Asynchronous Successive Halving Algorithm.
+//
+// Successive Halving (arXiv: https://arxiv.org/abs/1502.07943) is a bandit-based algorithm to identify
+// the best one among multiple configurations. This is based on Asynchronous Successive Halving Algorithm
+// (arXiv: http://arxiv.org/abs/1810.05934), but currently this only supports Optuna flavored Asynchronous
+// Successive Halving Algorithm. See https://github.com/optuna/optuna/pull/404 for more details.
+type Pruner struct {
 	MinResource          int
 	ReductionFactor      int
 	MinEarlyStoppingRate int
 }
 
-// Prune by Optuna-flavored Asynchronous Successive Halving Algorithm.
-func (p *OptunaPruner) Prune(study *goptuna.Study, trial goptuna.FrozenTrial) (bool, error) {
+func (p *Pruner) Prune(study *goptuna.Study, trial goptuna.FrozenTrial) (bool, error) {
 	step, exist := trial.GetLatestStep()
 	if !exist {
 		return false, nil
@@ -79,7 +89,7 @@ func (p *OptunaPruner) Prune(study *goptuna.Study, trial goptuna.FrozenTrial) (b
 	}
 }
 
-func (p *OptunaPruner) isPromotable(rung int, value float64, allTrials []goptuna.FrozenTrial, direction goptuna.StudyDirection) (bool, error) {
+func (p *Pruner) isPromotable(rung int, value float64, allTrials []goptuna.FrozenTrial, direction goptuna.StudyDirection) (bool, error) {
 	competingValues := make([]float64, 0, len(allTrials))
 	for i := range allTrials {
 		value, err := getValueAtRung(allTrials[i], rung)
