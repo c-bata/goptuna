@@ -1,14 +1,22 @@
 package tpe
 
-import "math/rand"
+import (
+	"math/rand"
+
+	"github.com/c-bata/goptuna"
+)
 
 // SamplerOption is a type of the function to customizing TPE sampler.
 type SamplerOption func(sampler *Sampler)
 
 // SamplerOptionSeed sets seed number.
 func SamplerOptionSeed(seed int64) SamplerOption {
+	randomSampler := goptuna.NewRandomSearchSampler(
+		goptuna.RandomSearchSamplerOptionSeed(seed))
+
 	return func(sampler *Sampler) {
 		sampler.rng = rand.New(rand.NewSource(seed))
+		sampler.randomSampler = randomSampler
 	}
 }
 
