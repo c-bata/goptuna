@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 )
 
@@ -14,6 +15,22 @@ var (
 	ErrUnsupportedDialect = errors.New("unsupported dialect")
 )
 
+// https://github.com/zzzeek/sqlalchemy/blob/c6554ac52bfb7ce9ecd30ec777ce90adfe7861d2/lib/sqlalchemy/engine/url.py#L234-L292
+var rfc1738pattern = regexp.MustCompile(
+	`(?P<name>[\w\+]+)://` +
+		`(?:` +
+		`(?P<username>[^:/]*)` +
+		`(?::(?P<password>.*))?` +
+		`@)?` +
+		`(?:` +
+		`(?:` +
+		`\[(?P<ipv6host>[^/]+)\] |` +
+		`(?P<ipv4host>[^/:]+)` +
+		`)?` +
+		`(?::(?P<port>[^/]*))?` +
+		`)?` +
+		`(?:/(?P<database>.*))?`)
+
 // EngineOption to set the DSN option
 type EngineOption struct {
 	ParseTime bool
@@ -23,19 +40,28 @@ type EngineOption struct {
 func ParseDatabaseURL(url string, opt *EngineOption) (string, []interface{}, error) {
 	// https://docs.sqlalchemy.org/en/13/core/engines.html
 	// dialect+driver://username:password@host:port/database
-	x := strings.SplitN(url, "://", 2)
-	if len(x) != 2 {
+	submatch := rfc1738pattern.FindStringSubmatch(url)
+	if submatch == nil {
 		return "", nil, ErrInvalidDatabaseURL
+	}
+	parsed := make(map[string]string, 8)
+	for i, name := range rfc1738pattern.SubexpNames() {
+		if i == 0 || name == "" {
+			continue
+		}
+		parsed[name] = submatch[i]
 	}
 
 	var pydialect, pydriver string
-	if strings.Contains(x[0], "+") {
-		y := strings.SplitN(x[0], "+", 2)
-		pydialect = y[0]
-		pydriver = y[1]
-	} else {
+	if strings.Contains(parsed["name"], "+") {
+		x := strings.SplitN(parsed["name"], "+", 2)
 		pydialect = x[0]
+		pydriver = x[1]
+	} else {
+		pydialect = parsed["name"]
 	}
+
+	fmt.Println(pydriver)
 
 	var godialect string
 	var dbargs []interface{}
@@ -43,10 +69,12 @@ func ParseDatabaseURL(url string, opt *EngineOption) (string, []interface{}, err
 	switch pydialect {
 	case "sqlite":
 		godialect = "sqlite3"
-		dbargs, err = parseSQLiteArgs(x[1])
+		dbargs = []interface{}{
+			parsed["database"],
+		}
 	case "mysql":
 		godialect = "mysql"
-		dbargs, err = parseMySQLArgs(pydriver, x[1], opt)
+		dbargs, err = buildMySQLArgs(pydriver, parsed, opt)
 	default:
 		return "", nil, ErrUnsupportedDialect
 	}
@@ -57,75 +85,47 @@ func ParseDatabaseURL(url string, opt *EngineOption) (string, []interface{}, err
 	return godialect, dbargs, nil
 }
 
-func parseSQLiteArgs(pyargs string) ([]interface{}, error) {
-	database := strings.TrimLeft(pyargs, "/")
-	return []interface{}{
-		database,
-	}, nil
-}
-
-func parseMySQLArgs(pydriver string, pyargs string, opt *EngineOption) ([]interface{}, error) {
+func buildMySQLArgs(pydriver string, parsed map[string]string, opt *EngineOption) ([]interface{}, error) {
 	var godsn string
-	var username, password string
-	var database string
 	var query url.Values
 	var unixpass string
+	var database string
+	var err error
+
 	protocol := "tcp"
-	hostname := "localhost:3306"
 
-	if strings.Contains(pyargs, "@") {
-		x := strings.SplitN(pyargs, "@", 2)
-		userpass := x[0]
-		hostInfoAndOption := x[1]
+	if strings.Contains(parsed["database"], "?") {
+		x := strings.SplitN(parsed["database"], "?", 2)
 
-		if strings.Contains(userpass, ":") {
-			y := strings.SplitN(userpass, ":", 2)
-			username = y[0]
-			password = y[1]
-		} else {
-			username = userpass
+		query, err = url.ParseQuery(x[1])
+		if err != nil {
+			return nil, err
 		}
-
-		var hostinfo string
-		if strings.Contains(hostInfoAndOption, "?") {
-			y := strings.SplitN(hostInfoAndOption, "?", 2)
-
-			var err error
-			query, err = url.ParseQuery(y[1])
-			if err != nil {
-				return nil, err
-			}
-			hostinfo = y[0]
-		} else {
-			hostinfo = hostInfoAndOption
-		}
-
-		z := strings.SplitN(hostinfo, "/", 2)
-		if len(z) != 2 {
-			return nil, errors.New("cannot extract database name")
-		}
-		hostname = z[0]
-		database = z[1]
+		database = x[0]
+	} else {
+		database = parsed["database"]
 	}
 
-	if query != nil && pydriver == "pymysql" {
+	if pydriver == "pymysql" && query != nil {
 		protocol = "unix"
 		unixpass = query.Get("unix_socket")
 	}
 
 	switch protocol {
 	case "tcp":
-		godsn = fmt.Sprintf("tcp(%s)/%s", hostname, database)
-	case "unix":
-		godsn = fmt.Sprintf("unix(%s)/%s", unixpass, database)
-	}
-
-	if username != "" {
-		if password != "" {
-			godsn = fmt.Sprintf("%s:%s@", username, password) + godsn
+		if parsed["port"] != "" {
+			godsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
+				parsed["username"], parsed["password"],
+				parsed["ipv4host"], parsed["port"], database)
 		} else {
-			godsn = fmt.Sprintf("%s@", username) + godsn
+			godsn = fmt.Sprintf("%s:%s@tcp(%s)/%s",
+				parsed["username"], parsed["password"],
+				parsed["ipv4host"], database)
 		}
+	case "unix":
+		godsn = fmt.Sprintf("%s:%s@unix(%s)/%s",
+			parsed["username"], parsed["password"],
+			unixpass, database)
 	}
 
 	if opt != nil {
