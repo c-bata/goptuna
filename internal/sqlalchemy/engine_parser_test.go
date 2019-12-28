@@ -18,7 +18,7 @@ func TestParseDatabaseURL(t *testing.T) {
 		wantDialect string
 		wantArgs    []interface{}
 	}{
-		// SQLiet3
+		// SQLite3
 		// sqlite://<nohostname>/<path>
 		{
 			name:        "sqlite3 simple",

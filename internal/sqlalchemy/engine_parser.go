@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
-	"strings"
 )
 
 var (
@@ -17,7 +16,8 @@ var (
 
 // https://github.com/zzzeek/sqlalchemy/blob/c6554ac52bfb7ce9ecd30ec777ce90adfe7861d2/lib/sqlalchemy/engine/url.py#L234-L292
 var rfc1738pattern = regexp.MustCompile(
-	`(?P<name>[\w\+]+)://` +
+	`(?P<dialect>[\w]+)` +
+		`(?:\+(?P<driver>[\w]+))?://` +
 		`(?:` +
 		`(?P<username>[^:/]*)` +
 		`(?::(?P<password>.*))?` +
@@ -29,7 +29,8 @@ var rfc1738pattern = regexp.MustCompile(
 		`)?` +
 		`(?::(?P<port>[^/]*))?` +
 		`)?` +
-		`(?:/(?P<database>.*))?`)
+		`(?:/(?P<database>[^?]*))?` +
+		`(?:\?(?P<query>.*))?`)
 
 // EngineOption to set the DSN option
 type EngineOption struct {
@@ -52,19 +53,10 @@ func ParseDatabaseURL(url string, opt *EngineOption) (string, []interface{}, err
 		parsed[name] = submatch[i]
 	}
 
-	var pydialect, pydriver string
-	if strings.Contains(parsed["name"], "+") {
-		x := strings.SplitN(parsed["name"], "+", 2)
-		pydialect = x[0]
-		pydriver = x[1]
-	} else {
-		pydialect = parsed["name"]
-	}
-
 	var godialect string
 	var dbargs []interface{}
 	var err error
-	switch pydialect {
+	switch parsed["dialect"] {
 	case "sqlite":
 		godialect = "sqlite3"
 		dbargs = []interface{}{
@@ -72,7 +64,7 @@ func ParseDatabaseURL(url string, opt *EngineOption) (string, []interface{}, err
 		}
 	case "mysql":
 		godialect = "mysql"
-		dbargs, err = buildMySQLArgs(pydriver, parsed, opt)
+		dbargs, err = buildMySQLArgs(parsed, opt)
 	default:
 		return "", nil, ErrUnsupportedDialect
 	}
@@ -83,22 +75,19 @@ func ParseDatabaseURL(url string, opt *EngineOption) (string, []interface{}, err
 	return godialect, dbargs, nil
 }
 
-func buildMySQLArgs(pydriver string, parsed map[string]string, opt *EngineOption) ([]interface{}, error) {
-	var godsn, unixpass, database string
+func buildMySQLArgs(parsed map[string]string, opt *EngineOption) ([]interface{}, error) {
+	var godsn, unixpass, dbname string
 	var query url.Values
 	var err error
 
-	x := strings.SplitN(parsed["database"], "?", 2)
-	database = x[0]
-	if len(x) == 2 {
-		query, err = url.ParseQuery(x[1])
-		if err != nil {
-			return nil, err
-		}
+	dbname = parsed["database"]
+	query, err = url.ParseQuery(parsed["query"])
+	if err != nil {
+		return nil, err
 	}
 
 	protocol := "tcp"
-	if pydriver == "pymysql" && query.Get("unix_socket") != "" {
+	if parsed["driver"] == "pymysql" && query.Get("unix_socket") != "" {
 		protocol = "unix"
 		unixpass = query.Get("unix_socket")
 	}
@@ -119,7 +108,7 @@ func buildMySQLArgs(pydriver string, parsed map[string]string, opt *EngineOption
 	case "unix":
 		godsn += fmt.Sprintf("@unix(%s)", unixpass)
 	}
-	godsn += "/" + database
+	godsn += "/" + dbname
 
 	if opt != nil {
 		if opt.ParseTime {
