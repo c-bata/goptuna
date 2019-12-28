@@ -14,8 +14,9 @@ var (
 	ErrUnsupportedDialect = errors.New("unsupported dialect")
 )
 
-// https://github.com/zzzeek/sqlalchemy/blob/c6554ac52bfb7ce9ecd30ec777ce90adfe7861d2/lib/sqlalchemy/engine/url.py#L234-L292
-var rfc1738pattern = regexp.MustCompile(
+// This regex pattern is based on following code:
+// https://github.com/zzzeek/sqlalchemy/blob/c6554ac52/lib/sqlalchemy/engine/url.py#L234-L292
+var engineURLPattern = regexp.MustCompile(
 	`(?P<dialect>[\w]+)` +
 		`(?:\+(?P<driver>[\w]+))?://` +
 		`(?:` +
@@ -41,12 +42,12 @@ type EngineOption struct {
 func ParseDatabaseURL(url string, opt *EngineOption) (string, []interface{}, error) {
 	// https://docs.sqlalchemy.org/en/13/core/engines.html
 	// dialect+driver://username:password@host:port/database
-	submatch := rfc1738pattern.FindStringSubmatch(url)
+	submatch := engineURLPattern.FindStringSubmatch(url)
 	if submatch == nil {
 		return "", nil, ErrInvalidDatabaseURL
 	}
 	parsed := make(map[string]string, 8)
-	for i, name := range rfc1738pattern.SubexpNames() {
+	for i, name := range engineURLPattern.SubexpNames() {
 		if i == 0 || name == "" {
 			continue
 		}
