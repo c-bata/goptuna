@@ -61,8 +61,6 @@ func ParseDatabaseURL(url string, opt *EngineOption) (string, []interface{}, err
 		pydialect = parsed["name"]
 	}
 
-	fmt.Println(pydriver)
-
 	var godialect string
 	var dbargs []interface{}
 	var err error
@@ -86,47 +84,42 @@ func ParseDatabaseURL(url string, opt *EngineOption) (string, []interface{}, err
 }
 
 func buildMySQLArgs(pydriver string, parsed map[string]string, opt *EngineOption) ([]interface{}, error) {
-	var godsn string
+	var godsn, unixpass, database string
 	var query url.Values
-	var unixpass string
-	var database string
 	var err error
 
-	protocol := "tcp"
-
-	if strings.Contains(parsed["database"], "?") {
-		x := strings.SplitN(parsed["database"], "?", 2)
-
+	x := strings.SplitN(parsed["database"], "?", 2)
+	database = x[0]
+	if len(x) == 2 {
 		query, err = url.ParseQuery(x[1])
 		if err != nil {
 			return nil, err
 		}
-		database = x[0]
-	} else {
-		database = parsed["database"]
 	}
 
-	if pydriver == "pymysql" && query != nil {
+	protocol := "tcp"
+	if pydriver == "pymysql" && query.Get("unix_socket") != "" {
 		protocol = "unix"
 		unixpass = query.Get("unix_socket")
 	}
 
+	godsn = parsed["username"]
+	if parsed["password"] != "" {
+		godsn += ":" + parsed["password"]
+	}
+
 	switch protocol {
 	case "tcp":
-		if parsed["port"] != "" {
-			godsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
-				parsed["username"], parsed["password"],
-				parsed["ipv4host"], parsed["port"], database)
+		if parsed["port"] == "" {
+			godsn += fmt.Sprintf("@tcp(%s)", parsed["ipv4host"])
 		} else {
-			godsn = fmt.Sprintf("%s:%s@tcp(%s)/%s",
-				parsed["username"], parsed["password"],
-				parsed["ipv4host"], database)
+			godsn += fmt.Sprintf("@tcp(%s:%s)",
+				parsed["ipv4host"], parsed["port"])
 		}
 	case "unix":
-		godsn = fmt.Sprintf("%s:%s@unix(%s)/%s",
-			parsed["username"], parsed["password"],
-			unixpass, database)
+		godsn += fmt.Sprintf("@unix(%s)", unixpass)
 	}
+	godsn += "/" + database
 
 	if opt != nil {
 		if opt.ParseTime {
