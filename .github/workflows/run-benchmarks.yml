@@ -29,11 +29,11 @@ jobs:
           KUROBAKO: ./kurobako
         run: |
           ./_benchmarks/runner.sh ./result.json
-          mv ./result.json /home/runner/kurobako-report.json
+          mv ./result.json /github/workspace/kurobako-report.json
 
       - name: Comment to Pull Request
         uses: c-bata/github-actions-kurobako@master
         with:
-          report-json-path: '/home/runner/kurobako-report.json'
+          report-json-path: '/github/workspace/kurobako-report.json'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
