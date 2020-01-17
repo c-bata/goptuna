@@ -1,0 +1,39 @@
+name: Run kurobako benchmark
+on:
+  pull_request:
+    branches:
+    - master
+jobs:
+  benchmarks:
+    name: Run kurobako benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@master
+
+      - name: Download kurobako CLI
+        run: |
+          curl -L https://github.com/sile/kurobako/releases/download/0.1.4/kurobako-0.1.4.linux-amd64 -o kurobako
+          chmod +x kurobako
+          ./kurobako -h
+
+      - name: Run sigopt/evalset/Ackley Benchmark
+        env:
+          KUROBAKO: ./kurobako
+        run: |
+          ./_benchmarks/runner.sh ./result.json
+          mv ./result.json /home/runner/kurobako-report.json
+
+      - name: Comment to Pull Request
+        uses: c-bata/github-actions-kurobako@master
+        with:
+          report-json-path: '/home/runner/kurobako-report.json'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
