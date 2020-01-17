@@ -28,12 +28,17 @@ jobs:
         env:
           KUROBAKO: ./kurobako
         run: |
-          ./_benchmarks/runner.sh ./result.json
-          mv ./result.json /github/workspace/kurobako-report.json
-
+          ./_benchmarks/runner.sh ./kurobako-report.json
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          version: '275.0.0'
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+      - run: gcloud info
+      - run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+      - run: gsutil ls gs://kurobako-reports/
       - name: Comment to Pull Request
         uses: c-bata/github-actions-kurobako@master
         with:
-          report-json-path: '/github/workspace/kurobako-report.json'
+          report-json-path: './kurobako-report.json'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
