@@ -9,14 +9,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@master
+
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - run: pip install numpy kurobako git+https://github.com/sigopt/evalset.git
+
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
         with:
           go-version: 1.13
         id: go
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@master
 
       - name: Download kurobako CLI
         run: |
@@ -24,17 +30,19 @@ jobs:
           chmod +x kurobako
           ./kurobako -h
 
-      - name: Run sigopt/evalset/Ackley Benchmark
-        env:
-          KUROBAKO: ./kurobako
-        run: |
-          ./_benchmarks/runner.sh ./kurobako-report.json
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           version: '275.0.0'
           service_account_key: ${{ secrets.GCP_SA_KEY }}
       - run: gcloud info
       - run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Run sigopt/evalset/Ackley Benchmark
+        env:
+          KUROBAKO: ./kurobako
+        run: |
+          ./_benchmarks/runner.sh ./kurobako-report.json
+
       - name: Comment to Pull Request
         uses: c-bata/github-actions-kurobako@master
         id: kurobako-action
