@@ -35,10 +35,13 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
       - run: gcloud info
       - run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
-      - run: gsutil ls gs://kurobako-reports/
       - name: Comment to Pull Request
         uses: c-bata/github-actions-kurobako@master
+        id: kurobako-action
         with:
           report-json-path: './kurobako-report.json'
+          public-image-url: 'https://storage.googleapis.com/kurobako-reports/actions-test.png'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: gsutil cp ${{steps.kurobako-action.outputs.image-path}} gs://kurobako-reports/actions-test.png
+      - run: gsutil ls gs://kurobako-reports/
