@@ -43,13 +43,22 @@ jobs:
         run: |
           ./_benchmarks/runner.sh ./kurobako-report.json
 
-      - name: Comment to Pull Request
-        uses: c-bata/github-actions-kurobako@master
-        id: kurobako-action
+      - name: Plot kurobako result
+        uses: c-bata/github-actions-kurobako/plot@separate-minimum-actions
+        id: kurobako-plot
         with:
           report-json-path: './kurobako-report.json'
+      - name: Upload an image to google cloud storage
+        run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/${{ github.sha }}.png
+
+      - name: Generate kurobako markdown report
+        run: |
+          cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
+
+      - name: Comment to Pull Request
+        uses: c-bata/github-actions-kurobako@separate-minimum-actions
+        with:
+          report-md-path: './kurobako-report.md'
           public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/${{ github.sha }}.png
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: gsutil cp ${{steps.kurobako-action.outputs.image-path}} gs://kurobako-reports/${{ github.repository }}/${{ github.sha }}.png
-      - run: gsutil ls gs://kurobako-reports/
