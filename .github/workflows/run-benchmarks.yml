@@ -48,8 +48,8 @@ jobs:
         id: kurobako-action
         with:
           report-json-path: './kurobako-report.json'
-          public-image-url: 'https://storage.googleapis.com/kurobako-reports/actions-test.png'
+          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/${{ github.sha }}.png
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: gsutil cp ${{steps.kurobako-action.outputs.image-path}} gs://kurobako-reports/actions-test.png
+      - run: gsutil cp ${{steps.kurobako-action.outputs.image-path}} gs://kurobako-reports/${{ github.repository }}/${{ github.sha }}.png
       - run: gsutil ls gs://kurobako-reports/
