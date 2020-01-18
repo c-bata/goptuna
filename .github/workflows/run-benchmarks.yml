@@ -1,8 +1,9 @@
 name: Run kurobako benchmark
 on:
   pull_request:
-    branches:
-    - master
+    paths:
+    - 'internal/**.go'
+    - 'tpe/**.go'
 jobs:
   benchmarks:
     name: Run kurobako benchmark
