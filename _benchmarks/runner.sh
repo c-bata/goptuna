@@ -4,10 +4,10 @@ set -e
 
 KUROBAKO=${KUROBAKO:-kurobako}
 
-go build -o ./kurobako-solver ./_benchmarks/kurobako-solver/main.go
+go build -o ./tpe_solver ./_benchmarks/tpe_solver/main.go
 
 RANDOM_SOLVER=$($KUROBAKO solver random)
-GOPTUNA_SOLVER=$($KUROBAKO solver command ./kurobako-solver)
+GOPTUNA_SOLVER=$($KUROBAKO solver command ./tpe_solver)
 PROBLEM=$($KUROBAKO problem sigopt --dim 5 ackley)
 
 $KUROBAKO studies \
