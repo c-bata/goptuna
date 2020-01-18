@@ -44,7 +44,7 @@ jobs:
           ./_benchmarks/runner.sh ./kurobako-report.json
 
       - name: Plot kurobako result
-        uses: c-bata/github-actions-kurobako/plot@separate-minimum-actions
+        uses: c-bata/github-actions-kurobako/plot@v1
         id: kurobako-plot
         with:
           report-json-path: './kurobako-report.json'
@@ -56,7 +56,7 @@ jobs:
           cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
 
       - name: Comment to Pull Request
-        uses: c-bata/github-actions-kurobako@separate-minimum-actions
+        uses: c-bata/github-actions-kurobako@v1
         with:
           report-md-path: './kurobako-report.md'
           public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/${{ github.sha }}.png
