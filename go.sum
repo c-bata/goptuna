@@ -100,6 +100,8 @@ github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqn
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
 github.com/sile/kurobako-go v0.0.0-20200115102950-33858a8c2964 h1:r8v01DJEkB8mLO5IMH+ZX+OU/B0prSNiz0DoFdMklN0=
 github.com/sile/kurobako-go v0.0.0-20200115102950-33858a8c2964/go.mod h1:FjX2M2IjP/e37osvrssWtrtvYvpfHqHp6nVdpLisEO8=
+github.com/sile/kurobako-go v0.0.0-20200119054321-481b79c0068b h1:THPYfrsrexiXomXSg05JFAClgq7O90rMMyf3H/4VBMk=
+github.com/sile/kurobako-go v0.0.0-20200119054321-481b79c0068b/go.mod h1:FjX2M2IjP/e37osvrssWtrtvYvpfHqHp6nVdpLisEO8=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
 github.com/spf13/afero v1.1.2/go.mod h1:j4pytiNVoe2o6bmDsKpLACNPDBIoEAkihy7loJ1B0CQ=
 github.com/spf13/cast v1.3.0/go.mod h1:Qx5cxh0v+4UWYiBimWS+eyWzqEqokIECu5etghLkUJE=
