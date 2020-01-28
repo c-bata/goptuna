@@ -81,14 +81,11 @@ func (s *Study) callRelativeSampler(trialID int) (
 
 	searchSpace := make(map[string]interface{}, len(intersection))
 	for paramName := range intersection {
-		distribution, ok := intersection[paramName].(Distribution)
-		if !ok {
-			return nil, nil, errors.New("failed to cast distribution")
-		}
-		if distribution.Single() {
+		distribution := intersection[paramName]
+		if yes, _ := DistributionIsSingle(distribution); yes {
 			continue
 		}
-		searchSpace[paramName] = distribution
+		searchSpace[paramName] = intersection[paramName]
 	}
 	relativeParams, err := s.RelativeSampler.SampleRelative(s, frozen, searchSpace)
 	if err != nil {

@@ -161,6 +161,62 @@ func TestRandomSearchSampler_SampleDiscreteUniform(t *testing.T) {
 	}
 }
 
+type queueRelativeSampler struct {
+	params []map[string]float64
+	index  int
+}
+
+func (s *queueRelativeSampler) SampleRelative(
+	study *goptuna.Study,
+	trial goptuna.FrozenTrial,
+	searchSpace map[string]interface{},
+) (map[string]float64, error) {
+	param := s.params[s.index]
+	s.index++
+	return param, nil
+}
+
+func TestRelativeSampler(t *testing.T) {
+	sampler := goptuna.NewRandomSearchSampler()
+	relativeSampler := &queueRelativeSampler{
+		params: []map[string]float64{
+			{
+				"x1": 3,
+				"x2": 1,
+			},
+		},
+	}
+
+	study, err := goptuna.CreateStudy(
+		"",
+		goptuna.StudyOptionSampler(sampler),
+		goptuna.StudyOptionRelativeSampler(relativeSampler),
+	)
+	if err != nil {
+		t.Errorf("should not be err, but got %s", err)
+		return
+	}
+
+	err = study.Optimize(func(trial goptuna.Trial) (f float64, e error) {
+		_, _ = trial.SuggestUniform("x1", -10, 10)
+		_, _ = trial.SuggestUniform("x2", -10, 10)
+		return 0.0, nil
+	}, 1)
+
+	err = study.Optimize(func(trial goptuna.Trial) (f float64, e error) {
+		x1, _ := trial.SuggestUniform("x1", -10, 10)
+		if x1 != 3 {
+			t.Errorf("should be 3, but got %f", x1)
+		}
+
+		x2, _ := trial.SuggestUniform("x2", -10, 10)
+		if x2 != 1 {
+			t.Errorf("should be 3, but got %f", x2)
+		}
+		return 0.0, nil
+	}, 1)
+}
+
 func TestIntersectionSearchSpace(t *testing.T) {
 	tests := []struct {
 		name         string
