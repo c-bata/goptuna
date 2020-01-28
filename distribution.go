@@ -250,6 +250,24 @@ func ToInternalRepresentation(distribution interface{}, xr interface{}) (float64
 	}
 }
 
+// DistributionIsSingle whether the distribution contains just a single value.
+func DistributionIsSingle(distribution interface{}) (bool, error) {
+	switch d := distribution.(type) {
+	case UniformDistribution:
+		return d.Single(), nil
+	case LogUniformDistribution:
+		return d.Single(), nil
+	case IntUniformDistribution:
+		return d.Single(), nil
+	case DiscreteUniformDistribution:
+		return d.Single(), nil
+	case CategoricalDistribution:
+		return d.Single(), nil
+	default:
+		return false, ErrUnknownDistribution
+	}
+}
+
 // DistributionToJSON serialize a distribution to JSON format.
 func DistributionToJSON(distribution interface{}) ([]byte, error) {
 	var ir struct {

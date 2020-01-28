@@ -3,6 +3,8 @@ package goptuna
 import (
 	"context"
 	"errors"
+	"fmt"
+	"reflect"
 )
 
 //go:generate stringer -trimprefix TrialState -output stringer_trial_state.go -type=TrialState
@@ -33,16 +35,44 @@ func (i TrialState) IsFinished() bool {
 // Note that this object is seamlessly instantiated and passed to the objective function behind;
 // hence, in typical use cases, library users do not care about instantiation of this object.
 type Trial struct {
-	Study *Study
-	ID    int
-	state TrialState
-	value float64
+	Study               *Study
+	ID                  int
+	state               TrialState
+	value               float64
+	relativeParams      map[string]float64
+	relativeSearchSpace map[string]interface{}
+}
+
+func (t *Trial) isRelativeParam(name string, distribution interface{}) bool {
+	expected, ok := t.relativeSearchSpace[name]
+	if !ok {
+		return false
+	}
+	// TODO(c-bata): avoid using reflect.DeepEqual for better performance.
+	return reflect.DeepEqual(expected, distribution)
 }
 
 func (t *Trial) suggest(name string, distribution interface{}) (float64, error) {
 	trial, err := t.Study.Storage.GetTrial(t.ID)
 	if err != nil {
 		return 0.0, err
+	}
+
+	if t.isRelativeParam(name, distribution) {
+		value, ok := t.relativeParams[name]
+		if !ok {
+			return 0.0, fmt.Errorf("relative sampler didn't sample '%s' param", name)
+		}
+
+		relativeDistribution, ok := t.relativeSearchSpace[name]
+		if !ok {
+			panic("must not reach here")
+		}
+		// TODO(c-bata): avoid using reflect.DeepEqual for better performance.
+		if !reflect.DeepEqual(distribution, relativeDistribution) {
+			return 0.0, fmt.Errorf("relative sampler sampled '%s' param from different distribution", name)
+		}
+		return value, nil
 	}
 
 	v, err := t.Study.Sampler.Sample(t.Study, trial, name, distribution)

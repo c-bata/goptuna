@@ -1,7 +1,9 @@
 package goptuna_test
 
 import (
+	"errors"
 	"math"
+	"reflect"
 	"testing"
 
 	"github.com/c-bata/goptuna"
@@ -156,5 +158,235 @@ func TestRandomSearchSampler_SampleDiscreteUniform(t *testing.T) {
 				roundPoint, points[i])
 			return
 		}
+	}
+}
+
+type queueRelativeSampler struct {
+	params []map[string]float64
+	index  int
+}
+
+func (s *queueRelativeSampler) SampleRelative(
+	study *goptuna.Study,
+	trial goptuna.FrozenTrial,
+	searchSpace map[string]interface{},
+) (map[string]float64, error) {
+	param := s.params[s.index]
+	s.index++
+	return param, nil
+}
+
+func TestRelativeSampler(t *testing.T) {
+	sampler := goptuna.NewRandomSearchSampler()
+	relativeSampler := &queueRelativeSampler{
+		params: []map[string]float64{
+			{
+				"uniform":     3,
+				"log_uniform": 100,
+				"int":         7,
+				"discrete":    5.5,
+				"categorical": 2, // choice3
+			},
+		},
+	}
+
+	study, err := goptuna.CreateStudy(
+		"",
+		goptuna.StudyOptionSampler(sampler),
+		goptuna.StudyOptionRelativeSampler(relativeSampler),
+	)
+	if err != nil {
+		t.Errorf("should not be err, but got %s", err)
+		return
+	}
+
+	// First trial cannot trigger relative sampler.
+	err = study.Optimize(func(trial goptuna.Trial) (f float64, e error) {
+		_, _ = trial.SuggestUniform("uniform", -10, 10)
+		_, _ = trial.SuggestLogUniform("log_uniform", 1e-10, 1e10)
+		_, _ = trial.SuggestInt("int", -10, 10)
+		_, _ = trial.SuggestDiscreteUniform("discrete", -10, 10, 0.5)
+		_, _ = trial.SuggestCategorical("categorical", []string{"choice1", "choice2", "choice3"})
+		return 0.0, nil
+	}, 1)
+
+	err = study.Optimize(func(trial goptuna.Trial) (f float64, e error) {
+		uniformParam, _ := trial.SuggestUniform("uniform", -10, 10)
+		if uniformParam != 3 {
+			t.Errorf("should be 3, but got %f", uniformParam)
+		}
+
+		logUniformParam, _ := trial.SuggestLogUniform("log_uniform", 1e-10, 1e10)
+		if logUniformParam != 100 {
+			t.Errorf("should be 100, but got %f", logUniformParam)
+		}
+
+		intParam, _ := trial.SuggestInt("int", -10, 10)
+		if intParam != 7 {
+			t.Errorf("should be 7, but got %d", intParam)
+		}
+
+		discreteParam, _ := trial.SuggestDiscreteUniform("discrete", -10, 10, 0.5)
+		if discreteParam != 5.5 {
+			t.Errorf("should be 5.5, but got %f", discreteParam)
+		}
+
+		categoricalParam, _ := trial.SuggestCategorical("categorical", []string{"choice1", "choice2", "choice3"})
+		if categoricalParam != "choice3" {
+			t.Errorf("should be 'choice3', but got %s", categoricalParam)
+		}
+		return 0.0, nil
+	}, 1)
+}
+
+func TestIntersectionSearchSpace(t *testing.T) {
+	tests := []struct {
+		name         string
+		study        func() *goptuna.Study
+		expectedKeys []string
+		want         map[string]interface{}
+		wantErr      bool
+	}{
+		{
+			name: "No trial",
+			study: func() *goptuna.Study {
+				study, err := goptuna.CreateStudy("sampler_test")
+				if err != nil {
+					panic(err)
+				}
+				return study
+			},
+			want:    map[string]interface{}{},
+			wantErr: false,
+		},
+		{
+			name: "One trial",
+			study: func() *goptuna.Study {
+				study, err := goptuna.CreateStudy("sampler_test")
+				if err != nil {
+					panic(err)
+				}
+
+				if err = study.Optimize(func(trial goptuna.Trial) (v float64, e error) {
+					x, _ := trial.SuggestInt("x", 0, 10)
+					y, _ := trial.SuggestUniform("y", -3, 3)
+					return float64(x) + y, nil
+				}, 1); err != nil {
+					panic(err)
+				}
+				return study
+			},
+			want: map[string]interface{}{
+				"x": goptuna.IntUniformDistribution{
+					High: 10,
+					Low:  0,
+				},
+				"y": goptuna.UniformDistribution{
+					High: 3,
+					Low:  -3,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Second trial (only 'y' parameter is suggested in this trial)",
+			study: func() *goptuna.Study {
+				study, err := goptuna.CreateStudy("sampler_test")
+				if err != nil {
+					panic(err)
+				}
+
+				// First Trial
+				if err = study.Optimize(func(trial goptuna.Trial) (v float64, e error) {
+					x, _ := trial.SuggestInt("x", 0, 10)
+					y, _ := trial.SuggestUniform("y", -3, 3)
+					return float64(x) + y, nil
+				}, 1); err != nil {
+					panic(err)
+				}
+
+				// Second Trial
+				if err = study.Optimize(func(trial goptuna.Trial) (v float64, e error) {
+					y, _ := trial.SuggestUniform("y", -3, 3)
+					return y, nil
+				}, 1); err != nil {
+					panic(err)
+				}
+				return study
+			},
+			want: map[string]interface{}{
+				"y": goptuna.UniformDistribution{
+					High: 3,
+					Low:  -3,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Failed or pruned trials are not considered in the calculation of an intersection search space.",
+			study: func() *goptuna.Study {
+				study, err := goptuna.CreateStudy("sampler_test")
+				if err != nil {
+					panic(err)
+				}
+
+				// First Trial
+				if err = study.Optimize(func(trial goptuna.Trial) (v float64, e error) {
+					x, _ := trial.SuggestInt("x", 0, 10)
+					y, _ := trial.SuggestUniform("y", -3, 3)
+					return float64(x) + y, nil
+				}, 1); err != nil {
+					panic(err)
+				}
+
+				// Second Trial
+				if err = study.Optimize(func(trial goptuna.Trial) (v float64, e error) {
+					y, _ := trial.SuggestUniform("y", -3, 3)
+					return y, nil
+				}, 1); err != nil {
+					panic(err)
+				}
+
+				// Failed trial (ignore error)
+				_ = study.Optimize(func(trial goptuna.Trial) (v float64, e error) {
+					_, _ = trial.SuggestUniform("y", -3, 3)
+					return 0.0, errors.New("something error")
+				}, 1)
+				// Pruned trial
+				if err = study.Optimize(func(trial goptuna.Trial) (v float64, e error) {
+					_, _ = trial.SuggestUniform("y", -3, 3)
+					return 0.0, goptuna.ErrTrialPruned
+				}, 1); err != nil {
+					panic(err)
+				}
+				return study
+			},
+			want: map[string]interface{}{
+				"y": goptuna.UniformDistribution{
+					High: 3,
+					Low:  -3,
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := goptuna.IntersectionSearchSpace(tt.study())
+			if (err != nil) != tt.wantErr {
+				t.Errorf("IntersectionSearchSpace() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if len(got) != len(tt.want) {
+				t.Errorf("IntersectionSearchSpace() return %d items, but want %d", len(got), len(tt.want))
+			}
+			for key := range tt.want {
+				if distribution, ok := got[key]; !ok {
+					t.Errorf("IntersectionSearchSpace() should have %s key", key)
+				} else if !reflect.DeepEqual(distribution, tt.want[key]) {
+					t.Errorf("IntersectionSearchSpace()[%s] = %v, want %v", key, distribution, tt.want[key])
+				}
+			}
+		})
 	}
 }
