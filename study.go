@@ -29,6 +29,7 @@ type Study struct {
 	ID                int
 	Storage           Storage
 	Sampler           Sampler
+	RelativeSampler   RelativeSampler
 	Pruner            Pruner
 	direction         StudyDirection
 	logger            Logger
@@ -56,6 +57,46 @@ func (s *Study) WithContext(ctx context.Context) {
 	s.ctx = ctx
 }
 
+func (s *Study) callRelativeSampler(trialID int) (
+	map[string]interface{},
+	map[string]float64,
+	error,
+) {
+	if s.RelativeSampler == nil {
+		return nil, nil, nil
+	}
+
+	frozen, err := s.Storage.GetTrial(trialID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	intersection, err := IntersectionSearchSpace(s)
+	if err != nil {
+		return nil, nil, err
+	}
+	if intersection == nil {
+		return nil, nil, nil
+	}
+
+	searchSpace := make(map[string]interface{}, len(intersection))
+	for paramName := range intersection {
+		distribution, ok := intersection[paramName].(Distribution)
+		if !ok {
+			return nil, nil, errors.New("failed to cast distribution")
+		}
+		if distribution.Single() {
+			continue
+		}
+		searchSpace[paramName] = distribution
+	}
+	relativeParams, err := s.RelativeSampler.SampleRelative(s, frozen, searchSpace)
+	if err != nil {
+		return nil, nil, err
+	}
+	return searchSpace, relativeParams, nil
+}
+
 func (s *Study) runTrial(objective FuncObjective) (int, error) {
 	trialID, err := s.Storage.CreateNewTrial(s.ID)
 	if err != nil {
@@ -63,10 +104,18 @@ func (s *Study) runTrial(objective FuncObjective) (int, error) {
 			fmt.Sprintf("err=%s", err))
 		return -1, errCreateNewTrial
 	}
+	searchSpace, relativeParams, err := s.callRelativeSampler(trialID)
+	if err != nil {
+		s.logger.Error("failed to call relative sampler",
+			fmt.Sprintf("err=%s", err))
+		return -1, err
+	}
 
 	trial := Trial{
-		Study: s,
-		ID:    trialID,
+		Study:               s,
+		ID:                  trialID,
+		relativeParams:      relativeParams,
+		relativeSearchSpace: searchSpace,
 	}
 	evaluation, objerr := objective(trial)
 	var state TrialState
@@ -208,11 +257,12 @@ func CreateStudy(
 	storage := NewInMemoryStorage()
 	sampler := NewRandomSearchSampler()
 	study := &Study{
-		ID:        0,
-		Storage:   storage,
-		Sampler:   sampler,
-		Pruner:    nil,
-		direction: StudyDirectionMinimize,
+		ID:              0,
+		Storage:         storage,
+		Sampler:         sampler,
+		RelativeSampler: nil,
+		Pruner:          nil,
+		direction:       StudyDirectionMinimize,
 		logger: &StdLogger{
 			Logger: log.New(os.Stdout, "", log.LstdFlags),
 			Level:  LoggerLevelDebug,
@@ -254,11 +304,12 @@ func LoadStudy(
 	storage := NewInMemoryStorage()
 	sampler := NewRandomSearchSampler()
 	study := &Study{
-		ID:        0,
-		Storage:   storage,
-		Sampler:   sampler,
-		Pruner:    nil,
-		direction: "",
+		ID:              0,
+		Storage:         storage,
+		Sampler:         sampler,
+		RelativeSampler: nil,
+		Pruner:          nil,
+		direction:       "",
 		logger: &StdLogger{
 			Logger: log.New(os.Stdout, "", log.LstdFlags),
 			Level:  LoggerLevelDebug,
@@ -333,6 +384,14 @@ func StudyOptionStorage(storage Storage) StudyOption {
 func StudyOptionSampler(sampler Sampler) StudyOption {
 	return func(s *Study) error {
 		s.Sampler = sampler
+		return nil
+	}
+}
+
+// StudyOptionRelativeSampler sets the relative sampler object.
+func StudyOptionRelativeSampler(sampler RelativeSampler) StudyOption {
+	return func(s *Study) error {
+		s.RelativeSampler = sampler
 		return nil
 	}
 }
