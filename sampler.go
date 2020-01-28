@@ -7,19 +7,23 @@ import (
 	"sync"
 )
 
-// Sampler returns the next search points
+// Sampler is the interface for sampling algorithms that do not use
+// relationship between parameters such as random sampling and TPE.
+//
+// Note that if study object has RelativeSampler, this interface is used
+// only for parameters that are not sampled by RelativeSampler.
 type Sampler interface {
 	// Sample a single parameter for a given distribution.
 	Sample(*Study, FrozenTrial, string, interface{}) (float64, error)
 }
 
-// RelativeSampler returns the next search points
+// RelativeSampler is the interface for sampling algorithms that use
+// relationship between parameters such as Gaussian Process and CMA-ES.
+//
+// This interface is called once at the beginning of each trial,
+// i.e., right before the evaluation of the objective function.
 type RelativeSampler interface {
-	// Sample samples multiple dimensional parameters in a given search space.
-	//
-	// This method is called once at the beginning of each trial, i.e., right before the
-	// evaluation of the objective function. This method is suitable for sampling algorithms
-	// that use relationship between parameters such as Gaussian Process and CMA-ES.
+	// SampleRelative samples multiple dimensional parameters in a given search space.
 	SampleRelative(*Study, FrozenTrial, map[string]interface{}) (map[string]float64, error)
 }
 
