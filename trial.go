@@ -61,10 +61,17 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 	if t.isRelativeParam(name, distribution) {
 		value, ok := t.relativeParams[name]
 		if !ok {
-			return 0.0, fmt.Errorf("RelativeSampler does not sample '%s' param", name)
+			return 0.0, fmt.Errorf("relative sampler didn't sample '%s' param", name)
 		}
-		// TODO(c-bata): check distribution compatibility
-		// https://github.com/optuna/optuna/pull/380/files#diff-815bd38671f30e415efa796835df638fR493
+
+		relativeDistribution, ok := t.relativeSearchSpace[name]
+		if !ok {
+			panic("must not reach here")
+		}
+		// TODO(c-bata): avoid using reflect.DeepEqual for better performance.
+		if !reflect.DeepEqual(distribution, relativeDistribution) {
+			return 0.0, fmt.Errorf("relative sampler sampled '%s' param from different distribution", name)
+		}
 		return value, nil
 	}
 
