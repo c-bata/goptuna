@@ -181,8 +181,11 @@ func TestRelativeSampler(t *testing.T) {
 	relativeSampler := &queueRelativeSampler{
 		params: []map[string]float64{
 			{
-				"x1": 3,
-				"x2": 1,
+				"uniform":     3,
+				"log_uniform": 100,
+				"int":         7,
+				"discrete":    5.5,
+				"categorical": 2, // choice3
 			},
 		},
 	}
@@ -197,21 +200,40 @@ func TestRelativeSampler(t *testing.T) {
 		return
 	}
 
+	// First trial cannot trigger relative sampler.
 	err = study.Optimize(func(trial goptuna.Trial) (f float64, e error) {
-		_, _ = trial.SuggestUniform("x1", -10, 10)
-		_, _ = trial.SuggestUniform("x2", -10, 10)
+		_, _ = trial.SuggestUniform("uniform", -10, 10)
+		_, _ = trial.SuggestLogUniform("log_uniform", 1e-10, 1e10)
+		_, _ = trial.SuggestInt("int", -10, 10)
+		_, _ = trial.SuggestDiscreteUniform("discrete", -10, 10, 0.5)
+		_, _ = trial.SuggestCategorical("categorical", []string{"choice1", "choice2", "choice3"})
 		return 0.0, nil
 	}, 1)
 
 	err = study.Optimize(func(trial goptuna.Trial) (f float64, e error) {
-		x1, _ := trial.SuggestUniform("x1", -10, 10)
-		if x1 != 3 {
-			t.Errorf("should be 3, but got %f", x1)
+		uniformParam, _ := trial.SuggestUniform("uniform", -10, 10)
+		if uniformParam != 3 {
+			t.Errorf("should be 3, but got %f", uniformParam)
 		}
 
-		x2, _ := trial.SuggestUniform("x2", -10, 10)
-		if x2 != 1 {
-			t.Errorf("should be 3, but got %f", x2)
+		logUniformParam, _ := trial.SuggestLogUniform("log_uniform", 1e-10, 1e10)
+		if logUniformParam != 100 {
+			t.Errorf("should be 100, but got %f", logUniformParam)
+		}
+
+		intParam, _ := trial.SuggestInt("int", -10, 10)
+		if intParam != 7 {
+			t.Errorf("should be 7, but got %d", intParam)
+		}
+
+		discreteParam, _ := trial.SuggestDiscreteUniform("discrete", -10, 10, 0.5)
+		if discreteParam != 5.5 {
+			t.Errorf("should be 5.5, but got %f", discreteParam)
+		}
+
+		categoricalParam, _ := trial.SuggestCategorical("categorical", []string{"choice1", "choice2", "choice3"})
+		if categoricalParam != "choice3" {
+			t.Errorf("should be 'choice3', but got %s", categoricalParam)
 		}
 		return 0.0, nil
 	}, 1)
