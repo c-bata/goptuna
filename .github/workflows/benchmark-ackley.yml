@@ -37,7 +37,7 @@ jobs:
         env:
           KUROBAKO: ./kurobako
         run: |
-          ./_benchmarks/runner.sh ./kurobako-report.json
+          ./_benchmarks/run_sigopt_ackley.sh ./kurobako-report.json
 
       - name: Plot kurobako result
         uses: c-bata/github-actions-kurobako/plot@v1
@@ -52,9 +52,10 @@ jobs:
           cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
 
       - name: Comment to Pull Request
-        uses: c-bata/github-actions-kurobako@v1
+        uses: c-bata/github-actions-kurobako@v2
         with:
           report-md-path: './kurobako-report.md'
           public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/${{ github.sha }}.png
+          title: 'Benchmark result of sigopt/evalset/Ackley problem'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

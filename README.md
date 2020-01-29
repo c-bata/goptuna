@@ -13,6 +13,7 @@ Currently following algorithms are implemented:
 
 * Random Search
 * Tree-structured Parzen Estimators (TPE)
+* Covariance Matrix Adaptation Evolution Strategy (CMA-ES)
 * Gaussian Process based Bayesian Optimization (GP-BO).
     * This is an experimental support. See [goptuna-bayesopt](https://github.com/c-bata/goptuna-bayesopt) for details.
 * Median Stopping Rule (Google Vizier)
