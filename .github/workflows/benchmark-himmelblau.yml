@@ -2,9 +2,8 @@ name: Run kurobako benchmark
 on:
   pull_request:
     paths:
-    - '.github/workflows/run-benchmarks.yml'
-    - 'internal/**.go'
-    - 'tpe/**.go'
+    - '.github/workflows/benchmark-ackley.yml'
+    - 'cma/**.go'
 jobs:
   benchmarks:
     name: Run kurobako benchmark
@@ -19,6 +18,12 @@ jobs:
         with:
           go-version: 1.13
         id: go
+
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - run: pip install kurobako optuna cma
 
       - name: Download kurobako CLI
         run: |
@@ -37,7 +42,7 @@ jobs:
         env:
           KUROBAKO: ./kurobako
         run: |
-          ./_benchmarks/runner.sh ./kurobako-report.json
+          ./_benchmarks/run_himmelblau.sh ./kurobako-report.json
 
       - name: Plot kurobako result
         uses: c-bata/github-actions-kurobako/plot@v1
@@ -45,16 +50,17 @@ jobs:
         with:
           report-json-path: './kurobako-report.json'
       - name: Upload an image to google cloud storage
-        run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/${{ github.sha }}.png
+        run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/himmelblau-${{ github.sha }}.png
 
       - name: Generate kurobako markdown report
         run: |
           cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
 
       - name: Comment to Pull Request
-        uses: c-bata/github-actions-kurobako@v1
+        uses: c-bata/github-actions-kurobako@v2
         with:
           report-md-path: './kurobako-report.md'
-          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/${{ github.sha }}.png
+          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/himmelblau-${{ github.sha }}.png
+          title: 'Benchmark result of himmelblau function'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
