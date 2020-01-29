@@ -7,6 +7,11 @@ import (
 	"sync"
 )
 
+var (
+	// ErrUnsupportedSearchSpace represents sampler does not support a given search space.
+	ErrUnsupportedSearchSpace = errors.New("unsupported search space")
+)
+
 // Sampler is the interface for sampling algorithms that do not use
 // relationship between parameters such as random sampling and TPE.
 //

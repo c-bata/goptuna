@@ -2,7 +2,9 @@ package goptuna_test
 
 import (
 	"errors"
+	"log"
 	"math"
+	"os"
 	"reflect"
 	"testing"
 
@@ -163,6 +165,7 @@ func TestRandomSearchSampler_SampleDiscreteUniform(t *testing.T) {
 
 type queueRelativeSampler struct {
 	params []map[string]float64
+	errors []error
 	index  int
 }
 
@@ -170,10 +173,13 @@ func (s *queueRelativeSampler) SampleRelative(
 	study *goptuna.Study,
 	trial goptuna.FrozenTrial,
 	searchSpace map[string]interface{},
-) (map[string]float64, error) {
-	param := s.params[s.index]
+) (p map[string]float64, e error) {
+	p = s.params[s.index]
+	if len(s.errors) > 0 {
+		e = s.errors[s.index]
+	}
 	s.index++
-	return param, nil
+	return
 }
 
 func TestRelativeSampler(t *testing.T) {
@@ -210,6 +216,7 @@ func TestRelativeSampler(t *testing.T) {
 		return 0.0, nil
 	}, 1)
 
+	// Second trial call relative sampler.
 	err = study.Optimize(func(trial goptuna.Trial) (f float64, e error) {
 		uniformParam, _ := trial.SuggestUniform("uniform", -10, 10)
 		if uniformParam != 3 {
@@ -237,6 +244,61 @@ func TestRelativeSampler(t *testing.T) {
 		}
 		return 0.0, nil
 	}, 1)
+}
+
+func TestRelativeSampler_UnsupportedSearchSpace(t *testing.T) {
+	sampler := goptuna.NewRandomSearchSampler()
+	relativeSampler := &queueRelativeSampler{
+		params: []map[string]float64{
+			nil,
+		},
+		errors: []error{
+			goptuna.ErrUnsupportedSearchSpace,
+		},
+	}
+
+	study, err := goptuna.CreateStudy(
+		"",
+		goptuna.StudyOptionSampler(sampler),
+		goptuna.StudyOptionRelativeSampler(relativeSampler),
+		goptuna.StudyOptionLogger(&goptuna.StdLogger{
+			Logger: log.New(os.Stdout, "", log.LstdFlags),
+			Level:  goptuna.LoggerLevelDebug,
+			Color:  true,
+		}),
+	)
+	if err != nil {
+		t.Errorf("should not be err, but got %s", err)
+		return
+	}
+
+	// First trial cannot trigger relative sampler.
+	err = study.Optimize(func(trial goptuna.Trial) (f float64, e error) {
+		_, _ = trial.SuggestUniform("x1", -10, 10)
+		_, _ = trial.SuggestLogUniform("x2", 1e-10, 1e10)
+		return 0.0, nil
+	}, 1)
+	if err != nil {
+		t.Errorf("should not be err, but got %s", err)
+		return
+	}
+
+	// Second trial. RelativeSampler return ErrUnsupportedSearchSpace.
+	err = study.Optimize(func(trial goptuna.Trial) (f float64, e error) {
+		_, e = trial.SuggestUniform("x1", -10, 10)
+		if e != nil {
+			t.Errorf("err should be nil, but got %s", e)
+		}
+		_, e = trial.SuggestLogUniform("x2", 1e-10, 1e10)
+		if e != nil {
+			t.Errorf("err should be nil, but got %s", e)
+		}
+		return 0.0, nil
+	}, 1)
+	if err != nil {
+		t.Errorf("should not be err, but got %s", err)
+		return
+	}
 }
 
 func TestIntersectionSearchSpace(t *testing.T) {
