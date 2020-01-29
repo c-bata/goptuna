@@ -88,7 +88,12 @@ func (s *Study) callRelativeSampler(trialID int) (
 		searchSpace[paramName] = intersection[paramName]
 	}
 	relativeParams, err := s.RelativeSampler.SampleRelative(s, frozen, searchSpace)
-	if err != nil {
+	if err == ErrUnsupportedSearchSpace {
+		s.logger.Warn("Your objective function contains unsupported search space for RelativeSampler.",
+			fmt.Sprintf("trialID=%d", trialID),
+			fmt.Sprintf("searchSpace=%#v", searchSpace))
+		return nil, nil, nil
+	} else if err != nil {
 		return nil, nil, err
 	}
 	return searchSpace, relativeParams, nil

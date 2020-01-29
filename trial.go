@@ -3,7 +3,6 @@ package goptuna
 import (
 	"context"
 	"errors"
-	"fmt"
 	"reflect"
 )
 
@@ -48,7 +47,6 @@ func (t *Trial) isRelativeParam(name string, distribution interface{}) bool {
 	if !ok {
 		return false
 	}
-	// TODO(c-bata): avoid using reflect.DeepEqual for better performance.
 	return reflect.DeepEqual(expected, distribution)
 }
 
@@ -59,20 +57,12 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 	}
 
 	if t.isRelativeParam(name, distribution) {
+		// isRelativeParam ensure that 'distribution' is same
+		// with the one's in relativeSearchSpace.
 		value, ok := t.relativeParams[name]
-		if !ok {
-			return 0.0, fmt.Errorf("relative sampler didn't sample '%s' param", name)
+		if ok {
+			return value, nil
 		}
-
-		relativeDistribution, ok := t.relativeSearchSpace[name]
-		if !ok {
-			panic("must not reach here")
-		}
-		// TODO(c-bata): avoid using reflect.DeepEqual for better performance.
-		if !reflect.DeepEqual(distribution, relativeDistribution) {
-			return 0.0, fmt.Errorf("relative sampler sampled '%s' param from different distribution", name)
-		}
-		return value, nil
 	}
 
 	v, err := t.Study.Sampler.Sample(t.Study, trial, name, distribution)
