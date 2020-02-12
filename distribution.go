@@ -7,8 +7,6 @@ import (
 
 // Distribution represents a parameter that can be optimized.
 type Distribution interface {
-	// ToInternalRepr to convert external representation of a parameter value into internal representation.
-	ToInternalRepr(interface{}) float64
 	// ToExternalRepr to convert internal representation of a parameter value into external representation.
 	ToExternalRepr(float64) interface{}
 	// Single to test whether the range of this distribution contains just a single value.
@@ -29,11 +27,6 @@ type UniformDistribution struct {
 
 // UniformDistributionName is the identifier name of UniformDistribution
 const UniformDistributionName = "UniformDistribution"
-
-// ToInternalRepr to convert external representation of a parameter value into internal representation.
-func (d *UniformDistribution) ToInternalRepr(xr interface{}) float64 {
-	return xr.(float64)
-}
 
 // ToExternalRepr to convert internal representation of a parameter value into external representation.
 func (d *UniformDistribution) ToExternalRepr(ir float64) interface{} {
@@ -66,11 +59,6 @@ type LogUniformDistribution struct {
 // LogUniformDistributionName is the identifier name of LogUniformDistribution
 const LogUniformDistributionName = "LogUniformDistribution"
 
-// ToInternalRepr to convert external representation of a parameter value into internal representation.
-func (d *LogUniformDistribution) ToInternalRepr(xr interface{}) float64 {
-	return xr.(float64)
-}
-
 // ToExternalRepr to convert internal representation of a parameter value into external representation.
 func (d *LogUniformDistribution) ToExternalRepr(ir float64) interface{} {
 	return ir
@@ -101,12 +89,6 @@ type IntUniformDistribution struct {
 
 // IntUniformDistributionName is the identifier name of IntUniformDistribution
 const IntUniformDistributionName = "IntUniformDistribution"
-
-// ToInternalRepr to convert external representation of a parameter value into internal representation.
-func (d *IntUniformDistribution) ToInternalRepr(xr interface{}) float64 {
-	x := xr.(int)
-	return float64(x)
-}
 
 // ToExternalRepr to convert internal representation of a parameter value into external representation.
 func (d *IntUniformDistribution) ToExternalRepr(ir float64) interface{} {
@@ -142,14 +124,9 @@ type DiscreteUniformDistribution struct {
 // DiscreteUniformDistributionName is the identifier name of DiscreteUniformDistribution
 const DiscreteUniformDistributionName = "DiscreteUniformDistribution"
 
-// ToInternalRepr to convert external representation of a parameter value into internal representation.
-func (d *DiscreteUniformDistribution) ToInternalRepr(xr interface{}) float64 {
-	return xr.(float64)
-}
-
 // ToExternalRepr to convert internal representation of a parameter value into external representation.
 func (d *DiscreteUniformDistribution) ToExternalRepr(ir float64) interface{} {
-	return ir
+	return math.Floor((ir-d.Low)/d.Q+0.5)*d.Q + d.Low
 }
 
 // Single to test whether the range of this distribution contains just a single value.
@@ -187,17 +164,6 @@ type CategoricalDistribution struct {
 // CategoricalDistributionName is the identifier name of CategoricalDistribution
 const CategoricalDistributionName = "CategoricalDistribution"
 
-// ToInternalRepr to convert external representation of a parameter value into internal representation.
-func (d *CategoricalDistribution) ToInternalRepr(er interface{}) float64 {
-	value := er.(string)
-	for i := range d.Choices {
-		if d.Choices[i] == value {
-			return float64(i)
-		}
-	}
-	panic("must not reach here")
-}
-
 // ToExternalRepr to convert internal representation of a parameter value into external representation.
 func (d *CategoricalDistribution) ToExternalRepr(ir float64) interface{} {
 	return d.Choices[int(ir)]
@@ -229,24 +195,6 @@ func ToExternalRepresentation(distribution interface{}, ir float64) (interface{}
 		return d.ToExternalRepr(ir), nil
 	default:
 		return nil, ErrUnknownDistribution
-	}
-}
-
-// ToInternalRepresentation converts to internal representation
-func ToInternalRepresentation(distribution interface{}, xr interface{}) (float64, error) {
-	switch d := distribution.(type) {
-	case UniformDistribution:
-		return d.ToInternalRepr(xr), nil
-	case LogUniformDistribution:
-		return d.ToInternalRepr(xr), nil
-	case IntUniformDistribution:
-		return d.ToInternalRepr(xr), nil
-	case DiscreteUniformDistribution:
-		return d.ToInternalRepr(xr), nil
-	case CategoricalDistribution:
-		return d.ToInternalRepr(xr), nil
-	default:
-		return -1, ErrUnknownDistribution
 	}
 }
 

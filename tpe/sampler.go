@@ -523,16 +523,8 @@ func getObservationPairs(study *goptuna.Study, paramName string) ([]float64, [][
 	values := make([]float64, 0, len(trials))
 	scores := make([][2]float64, 0, len(trials))
 	for _, trial := range trials {
-		xr, ok := trial.Params[paramName]
+		ir, ok := trial.InternalParams[paramName]
 		if !ok {
-			continue
-		}
-		distribution, ok := trial.Distributions[paramName]
-		if !ok {
-			continue
-		}
-		ir, err := goptuna.ToInternalRepresentation(distribution, xr)
-		if err != nil {
 			continue
 		}
 

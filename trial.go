@@ -71,14 +71,6 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 		return 0.0, err
 	}
 
-	if trial.Params == nil {
-		trial.Params = make(map[string]interface{}, 8)
-	}
-	trial.Params[name], err = ToExternalRepresentation(distribution, v)
-	if err != nil {
-		return 0.0, err
-	}
-
 	err = t.Study.Storage.SetTrialParam(trial.ID, name, v, distribution)
 	return v, err
 }
@@ -149,10 +141,14 @@ func (t *Trial) SuggestDiscreteUniform(name string, low, high, q float64) (float
 	if low > high {
 		return 0, errors.New("'low' must be smaller than or equal to the 'high'")
 	}
-	v, err := t.suggest(name, DiscreteUniformDistribution{
+	d := DiscreteUniformDistribution{
 		High: high, Low: low, Q: q,
-	})
-	return v, err
+	}
+	ir, err := t.suggest(name, d)
+	if err != nil {
+		return 0, err
+	}
+	return d.ToExternalRepr(ir).(float64), err
 }
 
 // SuggestCategorical suggests an categorical parameter.
