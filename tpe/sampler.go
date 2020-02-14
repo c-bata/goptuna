@@ -408,6 +408,15 @@ func (s *Sampler) sampleDiscreteUniform(distribution goptuna.DiscreteUniformDist
 	// [low, high] is shifted to [0, r] to align sampled values at regular intervals.
 	low := 0 - 0.5*q
 	high := r + 0.5*q
+
+	// Shift below and above to [0, r]
+	for i := range below {
+		below[i] -= distribution.Low
+	}
+	for i := range above {
+		above[i] -= distribution.Low
+	}
+
 	best := s.sampleNumerical(low, high, below, above, q, false) + distribution.Low
 	return math.Min(math.Max(best, distribution.Low), distribution.High)
 }
