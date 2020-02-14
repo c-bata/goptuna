@@ -405,9 +405,20 @@ func (s *Sampler) sampleInt(distribution goptuna.IntUniformDistribution, below, 
 func (s *Sampler) sampleDiscreteUniform(distribution goptuna.DiscreteUniformDistribution, below, above []float64) float64 {
 	q := distribution.Q
 	r := distribution.High - distribution.Low
+
 	// [low, high] is shifted to [0, r] to align sampled values at regular intervals.
+	// See https://github.com/optuna/optuna/pull/917#issuecomment-586114630 for details.
 	low := 0 - 0.5*q
 	high := r + 0.5*q
+
+	// Shift below and above to [0, r]
+	for i := range below {
+		below[i] -= distribution.Low
+	}
+	for i := range above {
+		above[i] -= distribution.Low
+	}
+
 	best := s.sampleNumerical(low, high, below, above, q, false) + distribution.Low
 	return math.Min(math.Max(best, distribution.Low), distribution.High)
 }
