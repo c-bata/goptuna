@@ -22,7 +22,7 @@ jobs:
 
       - name: Download kurobako CLI
         run: |
-          curl -L https://github.com/sile/kurobako/releases/download/0.1.7/kurobako-0.1.7.linux-amd64 -o kurobako
+          curl -L https://github.com/sile/kurobako/releases/download/0.1.8/kurobako-0.1.8.linux-amd64 -o kurobako
           chmod +x kurobako
           ./kurobako -h
 
