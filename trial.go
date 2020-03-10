@@ -85,6 +85,9 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 
 // Report an intermediate value of an objective function
 func (t *Trial) Report(value float64, step int) error {
+	if step < 0 {
+		return errors.New("step should be larger equal than 0")
+	}
 	return t.Study.Storage.SetTrialIntermediateValue(t.ID, step, value)
 }
 
