@@ -61,7 +61,8 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 		// with the one's in relativeSearchSpace.
 		value, ok := t.relativeParams[name]
 		if ok {
-			return value, nil
+			err = t.Study.Storage.SetTrialParam(trial.ID, name, value, distribution)
+			return value, err
 		}
 	}
 
