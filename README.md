@@ -13,6 +13,8 @@ Currently following algorithms are implemented:
 
 * Random Search
 * Tree-structured Parzen Estimators (TPE)
+* Gaussian Process based Bayesian Optimization (GP-BO).
+    * This is an experimental support. See [goptuna-bayesopt](https://github.com/c-bata/goptuna-bayesopt) for details.
 * Median Stopping Rule (Google Vizier)
 * Optuna flavored Asynchronous Successive Halving Algorithm (ASHA)
 
@@ -239,6 +241,7 @@ func main() {
 References:
 
 * TPE: [James S. Bergstra, Remi Bardenet, Yoshua Bengio, and Balázs Kégl. Algorithms for hyper-parameter optimization. In Advances in Neural Information Processing Systems 25. 2011.](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)
+* GP-BO: [J. Snoek, H. Larochelle, and R. Adams. Practical Bayesian optimization of machine learning algorithms. In Advances in Neural Information Processing Systems 25, pages 2960–2968, 2012.](https://arxiv.org/abs/1206.2944)
 * Optuna (Define-by-Run interface): [Takuya Akiba, Shotaro Sano, Toshihiko Yanase, Takeru Ohta, Masanori Koyama. 2019. Optuna: A Next-generation Hyperparameter Optimization Framework. In The 25th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD ’19), August 4–8, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
 * Median stopping rule: [Golovin, B. Sonik, S. Moitra, G. Kochanski, J. Karro, and D.Sculley. Google Vizier: A service for black-box optimization. In Knowledge Discovery and Data Mining (KDD), 2017.](http://www.kdd.org/kdd2017/papers/view/google-vizier-a-service-for-black-box-optimization)
 * Successive Halving Algorithm (SHA): [Kevin G. Jamieson and Ameet S. Talwalkar. Non-stochastic best arm identification and hyperparameter optimization. In AISTATS, 2016.](http://proceedings.mlr.press/v51/jamieson16.pdf)
