@@ -1,4 +1,4 @@
-package cmaes
+package cma
 
 import (
 	"math/rand"

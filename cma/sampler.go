@@ -1,4 +1,4 @@
-package cmaes
+package cma
 
 import (
 	"math/rand"
@@ -45,6 +45,25 @@ func (s *Sampler) SampleRelative(
 
 	params := make(map[string]float64, len(searchSpace))
 	return params, nil
+}
+
+func (s *Sampler) initializeMu(searchSpace map[string]interface{}) []float64 {
+	distributions := make([]interface{}, 0, len(searchSpace))
+	for key := range searchSpace {
+		switch _ := searchSpace[key].(type) {
+		case goptuna.UniformDistribution:
+		case goptuna.LogUniformDistribution:
+		case goptuna.IntUniformDistribution:
+		case goptuna.DiscreteUniformDistribution:
+			distributions = append(distributions, searchSpace[key])
+		case goptuna.CategoricalDistribution:
+			continue
+		}
+	}
+	dim := len(distributions)
+	_ = dim
+	panic("wip")
+	return nil
 }
 
 // NewSampler returns the TPE sampler.
