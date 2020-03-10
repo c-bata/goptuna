@@ -314,17 +314,6 @@ func (s *Storage) SetTrialIntermediateValue(trialID int, step int, value float64
 		return goptuna.ErrTrialCannotBeUpdated
 	}
 
-	// Update the value of trial
-	// This is essentially the same with Optuna (at v0.14.0).
-	// See https://github.com/optuna/optuna/blob/v0.14.0/optuna/trial.py#L371-L373
-	err = tx.Model(&trialModel{}).
-		Where("trial_id = ?", trialID).
-		Update("value", value).Error
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
 	// If trial value is already exist, then do rollback.
 	result := tx.First(&trialValueModel{}, "trial_id = ? AND step = ?", trialID, step)
 	if !(result.Error != nil && result.RecordNotFound()) {
