@@ -82,12 +82,12 @@ func (s *Study) popWaitingTrialID() (int, error) {
 			continue
 		}
 
-		ok, err := s.Storage.SetTrialState(trials[i].ID, TrialStateRunning)
-		if err != nil {
-			return -1, err
-		}
-		if !ok {
+		err = s.Storage.SetTrialState(trials[i].ID, TrialStateRunning)
+		if err == ErrTrialCannotBeUpdated {
+			err = nil
 			continue
+		} else if err != nil {
+			return -1, err
 		}
 		s.logger.Debug("trial is popped from the trial queue.",
 			fmt.Sprintf("number=%d", trials[i].Number))
@@ -301,7 +301,7 @@ func (s *Study) runTrial(objective FuncObjective) (int, error) {
 		}
 	}
 
-	ok, err := s.Storage.SetTrialState(trialID, state)
+	err = s.Storage.SetTrialState(trialID, state)
 	if err != nil {
 		s.logger.Error("Failed to set trial state",
 			fmt.Sprintf("trialID=%d", trialID),
@@ -309,11 +309,6 @@ func (s *Study) runTrial(objective FuncObjective) (int, error) {
 			fmt.Sprintf("evaluation=%f", evaluation),
 			fmt.Sprintf("err=%s", err))
 		return trialID, err
-	}
-	if !ok {
-		s.logger.Warn("Failed to set trial state",
-			fmt.Sprintf("trialID=%d", trialID),
-			fmt.Sprintf("state=%s", state.String()))
 	}
 	return trialID, objerr
 }

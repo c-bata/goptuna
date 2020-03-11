@@ -5,10 +5,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/c-bata/goptuna"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
-
-	"github.com/c-bata/goptuna"
 )
 
 var _ goptuna.Storage = &Storage{}
@@ -490,10 +489,10 @@ func (s *Storage) SetTrialParam(
 }
 
 // SetTrialState sets the state of trial.
-func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) (bool, error) {
+func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 	xr, err := toStateInternalRepresentation(state)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	tx := s.db.Begin()
@@ -503,7 +502,41 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) (bool, er
 		}
 	}()
 	if tx.Error != nil {
-		return false, tx.Error
+		return tx.Error
+	}
+
+	// TODO(c-bata): Add `FOR UPDATE` clause.
+	//
+	// result := tx.Set("gorm:query_option", "FOR UPDATE").
+	//     First(&trial, "trial_id = ?", trialID)
+	//
+	// But SQLite3 doesn't interpret `FOR UPDATE` clause.
+	// SQLAlchemy can automatically remove it, but Gorm can't.
+	//
+	// Another solution is to add `EnableForUpdateClause=false` option.
+	//
+	// See following pages for the information.
+	// * https://github.com/optuna/optuna/pull/1014
+	// * http://gorm.io/docs/query.html#Extra-Querying-option
+	var trial trialModel
+	result := tx.First(&trial, "trial_id = ?", trialID)
+	if result.RecordNotFound() {
+		tx.Rollback()
+		return goptuna.ErrInvalidTrialID
+	}
+	if result.Error != nil {
+		tx.Rollback()
+		return result.Error
+	}
+
+	previousState, err := toStateExternalRepresentation(trial.State)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if previousState.IsFinished() {
+		tx.Rollback()
+		return goptuna.ErrTrialCannotBeUpdated
 	}
 
 	err = tx.Model(&trialModel{}).
@@ -511,7 +544,7 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) (bool, er
 		Update("state", xr).Error
 	if err != nil {
 		tx.Rollback()
-		return false, err
+		return err
 	}
 	if state.IsFinished() {
 		completedAt := time.Now()
@@ -520,10 +553,10 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) (bool, er
 			Update("datetime_complete", completedAt).Error
 		if err != nil {
 			tx.Rollback()
-			return false, err
+			return err
 		}
 	}
-	return true, tx.Commit().Error
+	return tx.Commit().Error
 }
 
 // SetTrialUserAttr to store the value for the user.

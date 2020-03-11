@@ -389,10 +389,7 @@ func TestStorage_SetTrialState(t *testing.T) {
 	}
 	before := trial.DatetimeComplete
 
-	ok, err := storage.SetTrialState(trialID, goptuna.TrialStateRunning)
-	if !ok {
-		t.Errorf("should be ok=true, but got false")
-	}
+	err = storage.SetTrialState(trialID, goptuna.TrialStateRunning)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -409,10 +406,7 @@ func TestStorage_SetTrialState(t *testing.T) {
 		return
 	}
 
-	ok, err = storage.SetTrialState(trialID, goptuna.TrialStateComplete)
-	if !ok {
-		t.Errorf("should be ok=true, but got false")
-	}
+	err = storage.SetTrialState(trialID, goptuna.TrialStateComplete)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -471,10 +465,7 @@ func TestStorage_GetTrial(t *testing.T) {
 		t.Errorf("error: %v != nil", err)
 		return
 	}
-	ok, err := storage.SetTrialState(trialID, goptuna.TrialStateComplete)
-	if !ok {
-		t.Errorf("should be ok=true, but got false")
-	}
+	err = storage.SetTrialState(trialID, goptuna.TrialStateComplete)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -574,10 +565,7 @@ func TestStorage_GetBestTrial(t *testing.T) {
 		t.Errorf("error: %v != nil", err)
 		return
 	}
-	ok, err := storage.SetTrialState(trialID, goptuna.TrialStateComplete)
-	if !ok {
-		t.Errorf("should be ok=true, but got false")
-	}
+	err = storage.SetTrialState(trialID, goptuna.TrialStateComplete)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -594,10 +582,7 @@ func TestStorage_GetBestTrial(t *testing.T) {
 		t.Errorf("error: %v != nil", err)
 		return
 	}
-	ok, err = storage.SetTrialState(trialID, goptuna.TrialStateComplete)
-	if !ok {
-		t.Errorf("should be ok=true, but got false")
-	}
+	err = storage.SetTrialState(trialID, goptuna.TrialStateComplete)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return

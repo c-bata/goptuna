@@ -161,10 +161,7 @@ func TestMemoryStorage_GetAllStudySummaries(t *testing.T) {
 		t.Errorf("should be nil, but got %s", err)
 		return
 	}
-	ok, err := storage.SetTrialState(trialID, goptuna.TrialStateComplete)
-	if !ok {
-		t.Errorf("should be ok=true, but got false")
-	}
+	err = storage.SetTrialState(trialID, goptuna.TrialStateComplete)
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
 		return
@@ -179,10 +176,7 @@ func TestMemoryStorage_GetAllStudySummaries(t *testing.T) {
 		t.Errorf("should be nil, but got %s", err)
 		return
 	}
-	ok, err = storage.SetTrialState(trialID, goptuna.TrialStateComplete)
-	if !ok {
-		t.Errorf("should be ok=true, but got false")
-	}
+	err = storage.SetTrialState(trialID, goptuna.TrialStateComplete)
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
 		return
