@@ -101,6 +101,35 @@ func ExampleStudy_EnqueueTrial() {
 	// x2: -5.000
 }
 
+func TestStudy_EnqueueTrial_WithUnfixedParameter(t *testing.T) {
+	study, _ := goptuna.CreateStudy(
+		"example",
+		goptuna.StudyOptionLogger(nil),
+	)
+
+	objective := func(trial goptuna.Trial) (float64, error) {
+		x1, _ := trial.SuggestUniform("x1", -10, 10)
+		x2, _ := trial.SuggestUniform("x2", -10, 10)
+		return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
+	}
+
+	study.EnqueueTrial(map[string]float64{"x1": 2})
+
+	err := study.Optimize(objective, 1)
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+		return
+	}
+	trials, err := study.GetTrials()
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+	}
+
+	if trials[0].InternalParams["x1"] != 2 {
+		t.Errorf("x1 should be 2, but got %f", trials[0].InternalParams["x1"])
+	}
+}
+
 func TestStudy_UserAttrs(t *testing.T) {
 	study, _ := goptuna.CreateStudy(
 		"example",
