@@ -17,6 +17,7 @@ const (
 	trialStateComplete = "COMPLETE"
 	trialStatePruned   = "PRUNED"
 	trialStateFail     = "FAIL"
+	trialStateWaiting  = "WAITING"
 )
 
 // https://gorm.io/docs/models.html

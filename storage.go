@@ -29,6 +29,7 @@ type Storage interface {
 	GetAllStudySummaries() ([]StudySummary, error)
 	// Basic trial manipulation
 	CreateNewTrial(studyID int) (int, error)
+	CloneTrial(studyID int, baseTrial FrozenTrial) (int, error)
 	SetTrialValue(trialID int, value float64) error
 	SetTrialIntermediateValue(trialID int, step int, value float64) error
 	SetTrialParam(trialID int, paramName string, paramValueInternal float64,
@@ -338,6 +339,31 @@ func (s *InMemoryStorage) CreateNewTrial(studyID int) (int, error) {
 		Distributions:      make(map[string]interface{}, 8),
 		UserAttrs:          make(map[string]string, 8),
 		SystemAttrs:        make(map[string]string, 8),
+	})
+	return trialID, nil
+}
+
+// CloneTrial creates new Trial from the given base Trial.
+func (s *InMemoryStorage) CloneTrial(studyID int, baseTrial FrozenTrial) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	number := len(s.trials)
+	// trialID equals the number because InMemoryStorage has only 1 study.
+	trialID := number
+	s.trials = append(s.trials, FrozenTrial{
+		ID:                 trialID,
+		StudyID:            studyID,
+		Number:             number,
+		State:              baseTrial.State,
+		Value:              baseTrial.Value,
+		IntermediateValues: baseTrial.IntermediateValues,
+		DatetimeStart:      baseTrial.DatetimeStart,
+		DatetimeComplete:   baseTrial.DatetimeComplete,
+		Params:             baseTrial.Params,
+		Distributions:      baseTrial.Distributions,
+		UserAttrs:          baseTrial.UserAttrs,
+		SystemAttrs:        baseTrial.SystemAttrs,
 	})
 	return trialID, nil
 }

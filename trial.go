@@ -18,13 +18,15 @@ const (
 	TrialStateComplete
 	// TrialStatePruned means Trial has been pruned.
 	TrialStatePruned
-	// TrialStateFail means Trial has failed due to ann uncaught error.
+	// TrialStateFail means Trial has failed due to an uncaught error.
 	TrialStateFail
+	// TrialStateWaiting means Trial has been stopped, but may be resuming.
+	TrialStateWaiting
 )
 
 // IsFinished returns true if trial is not running.
 func (i TrialState) IsFinished() bool {
-	return i != TrialStateRunning
+	return i != TrialStateRunning && i != TrialStateWaiting
 }
 
 // Trial is a process of evaluating an objective function.
