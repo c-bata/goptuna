@@ -2,8 +2,6 @@ package rdb
 
 import (
 	"errors"
-	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/c-bata/goptuna"
@@ -21,13 +19,9 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 
 	systemAttrs := make(map[string]string, len(trial.SystemAttributes))
 	for i := range trial.SystemAttributes {
-		if trial.SystemAttributes[i].Key == keyNumber {
-			systemAttrs[trial.SystemAttributes[i].Key] = trial.SystemAttributes[i].ValueJSON
-		} else {
-			systemAttrs[trial.SystemAttributes[i].Key], err = decodeAttrValue(trial.SystemAttributes[i].ValueJSON)
-			if err != nil {
-				return goptuna.FrozenTrial{}, err
-			}
+		systemAttrs[trial.SystemAttributes[i].Key], err = decodeAttrValue(trial.SystemAttributes[i].ValueJSON)
+		if err != nil {
+			return goptuna.FrozenTrial{}, err
 		}
 	}
 
@@ -52,15 +46,6 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 		}
 	}
 
-	numberStr, ok := systemAttrs[keyNumber]
-	if !ok {
-		return goptuna.FrozenTrial{}, errors.New("number is not exist in system attrs")
-	}
-	number, err := strconv.Atoi(numberStr)
-	if err != nil {
-		return goptuna.FrozenTrial{}, fmt.Errorf("invalid trial number: %s", err)
-	}
-
 	state, err := toStateExternalRepresentation(trial.State)
 	if err != nil {
 		return goptuna.FrozenTrial{}, err
@@ -82,7 +67,7 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 	return goptuna.FrozenTrial{
 		ID:                 trial.ID,
 		StudyID:            trial.TrialReferStudy,
-		Number:             number,
+		Number:             trial.Number,
 		State:              state,
 		Value:              trial.Value,
 		IntermediateValues: intermediateValue,

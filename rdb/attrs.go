@@ -8,8 +8,6 @@ import (
 // See https://github.com/c-bata/goptuna/issues/34
 // for the reason why we need following code.
 
-// Caution "_number" in trial_system_attributes must not be encoded.
-
 func encodeAttrValue(xr string) string {
 	return fmt.Sprintf("\"%s\"",
 		base64.StdEncoding.EncodeToString([]byte(xr)))

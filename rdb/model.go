@@ -61,6 +61,7 @@ func (m studySystemAttributeModel) TableName() string {
 
 type trialModel struct {
 	ID               int        `gorm:"column:trial_id;PRIMARY_KEY"`
+	Number           int        `gorm:"column:number"`
 	TrialReferStudy  int        `gorm:"column:study_id"`
 	State            string     `gorm:"column:state;NOT NULL"`
 	Value            float64    `gorm:"column:value"`
