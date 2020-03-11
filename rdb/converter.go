@@ -134,6 +134,8 @@ func toStateExternalRepresentation(state string) (goptuna.TrialState, error) {
 		return goptuna.TrialStatePruned, nil
 	case trialStateFail:
 		return goptuna.TrialStateFail, nil
+	case trialStateWaiting:
+		return goptuna.TrialStateWaiting, nil
 	default:
 		return goptuna.TrialStateRunning, errors.New("invalid trial state")
 	}
@@ -149,6 +151,8 @@ func toStateInternalRepresentation(state goptuna.TrialState) (string, error) {
 		return trialStatePruned, nil
 	case goptuna.TrialStateFail:
 		return trialStateFail, nil
+	case goptuna.TrialStateWaiting:
+		return trialStateWaiting, nil
 	default:
 		return "", errors.New("invalid trial state")
 	}

@@ -29,6 +29,7 @@ type Storage interface {
 	GetAllStudySummaries() ([]StudySummary, error)
 	// Basic trial manipulation
 	CreateNewTrial(studyID int) (int, error)
+	CloneTrial(studyID int, baseTrial FrozenTrial) (int, error)
 	SetTrialValue(trialID int, value float64) error
 	SetTrialIntermediateValue(trialID int, step int, value float64) error
 	SetTrialParam(trialID int, paramName string, paramValueInternal float64,
@@ -45,48 +46,6 @@ type Storage interface {
 	GetTrialParams(trialID int) (map[string]interface{}, error)
 	GetTrialUserAttrs(trialID int) (map[string]string, error)
 	GetTrialSystemAttrs(trialID int) (map[string]string, error)
-}
-
-// StudySummary holds basic attributes and aggregated results of Study.
-type StudySummary struct {
-	ID            int               `json:"study_id"`
-	Name          string            `json:"study_name"`
-	Direction     StudyDirection    `json:"direction"`
-	BestTrial     FrozenTrial       `json:"best_trial"`
-	UserAttrs     map[string]string `json:"user_attrs"`
-	SystemAttrs   map[string]string `json:"system_attrs"`
-	DatetimeStart time.Time         `json:"datetime_start"`
-}
-
-// FrozenTrial holds the status and results of a Trial.
-type FrozenTrial struct {
-	ID                 int                    `json:"trial_id"`
-	StudyID            int                    `json:"study_id"`
-	Number             int                    `json:"number"`
-	State              TrialState             `json:"state"`
-	Value              float64                `json:"value"`
-	IntermediateValues map[int]float64        `json:"intermediate_values"`
-	DatetimeStart      time.Time              `json:"datetime_start"`
-	DatetimeComplete   time.Time              `json:"datetime_complete"`
-	InternalParams     map[string]float64     `json:"internal_params"`
-	Params             map[string]interface{} `json:"params"`
-	Distributions      map[string]interface{} `json:"distributions"`
-	UserAttrs          map[string]string      `json:"user_attrs"`
-	SystemAttrs        map[string]string      `json:"system_attrs"`
-}
-
-// GetLatestStep returns the latest step in intermediate values.
-func (t FrozenTrial) GetLatestStep() (step int, exist bool) {
-	if len(t.IntermediateValues) == 0 {
-		return -1, false
-	}
-	var maxStep int
-	for k := range t.IntermediateValues {
-		if k > maxStep {
-			maxStep = k
-		}
-	}
-	return maxStep, true
 }
 
 var _ Storage = &InMemoryStorage{}
@@ -338,6 +297,32 @@ func (s *InMemoryStorage) CreateNewTrial(studyID int) (int, error) {
 		Distributions:      make(map[string]interface{}, 8),
 		UserAttrs:          make(map[string]string, 8),
 		SystemAttrs:        make(map[string]string, 8),
+	})
+	return trialID, nil
+}
+
+// CloneTrial creates new Trial from the given base Trial.
+func (s *InMemoryStorage) CloneTrial(studyID int, baseTrial FrozenTrial) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	number := len(s.trials)
+	// trialID equals the number because InMemoryStorage has only 1 study.
+	trialID := number
+	s.trials = append(s.trials, FrozenTrial{
+		ID:                 trialID,
+		StudyID:            studyID,
+		Number:             number,
+		State:              baseTrial.State,
+		Value:              baseTrial.Value,
+		IntermediateValues: baseTrial.IntermediateValues,
+		DatetimeStart:      baseTrial.DatetimeStart,
+		DatetimeComplete:   baseTrial.DatetimeComplete,
+		InternalParams:     baseTrial.InternalParams,
+		Params:             baseTrial.Params,
+		Distributions:      baseTrial.Distributions,
+		UserAttrs:          baseTrial.UserAttrs,
+		SystemAttrs:        baseTrial.SystemAttrs,
 	})
 	return trialID, nil
 }

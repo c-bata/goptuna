@@ -2,11 +2,13 @@ package goptuna
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"os"
 	"sync"
+	"time"
 )
 
 var errCreateNewTrial = errors.New("failed to create a new trial")
@@ -38,6 +40,127 @@ type Study struct {
 	loadIfExists      bool
 	mu                sync.RWMutex
 	ctx               context.Context
+}
+
+// EnqueueTrial to enqueue a trial with given parameter values.
+// You can fix the next sampling parameters which will be evaluated in your
+// objective function.
+//
+// This is an EXPERIMENTAL API and may be changed in the future.
+// Currently EnqueueTrial only accepts internal representations.
+// This means that you need to encode categorical parameter to its index number.
+// Furthermore, please caution that there is a concurrency problem in RDB storage
+// like https://github.com/optuna/optuna/pull/1014.
+func (s *Study) EnqueueTrial(internalParams map[string]float64) error {
+	systemAttrs := make(map[string]string, 8)
+	paramJSONBytes, err := json.Marshal(internalParams)
+	if err != nil {
+		return err
+	}
+
+	systemAttrs["fixed_params"] = string(paramJSONBytes)
+	return s.appendTrial(
+		0,
+		nil,
+		nil,
+		nil,
+		systemAttrs,
+		nil,
+		TrialStateWaiting,
+		time.Now(),
+		time.Time{},
+	)
+}
+
+func (s *Study) popWaitingTrialID() (int, error) {
+	trials, err := s.Storage.GetAllTrials(s.ID)
+	if err != nil {
+		return -1, err
+	}
+
+	// TODO(c-bata): Reduce database query counts for extracting waiting trials.
+	for i := range trials {
+		if trials[i].State != TrialStateWaiting {
+			continue
+		}
+
+		err = s.Storage.SetTrialState(trials[i].ID, TrialStateRunning)
+		if err == ErrTrialCannotBeUpdated {
+			err = nil
+			continue
+		} else if err != nil {
+			return -1, err
+		}
+		s.logger.Debug("trial is popped from the trial queue.",
+			fmt.Sprintf("number=%d", trials[i].Number))
+		return trials[i].ID, nil
+	}
+	return -1, nil
+}
+
+// AppendTrial to inject a trial into the Study.
+func (s *Study) appendTrial(
+	value float64,
+	internalParams map[string]float64,
+	distributions map[string]interface{},
+	userAttrs map[string]string,
+	systemAttrs map[string]string,
+	intermediateValues map[int]float64,
+	state TrialState,
+	datetimeStart time.Time,
+	datetimeComplete time.Time,
+) error {
+	params := make(map[string]interface{}, len(internalParams))
+	for name := range internalParams {
+		d, ok := distributions[name]
+		if !ok {
+			return fmt.Errorf("distribution '%s' is not found", name)
+		}
+		xr, err := ToExternalRepresentation(d, internalParams[name])
+		if err != nil {
+			return err
+		}
+		params[name] = xr
+	}
+	if state.IsFinished() && datetimeComplete.IsZero() {
+		datetimeComplete = time.Now()
+	}
+	if distributions == nil {
+		distributions = make(map[string]interface{})
+	}
+	if internalParams == nil {
+		internalParams = make(map[string]float64)
+	}
+	if userAttrs == nil {
+		userAttrs = make(map[string]string)
+	}
+	if systemAttrs == nil {
+		systemAttrs = make(map[string]string)
+	}
+	if intermediateValues == nil {
+		intermediateValues = make(map[int]float64)
+	}
+	trial := FrozenTrial{
+		ID:                 -1, // dummy value
+		StudyID:            s.ID,
+		Number:             -1, // dummy value
+		State:              state,
+		Value:              value,
+		IntermediateValues: intermediateValues,
+		DatetimeStart:      datetimeStart,
+		DatetimeComplete:   datetimeComplete,
+		InternalParams:     internalParams,
+		Params:             params,
+		Distributions:      distributions,
+		UserAttrs:          userAttrs,
+		SystemAttrs:        systemAttrs,
+	}
+	err := trial.validate()
+	if err != nil {
+		return err
+	}
+	_, err = s.Storage.CloneTrial(s.ID, trial)
+	return err
 }
 
 // GetTrials returns all trials in this study.
@@ -100,11 +223,19 @@ func (s *Study) callRelativeSampler(trialID int) (
 }
 
 func (s *Study) runTrial(objective FuncObjective) (int, error) {
-	trialID, err := s.Storage.CreateNewTrial(s.ID)
+	trialID, err := s.popWaitingTrialID()
 	if err != nil {
-		s.logger.Error("failed to create a new trial",
+		s.logger.Error("failed to pop a waiting trial",
 			fmt.Sprintf("err=%s", err))
-		return -1, errCreateNewTrial
+		return -1, err
+	}
+	if trialID == -1 {
+		trialID, err = s.Storage.CreateNewTrial(s.ID)
+		if err != nil {
+			s.logger.Error("failed to create a new trial",
+				fmt.Sprintf("err=%s", err))
+			return -1, errCreateNewTrial
+		}
 	}
 	searchSpace, relativeParams, err := s.callRelativeSampler(trialID)
 	if err != nil {

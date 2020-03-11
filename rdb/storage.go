@@ -1,13 +1,13 @@
 package rdb
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
+	"github.com/c-bata/goptuna"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
-
-	"github.com/c-bata/goptuna"
 )
 
 var _ goptuna.Storage = &Storage{}
@@ -248,6 +248,136 @@ func (s *Storage) CreateNewTrial(studyID int) (int, error) {
 	return trial.ID, err
 }
 
+// CloneTrial creates new Trial from the given base Trial.
+func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, error) {
+	tx := s.db.Begin()
+	if tx.Error != nil {
+		return -1, tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Because only `RUNNING` trials can be updated,
+	// we temporarily set the state of the new trial to `RUNNING`.
+	// After all fields of the trial have been updated,
+	// the state is set to `template_trial.state`.
+	tempState := trialStateWaiting
+
+	trial := &trialModel{
+		TrialReferStudy:  studyID,
+		State:            tempState,
+		Value:            baseTrial.Value,
+		DatetimeStart:    &baseTrial.DatetimeStart,
+		DatetimeComplete: &baseTrial.DatetimeComplete,
+	}
+	if err := tx.Create(trial).Error; err != nil {
+		tx.Rollback()
+		return -1, err
+	}
+
+	// params
+	for name := range baseTrial.InternalParams {
+		d, ok := baseTrial.Distributions[name]
+		if !ok {
+			tx.Rollback()
+			return -1, fmt.Errorf("'%s' distribution is not found", name)
+		}
+		jsonBytes, err := goptuna.DistributionToJSON(d)
+		if err != nil {
+			tx.Rollback()
+			return -1, err
+		}
+		err = tx.Create(&trialParamModel{
+			TrialParamReferTrial: trial.ID,
+			Name:                 name,
+			Value:                baseTrial.InternalParams[name],
+			DistributionJSON:     string(jsonBytes),
+		}).Error
+	}
+
+	// user attrs
+	for key := range baseTrial.UserAttrs {
+		err := tx.Create(&trialUserAttributeModel{
+			UserAttributeReferTrial: trial.ID,
+			Key:                     key,
+			ValueJSON:               encodeAttrValue(baseTrial.UserAttrs[key]),
+		}).Error
+		if err != nil {
+			tx.Rollback()
+			return -1, err
+		}
+	}
+
+	// system attrs
+	for key := range baseTrial.SystemAttrs {
+		if key == "_number" {
+			continue
+		}
+		err := tx.Create(&trialSystemAttributeModel{
+			SystemAttributeReferTrial: trial.ID,
+			Key:                       key,
+			ValueJSON:                 encodeAttrValue(baseTrial.SystemAttrs[key]),
+		}).Error
+		if err != nil {
+			tx.Rollback()
+			return -1, err
+		}
+	}
+
+	// intermediate values
+	for step := range baseTrial.IntermediateValues {
+		err := tx.Create(&trialValueModel{
+			TrialValueReferTrial: trial.ID,
+			Step:                 step,
+			Value:                baseTrial.IntermediateValues[step],
+		}).Error
+		if err != nil {
+			tx.Rollback()
+			return -1, err
+		}
+	}
+
+	// state
+	state, err := toStateInternalRepresentation(baseTrial.State)
+	if err != nil {
+		tx.Rollback()
+		return -1, err
+	}
+	err = tx.Model(&trialModel{}).
+		Where("trial_id = ?", trial.ID).
+		Update("state", state).Error
+	if err != nil {
+		tx.Rollback()
+		return -1, err
+	}
+
+	// trial number
+	var number int
+	err = tx.Model(&trialModel{}).
+		Where("study_id = ?", studyID).
+		Where("trial_id < ?", trial.ID).
+		Count(&number).Error
+	if err != nil {
+		tx.Rollback()
+		return -1, err
+	}
+	err = tx.Create(&trialSystemAttributeModel{
+		SystemAttributeReferTrial: trial.ID,
+		Key:                       keyNumber,
+		ValueJSON:                 strconv.Itoa(number),
+	}).Error
+	if err != nil {
+		tx.Rollback()
+		return -1, err
+	}
+
+	err = tx.Commit().Error
+	return trial.ID, err
+}
+
 // SetTrialValue sets the value of trial.
 func (s *Storage) SetTrialValue(trialID int, value float64) error {
 	tx := s.db.Begin()
@@ -373,6 +503,40 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 	}()
 	if tx.Error != nil {
 		return tx.Error
+	}
+
+	// TODO(c-bata): Add `FOR UPDATE` clause.
+	//
+	// result := tx.Set("gorm:query_option", "FOR UPDATE").
+	//     First(&trial, "trial_id = ?", trialID)
+	//
+	// But SQLite3 doesn't interpret `FOR UPDATE` clause.
+	// SQLAlchemy can automatically remove it, but Gorm can't.
+	//
+	// Another solution is to add `EnableForUpdateClause=false` option.
+	//
+	// See following pages for the information.
+	// * https://github.com/optuna/optuna/pull/1014
+	// * http://gorm.io/docs/query.html#Extra-Querying-option
+	var trial trialModel
+	result := tx.First(&trial, "trial_id = ?", trialID)
+	if result.RecordNotFound() {
+		tx.Rollback()
+		return goptuna.ErrInvalidTrialID
+	}
+	if result.Error != nil {
+		tx.Rollback()
+		return result.Error
+	}
+
+	previousState, err := toStateExternalRepresentation(trial.State)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if previousState.IsFinished() {
+		tx.Rollback()
+		return goptuna.ErrTrialCannotBeUpdated
 	}
 
 	err = tx.Model(&trialModel{}).

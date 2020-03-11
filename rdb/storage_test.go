@@ -4,6 +4,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/c-bata/goptuna"
 
@@ -636,5 +637,111 @@ func TestStorage_SetTrialIntermediateValue(t *testing.T) {
 	}
 	if len(trial.IntermediateValues) != 2 {
 		t.Errorf("want two intermediate vales, but got %#v", trial.IntermediateValues)
+	}
+}
+
+func TestStorage_CloneTrial(t *testing.T) {
+	db, teardown, err := SetupSQLite3Test(t, "goptuna-test.db")
+	defer teardown()
+	if err != nil {
+		t.Errorf("failed to setup tests with %s", err)
+		return
+	}
+
+	storage := rdb.NewStorage(db)
+	now := time.Now()
+
+	baseTrial := goptuna.FrozenTrial{
+		ID:     -1, // dummy value (unused)
+		Number: -1, // dummy value (unused)
+		State:  goptuna.TrialStateComplete,
+		Value:  10000,
+		IntermediateValues: map[int]float64{
+			1: 10,
+			2: 100,
+			3: 1000,
+		},
+		DatetimeStart:    now,
+		DatetimeComplete: now,
+		InternalParams: map[string]float64{
+			"x": 0.5,
+		},
+		Params: map[string]interface{}{
+			"x": 0.5,
+		},
+		Distributions: map[string]interface{}{
+			"x": goptuna.UniformDistribution{High: 1, Low: 0},
+		},
+		UserAttrs: map[string]string{
+			"foo": "bar",
+		},
+		SystemAttrs: map[string]string{
+			"baz": "123",
+		},
+	}
+
+	studyID, err := storage.CreateNewStudy("")
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+		return
+	}
+
+	err = storage.SetStudyDirection(studyID, goptuna.StudyDirectionMinimize)
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+		return
+	}
+
+	trialID, err := storage.CloneTrial(studyID, baseTrial)
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+		return
+	}
+
+	trials, err := storage.GetAllTrials(studyID)
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+		return
+	}
+
+	if len(trials) != 1 {
+		t.Errorf("should get one trial, but got %d", len(trials))
+		return
+	}
+
+	if trials[0].ID != trialID {
+		t.Errorf("trialID should be %d, but got %d", trialID, trials[0].ID)
+	}
+
+	if trials[0].Number != 0 {
+		t.Errorf("number should be 0, but got %d", trials[0].Number)
+	}
+
+	if trials[0].State != goptuna.TrialStateComplete {
+		t.Errorf("state should be complete, but got %s", trials[0].State)
+	}
+
+	if !reflect.DeepEqual(trials[0].Distributions, baseTrial.Distributions) {
+		t.Errorf("Distributions should be %v, but got %v", trials[0].Distributions, baseTrial.Distributions)
+	}
+
+	if !reflect.DeepEqual(trials[0].Params, baseTrial.Params) {
+		t.Errorf("Params should be %v, but got %v", trials[0].Params, baseTrial.Params)
+	}
+
+	if !reflect.DeepEqual(trials[0].InternalParams, baseTrial.InternalParams) {
+		t.Errorf("InternalParams should be %v, but got %v", trials[0].InternalParams, baseTrial.InternalParams)
+	}
+
+	if !reflect.DeepEqual(trials[0].IntermediateValues, baseTrial.IntermediateValues) {
+		t.Errorf("InternalValues should be %v, but got %v", trials[0].IntermediateValues, baseTrial.IntermediateValues)
+	}
+
+	if trials[0].DatetimeStart.Second() != baseTrial.DatetimeStart.Second() {
+		t.Errorf("DatetimeStart should be %s, but got %s", trials[0].DatetimeStart, baseTrial.DatetimeStart)
+	}
+
+	if trials[0].DatetimeComplete.Second() != baseTrial.DatetimeComplete.Second() {
+		t.Errorf("DatetimeComplete should be %s, but got %s", trials[0].DatetimeComplete, baseTrial.DatetimeComplete)
 	}
 }

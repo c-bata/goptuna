@@ -2,6 +2,7 @@ package goptuna
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"reflect"
 )
@@ -18,13 +19,15 @@ const (
 	TrialStateComplete
 	// TrialStatePruned means Trial has been pruned.
 	TrialStatePruned
-	// TrialStateFail means Trial has failed due to ann uncaught error.
+	// TrialStateFail means Trial has failed due to an uncaught error.
 	TrialStateFail
+	// TrialStateWaiting means Trial has been stopped, but may be resuming.
+	TrialStateWaiting
 )
 
 // IsFinished returns true if trial is not running.
 func (i TrialState) IsFinished() bool {
-	return i != TrialStateRunning
+	return i != TrialStateRunning && i != TrialStateWaiting
 }
 
 // Trial is a process of evaluating an objective function.
@@ -42,6 +45,54 @@ type Trial struct {
 	relativeSearchSpace map[string]interface{}
 }
 
+func (t *Trial) isFixedParam(name string, distribution interface{}) (float64, bool, error) {
+	systemAttrs, err := t.GetSystemAttrs()
+	if err != nil {
+		return 0, false, err
+	}
+	fixedParamsJSON, ok := systemAttrs["fixed_params"]
+	if !ok {
+		return 0, false, nil
+	}
+
+	var fixedParams map[string]float64
+	err = json.Unmarshal([]byte(fixedParamsJSON), &fixedParams)
+	if err != nil {
+		return 0, false, err
+	}
+
+	internalParam, ok := fixedParams[name]
+	if !ok {
+		return 0, false, nil
+	}
+
+	switch typedDistribution := distribution.(type) {
+	case UniformDistribution:
+		if !typedDistribution.Contains(internalParam) {
+			return 0, false, nil
+		}
+	case LogUniformDistribution:
+		if !typedDistribution.Contains(internalParam) {
+			return 0, false, nil
+		}
+	case DiscreteUniformDistribution:
+		if !typedDistribution.Contains(internalParam) {
+			return 0, false, nil
+		}
+	case IntUniformDistribution:
+		if !typedDistribution.Contains(internalParam) {
+			return 0, false, nil
+		}
+	case CategoricalDistribution:
+		if !typedDistribution.Contains(internalParam) {
+			return 0, false, nil
+		}
+	default:
+		return 0, false, errors.New("unsupported distribution")
+	}
+	return internalParam, true, nil
+}
+
 func (t *Trial) isRelativeParam(name string, distribution interface{}) bool {
 	expected, ok := t.relativeSearchSpace[name]
 	if !ok {
@@ -54,6 +105,13 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 	trial, err := t.Study.Storage.GetTrial(t.ID)
 	if err != nil {
 		return 0.0, err
+	}
+
+	if value, ok, err := t.isFixedParam(name, distribution); err != nil {
+		return 0.0, err
+	} else if ok {
+		err = t.Study.Storage.SetTrialParam(t.ID, name, value, distribution)
+		return value, err
 	}
 
 	if t.isRelativeParam(name, distribution) {
