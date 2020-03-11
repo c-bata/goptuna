@@ -490,10 +490,10 @@ func (s *Storage) SetTrialParam(
 }
 
 // SetTrialState sets the state of trial.
-func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
+func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) (bool, error) {
 	xr, err := toStateInternalRepresentation(state)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	tx := s.db.Begin()
@@ -503,7 +503,7 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 		}
 	}()
 	if tx.Error != nil {
-		return tx.Error
+		return false, tx.Error
 	}
 
 	err = tx.Model(&trialModel{}).
@@ -511,7 +511,7 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 		Update("state", xr).Error
 	if err != nil {
 		tx.Rollback()
-		return err
+		return false, err
 	}
 	if state.IsFinished() {
 		completedAt := time.Now()
@@ -520,10 +520,10 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 			Update("datetime_complete", completedAt).Error
 		if err != nil {
 			tx.Rollback()
-			return err
+			return false, err
 		}
 	}
-	return tx.Commit().Error
+	return true, tx.Commit().Error
 }
 
 // SetTrialUserAttr to store the value for the user.

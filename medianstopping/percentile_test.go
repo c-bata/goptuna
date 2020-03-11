@@ -178,7 +178,10 @@ func TestPercentilePruner_Prune(t *testing.T) {
 					t.Errorf("should be err=nil, but got %s", err)
 					return
 				}
-				err = study.Storage.SetTrialState(trialID, goptuna.TrialStateComplete)
+				ok, err := study.Storage.SetTrialState(trialID, goptuna.TrialStateComplete)
+				if !ok {
+					t.Error("should be ok=true, but got false")
+				}
 				if err != nil {
 					t.Errorf("should be err=nil, but got %s", err)
 					return

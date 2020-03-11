@@ -34,7 +34,7 @@ type Storage interface {
 	SetTrialIntermediateValue(trialID int, step int, value float64) error
 	SetTrialParam(trialID int, paramName string, paramValueInternal float64,
 		distribution interface{}) error
-	SetTrialState(trialID int, state TrialState) error
+	SetTrialState(trialID int, state TrialState) (bool, error)
 	SetTrialUserAttr(trialID int, key string, value string) error
 	SetTrialSystemAttr(trialID int, key string, value string) error
 	// Basic trial access
@@ -407,23 +407,23 @@ func (s *InMemoryStorage) SetTrialParam(
 }
 
 // SetTrialState sets the state of trial.
-func (s *InMemoryStorage) SetTrialState(trialID int, state TrialState) error {
+func (s *InMemoryStorage) SetTrialState(trialID int, state TrialState) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if trialID >= len(s.trials) {
-		return ErrInvalidTrialID
+		return false, ErrInvalidTrialID
 	}
 	trial := s.trials[trialID]
 	if trial.State.IsFinished() {
-		return ErrTrialCannotBeUpdated
+		return false, ErrTrialCannotBeUpdated
 	}
 	trial.State = state
 	if trial.State.IsFinished() {
 		trial.DatetimeComplete = time.Now()
 	}
 	s.trials[trialID] = trial
-	return nil
+	return true, nil
 }
 
 // SetTrialUserAttr to store the value for the user.

@@ -69,6 +69,38 @@ func TestStudy_SystemAttrs(t *testing.T) {
 	}
 }
 
+func ExampleStudy_EnqueueTrial() {
+	study, _ := goptuna.CreateStudy(
+		"example",
+		goptuna.StudyOptionLogger(nil),
+	)
+
+	objective := func(trial goptuna.Trial) (float64, error) {
+		x1, _ := trial.SuggestUniform("x1", -10, 10)
+		x2, _ := trial.SuggestUniform("x2", -10, 10)
+		return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
+	}
+
+	study.EnqueueTrial(map[string]float64{"x1": 2, "x2": -5})
+
+	err := study.Optimize(objective, 1)
+	if err != nil {
+		panic(err)
+	}
+
+	trials, err := study.GetTrials()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("x1: %.3f\n", trials[0].Params["x1"].(float64))
+	fmt.Printf("x2: %.3f\n", trials[0].Params["x2"].(float64))
+
+	// Output:
+	// x1: 2.000
+	// x2: -5.000
+}
+
 func TestStudy_UserAttrs(t *testing.T) {
 	study, _ := goptuna.CreateStudy(
 		"example",
