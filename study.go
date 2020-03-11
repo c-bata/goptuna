@@ -49,6 +49,8 @@ type Study struct {
 // This is an EXPERIMENTAL API and may be changed in the future.
 // Currently EnqueueTrial only accepts internal representations.
 // This means that you need to encode categorical parameter to its index number.
+// Furthermore, please caution that there is a concurrency problem in RDB storage
+// like https://github.com/optuna/optuna/pull/1014.
 func (s *Study) EnqueueTrial(internalParams map[string]float64) error {
 	systemAttrs := make(map[string]string, 8)
 	paramJSONBytes, err := json.Marshal(internalParams)
