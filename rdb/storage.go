@@ -2,7 +2,6 @@ package rdb
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/c-bata/goptuna"
@@ -11,8 +10,6 @@ import (
 )
 
 var _ goptuna.Storage = &Storage{}
-
-const keyNumber = "_number"
 
 // NewStorage returns new RDB storage.
 func NewStorage(db *gorm.DB) *Storage {
@@ -234,12 +231,9 @@ func (s *Storage) CreateNewTrial(studyID int) (int, error) {
 		return -1, err
 	}
 
-	// Set '_number' in trial_system_attributes.
-	err = tx.Create(&trialSystemAttributeModel{
-		SystemAttributeReferTrial: trial.ID,
-		Key:                       keyNumber,
-		ValueJSON:                 strconv.Itoa(number),
-	}).Error
+	err = tx.Model(&trialModel{}).
+		Where("trial_id = ?", trial.ID).
+		Update("number", number).Error
 	if err != nil {
 		tx.Rollback()
 		return -1, err
@@ -313,9 +307,6 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 
 	// system attrs
 	for key := range baseTrial.SystemAttrs {
-		if key == "_number" {
-			continue
-		}
 		err := tx.Create(&trialSystemAttributeModel{
 			SystemAttributeReferTrial: trial.ID,
 			Key:                       key,
@@ -364,11 +355,10 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 		tx.Rollback()
 		return -1, err
 	}
-	err = tx.Create(&trialSystemAttributeModel{
-		SystemAttributeReferTrial: trial.ID,
-		Key:                       keyNumber,
-		ValueJSON:                 strconv.Itoa(number),
-	}).Error
+
+	err = tx.Model(&trialModel{}).
+		Where("trial_id = ?", trial.ID).
+		Update("number", number).Error
 	if err != nil {
 		tx.Rollback()
 		return -1, err
@@ -579,13 +569,11 @@ func (s *Storage) SetTrialSystemAttr(trialID int, key string, value string) erro
 
 // GetTrialNumberFromID returns the trial's number.
 func (s *Storage) GetTrialNumberFromID(trialID int) (int, error) {
-	var attr trialSystemAttributeModel
-	err := s.db.First(&attr, "trial_id = ? AND key = ?", trialID, keyNumber).Error
+	trial, err := s.GetTrial(trialID)
 	if err != nil {
 		return -1, err
 	}
-	number, err := strconv.Atoi(attr.ValueJSON)
-	return number, err
+	return trial.Number, err
 }
 
 // GetTrialParam returns the internal parameter of the trial
