@@ -227,6 +227,7 @@ func (s *Storage) CreateNewTrial(studyID int) (int, error) {
 	var number int
 	err := tx.Model(&trialModel{}).
 		Where("study_id = ?", studyID).
+		Where("trial_id < ?", trial.ID).
 		Count(&number).Error
 	if err != nil {
 		tx.Rollback()
