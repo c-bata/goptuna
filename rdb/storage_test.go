@@ -541,7 +541,7 @@ func TestStorage_GetBestTrial(t *testing.T) {
 		t.Errorf("error: %v != nil", err)
 		return
 	}
-	// trial number 1 (not completed yet)
+	// trial number 0 (not completed yet)
 	trialID, err := storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
@@ -553,7 +553,7 @@ func TestStorage_GetBestTrial(t *testing.T) {
 		return
 	}
 
-	// trial number 2
+	// trial number 1
 	trialID, err = storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
@@ -570,7 +570,7 @@ func TestStorage_GetBestTrial(t *testing.T) {
 		return
 	}
 
-	// trial number 3
+	// trial number 2
 	trialID, err = storage.CreateNewTrial(studyID)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
@@ -592,8 +592,8 @@ func TestStorage_GetBestTrial(t *testing.T) {
 		t.Errorf("error: %v != nil", err)
 		return
 	}
-	if bestTrial.Value == 0.2 && bestTrial.Number != 3 {
-		t.Errorf("want Trial(Value=0.2, Number: 3), but got %#v", bestTrial)
+	if bestTrial.Value == 0.2 && bestTrial.Number != 2 {
+		t.Errorf("want Trial(Value=0.2, Number: 2), but got %#v", bestTrial)
 	}
 }
 
