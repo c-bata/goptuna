@@ -65,53 +65,6 @@ func TestDistributionConversionBetweenDistributionAndJSON(t *testing.T) {
 	}
 }
 
-func TestDistributionToInternalRepresentation(t *testing.T) {
-	tests := []struct {
-		name         string
-		distribution goptuna.Distribution
-		args         interface{}
-		want         float64
-	}{
-		{
-			name:         "uniform distribution",
-			distribution: &goptuna.UniformDistribution{Low: 0.5, High: 5.5},
-			args:         3.5,
-			want:         3.5,
-		},
-		{
-			name:         "log uniform distribution",
-			distribution: &goptuna.LogUniformDistribution{Low: 1e-2, High: 1e5},
-			args:         float64(1e3),
-			want:         float64(1e3),
-		},
-		{
-			name:         "int uniform distribution",
-			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
-			args:         3,
-			want:         3.0,
-		},
-		{
-			name:         "discrete uniform distribution",
-			distribution: &goptuna.DiscreteUniformDistribution{Low: 0.5, High: 5.5, Q: 0.5},
-			args:         3.5,
-			want:         3.5,
-		},
-		{
-			name:         "categorical distribution",
-			distribution: &goptuna.CategoricalDistribution{Choices: []string{"a", "b", "c"}},
-			args:         "b",
-			want:         1,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.distribution.ToInternalRepr(tt.args); got != tt.want {
-				t.Errorf("UniformDistribution.ToInternalRepr() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestDistributionToExternalRepresentation(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -138,9 +91,21 @@ func TestDistributionToExternalRepresentation(t *testing.T) {
 			want:         3,
 		},
 		{
-			name:         "discrete uniform distribution",
+			name:         "discrete uniform distribution 1",
 			distribution: &goptuna.DiscreteUniformDistribution{Low: 0.5, High: 5.5, Q: 0.5},
 			args:         3.5,
+			want:         3.5,
+		},
+		{
+			name:         "discrete uniform distribution 2",
+			distribution: &goptuna.DiscreteUniformDistribution{Low: 0.5, High: 5.5, Q: 0.5},
+			args:         3.3,
+			want:         3.5,
+		},
+		{
+			name:         "discrete uniform distribution 3",
+			distribution: &goptuna.DiscreteUniformDistribution{Low: 0.5, High: 5.5, Q: 0.05},
+			args:         3.52,
 			want:         3.5,
 		},
 		{
@@ -153,7 +118,7 @@ func TestDistributionToExternalRepresentation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.distribution.ToExternalRepr(tt.args); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UniformDistribution.ToInternalRepr() = %v, want %v", got, tt.want)
+				t.Errorf("UniformDistribution.ToExternalRepr() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -219,7 +184,7 @@ func TestDistributionSingle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.distribution.Single(); got != tt.want {
-				t.Errorf("UniformDistribution.ToInternalRepr() = %v, want %v", got, tt.want)
+				t.Errorf("UniformDistribution.Single() = %v, want %v", got, tt.want)
 			}
 		})
 	}

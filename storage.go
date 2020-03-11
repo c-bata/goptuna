@@ -68,6 +68,7 @@ type FrozenTrial struct {
 	IntermediateValues map[int]float64        `json:"intermediate_values"`
 	DatetimeStart      time.Time              `json:"datetime_start"`
 	DatetimeComplete   time.Time              `json:"datetime_complete"`
+	InternalParams     map[string]float64     `json:"internal_params"`
 	Params             map[string]interface{} `json:"params"`
 	Distributions      map[string]interface{} `json:"distributions"`
 	UserAttrs          map[string]string      `json:"user_attrs"`
@@ -332,6 +333,7 @@ func (s *InMemoryStorage) CreateNewTrial(studyID int) (int, error) {
 		IntermediateValues: make(map[int]float64, 8),
 		DatetimeStart:      time.Now(),
 		DatetimeComplete:   time.Time{},
+		InternalParams:     make(map[string]float64, 8),
 		Params:             make(map[string]interface{}, 8),
 		Distributions:      make(map[string]interface{}, 8),
 		UserAttrs:          make(map[string]string, 8),
@@ -407,14 +409,14 @@ func (s *InMemoryStorage) SetTrialParam(
 		return ErrTrialCannotBeUpdated
 	}
 
-	// Set param distribution
-	trial.Distributions[paramName] = distribution
-	var err error
-	trial.Params[paramName], err = ToExternalRepresentation(distribution, paramValueInternal)
+	paramValueExternal, err := ToExternalRepresentation(distribution, paramValueInternal)
 	if err != nil {
 		return err
 	}
 
+	trial.Distributions[paramName] = distribution
+	trial.InternalParams[paramName] = paramValueInternal
+	trial.Params[paramName] = paramValueExternal
 	s.trials[trialID] = trial
 	return nil
 }
@@ -487,16 +489,11 @@ func (s *InMemoryStorage) GetTrialParam(trialID int, paramName string) (float64,
 
 	for i := range s.trials {
 		if s.trials[i].ID == trialID {
-			xr, ok := s.trials[i].Params[paramName]
+			ir, ok := s.trials[i].InternalParams[paramName]
 			if !ok {
 				return -1.0, errors.New("param doesn't exist")
 			}
-			d, ok := s.trials[i].Distributions[paramName]
-			if !ok {
-				return -1.0, errors.New("distribution doesn't exist")
-			}
-			ir, err := ToInternalRepresentation(d, xr)
-			return ir, err
+			return ir, nil
 		}
 	}
 	return -1, ErrInvalidTrialID

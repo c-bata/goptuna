@@ -32,6 +32,7 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 	}
 
 	distributions := make(map[string]interface{}, len(trial.TrialParams))
+	paramsInIR := make(map[string]float64, len(trial.TrialParams))
 	paramsInXR := make(map[string]interface{}, len(trial.TrialParams))
 	for i := range trial.TrialParams {
 		// distributions
@@ -40,7 +41,11 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 			return goptuna.FrozenTrial{}, err
 		}
 		distributions[trial.TrialParams[i].Name] = d
-		// external representations
+
+		// internal representation
+		paramsInIR[trial.TrialParams[i].Name] = trial.TrialParams[i].Value
+
+		// external representation
 		paramsInXR[trial.TrialParams[i].Name], err = goptuna.ToExternalRepresentation(d, trial.TrialParams[i].Value)
 		if err != nil {
 			return goptuna.FrozenTrial{}, err
@@ -83,6 +88,7 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 		IntermediateValues: intermediateValue,
 		DatetimeStart:      datetimeStart,
 		DatetimeComplete:   datetimeComplete,
+		InternalParams:     paramsInIR,
 		Params:             paramsInXR,
 		Distributions:      distributions,
 		UserAttrs:          userAttrs,
