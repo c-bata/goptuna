@@ -42,7 +42,19 @@ type Study struct {
 }
 
 func (s *Study) EnqueueTrial(params map[string]interface{}) error {
-	return nil
+	systemAttrs := make(map[string]string, 8)
+	systemAttrs["fixed_params"] = ""
+	return s.appendTrial(
+		0,
+		nil,
+		nil,
+		nil,
+		systemAttrs,
+		nil,
+		TrialStateWaiting,
+		time.Now(),
+		time.Time{},
+	)
 }
 
 func (s *Study) popWaitingTrialID() (int, error) {
@@ -50,7 +62,7 @@ func (s *Study) popWaitingTrialID() (int, error) {
 }
 
 // AppendTrial to inject a trial into the Study.
-func (s *Study) AppendTrial(
+func (s *Study) appendTrial(
 	value float64,
 	internalParams map[string]float64,
 	distributions map[string]interface{},
@@ -72,6 +84,9 @@ func (s *Study) AppendTrial(
 			return err
 		}
 		params[name] = xr
+	}
+	if state.IsFinished() && datetimeComplete.IsZero() {
+		datetimeComplete = time.Now()
 	}
 	trial := FrozenTrial{
 		ID:                 -1, // dummy value

@@ -318,6 +318,7 @@ func (s *InMemoryStorage) CloneTrial(studyID int, baseTrial FrozenTrial) (int, e
 		IntermediateValues: baseTrial.IntermediateValues,
 		DatetimeStart:      baseTrial.DatetimeStart,
 		DatetimeComplete:   baseTrial.DatetimeComplete,
+		InternalParams:     baseTrial.InternalParams,
 		Params:             baseTrial.Params,
 		Distributions:      baseTrial.Distributions,
 		UserAttrs:          baseTrial.UserAttrs,
