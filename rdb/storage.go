@@ -109,10 +109,7 @@ func (s *Storage) GetStudyUserAttrs(studyID int) (map[string]string, error) {
 
 	res := make(map[string]string, len(attrs))
 	for i := range attrs {
-		res[attrs[i].Key], err = decodeAttrValue(attrs[i].ValueJSON)
-		if err != nil {
-			return nil, err
-		}
+		res[attrs[i].Key] = decodeAttrValue(attrs[i].ValueJSON)
 	}
 	return res, nil
 }
@@ -127,10 +124,7 @@ func (s *Storage) GetStudySystemAttrs(studyID int) (map[string]string, error) {
 
 	res := make(map[string]string, len(attrs))
 	for i := range attrs {
-		res[attrs[i].Key], err = decodeAttrValue(attrs[i].ValueJSON)
-		if err != nil {
-			return nil, err
-		}
+		res[attrs[i].Key] = decodeAttrValue(attrs[i].ValueJSON)
 	}
 	return res, nil
 }
@@ -603,13 +597,9 @@ func (s *Storage) GetTrialUserAttrs(trialID int) (map[string]string, error) {
 		return nil, result.Error
 	}
 
-	var err error
 	res := make(map[string]string, len(attrs))
 	for i := range attrs {
-		res[attrs[i].Key], err = decodeAttrValue(attrs[i].ValueJSON)
-		if err != nil {
-			return nil, err
-		}
+		res[attrs[i].Key] = decodeAttrValue(attrs[i].ValueJSON)
 	}
 	return res, nil
 }
@@ -622,13 +612,9 @@ func (s *Storage) GetTrialSystemAttrs(trialID int) (map[string]string, error) {
 		return nil, result.Error
 	}
 
-	var err error
 	res := make(map[string]string, len(attrs))
 	for i := range attrs {
-		res[attrs[i].Key], err = decodeAttrValue(attrs[i].ValueJSON)
-		if err != nil {
-			return nil, err
-		}
+		res[attrs[i].Key] = decodeAttrValue(attrs[i].ValueJSON)
 	}
 	return res, nil
 }
