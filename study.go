@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 )
 
 var errCreateNewTrial = errors.New("failed to create a new trial")
@@ -38,6 +39,61 @@ type Study struct {
 	loadIfExists      bool
 	mu                sync.RWMutex
 	ctx               context.Context
+}
+
+func (s *Study) EnqueueTrial(params map[string]interface{}) error {
+	return nil
+}
+
+func (s *Study) popWaitingTrialID() (int, error) {
+	return -1, nil
+}
+
+// AppendTrial to inject a trial into the Study.
+func (s *Study) AppendTrial(
+	value float64,
+	internalParams map[string]float64,
+	distributions map[string]interface{},
+	userAttrs map[string]string,
+	systemAttrs map[string]string,
+	intermediateValues map[int]float64,
+	state TrialState,
+	datetimeStart time.Time,
+	datetimeComplete time.Time,
+) error {
+	params := make(map[string]interface{}, len(internalParams))
+	for name := range internalParams {
+		d, ok := distributions[name]
+		if !ok {
+			return fmt.Errorf("distribution '%s' is not found", name)
+		}
+		xr, err := ToExternalRepresentation(d, internalParams[name])
+		if err != nil {
+			return err
+		}
+		params[name] = xr
+	}
+	trial := FrozenTrial{
+		ID:                 -1, // dummy value
+		StudyID:            s.ID,
+		Number:             -1, // dummy value
+		State:              state,
+		Value:              value,
+		IntermediateValues: intermediateValues,
+		DatetimeStart:      datetimeStart,
+		DatetimeComplete:   datetimeComplete,
+		InternalParams:     internalParams,
+		Params:             params,
+		Distributions:      distributions,
+		UserAttrs:          userAttrs,
+		SystemAttrs:        systemAttrs,
+	}
+	err := trial.validate()
+	if err != nil {
+		return err
+	}
+	_, err = s.Storage.CloneTrial(s.ID, trial)
+	return err
 }
 
 // GetTrials returns all trials in this study.

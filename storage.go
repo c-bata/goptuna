@@ -2,6 +2,7 @@ package goptuna
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -88,6 +89,57 @@ func (t FrozenTrial) GetLatestStep() (step int, exist bool) {
 		}
 	}
 	return maxStep, true
+}
+
+// Validate returns error if invalid.
+func (t FrozenTrial) validate() error {
+	if t.DatetimeStart.IsZero() {
+		return errors.New("`DatetimeStart` is supposed to be set")
+	}
+
+	if t.State.IsFinished() {
+		if t.DatetimeComplete.IsZero() {
+			return errors.New("`DatetimeComplete` is supposed to be set for a finished trial")
+		}
+	} else {
+		if !t.DatetimeComplete.IsZero() {
+			return errors.New("`DatetimeComplete` is supposed to not be set for a finished trial")
+		}
+	}
+
+	if len(t.InternalParams) != len(t.Distributions) {
+		return errors.New("`Params` and `Distributions` should be the same length")
+	}
+	for name := range t.InternalParams {
+		if _, ok := t.Distributions[name]; !ok {
+			return fmt.Errorf("distribution '%s' is not found", name)
+		}
+	}
+
+	if len(t.Params) != len(t.InternalParams) {
+		return errors.New("`Params` and `InternalParams` should be the same length")
+	}
+	for name := range t.InternalParams {
+		ir := t.InternalParams[name]
+		d := t.Distributions[name]
+
+		expectedXr, err := ToExternalRepresentation(d, ir)
+		if err != nil {
+			return err
+		}
+
+		actualXr, ok := t.Params[name]
+		if !ok {
+			return fmt.Errorf("params '%s' is not found", name)
+		}
+
+		if expectedXr != actualXr {
+			return fmt.Errorf("internal params and external param does not match: %s", name)
+		}
+
+		// TODO(c-bata): Check whether d.Contains(external_repr) is true.
+	}
+	return nil
 }
 
 var _ Storage = &InMemoryStorage{}
