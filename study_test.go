@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"testing"
+	"time"
 
 	"github.com/c-bata/goptuna"
 )
@@ -94,5 +95,42 @@ func TestStudy_UserAttrs(t *testing.T) {
 	}
 	if hello != "world" {
 		t.Errorf("should be 'world', but got '%s'", hello)
+	}
+}
+
+func TestStudy_AppendTrial(t *testing.T) {
+	study, err := goptuna.CreateStudy(
+		"example",
+		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
+		goptuna.StudyOptionSampler(goptuna.NewRandomSearchSampler()),
+	)
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+		return
+	}
+	err = goptuna.ExportStudyAppendTrial(
+		study,
+		0.8,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		goptuna.TrialStateComplete,
+		time.Now(),
+		time.Now(),
+	)
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+		return
+	}
+	bestValue, err := study.GetBestValue()
+	if err != nil {
+		t.Errorf("err: %v != nil", err)
+		return
+	}
+	if bestValue != 0.8 {
+		t.Errorf("bestValue: %f != 0.8", bestValue)
+		return
 	}
 }
