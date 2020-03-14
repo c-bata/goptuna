@@ -33,32 +33,14 @@ sleep 20
 
 ##################################################################
 echo ""
-echo "2. Create a study."
-echo ""
-
-go run ${REPOSITORY_ROOT}/cmd/main.go create-study --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/goptuna --study rdb
-
-##################################################################
-echo ""
-echo "3. Check the tables of MYSQL."
-echo ""
-
-echo "DATABASES:"
-mysql --host 127.0.0.1 --port 3306 --user goptuna -ppassword -e "SHOW DATABASES;"
-
-echo "TABLES:"
-mysql --host 127.0.0.1 --port 3306 --user goptuna -ppassword -e "SHOW TABLES FROM goptuna;"
-
-##################################################################
-echo ""
-echo "4. Run Goptuna optimizations."
+echo "2. Run Goptuna optimizations."
 echo ""
 
 go run ${DIR}/main.go mysql "goptuna:password@tcp(localhost:3306)/goptuna?parseTime=true"
 
 ##################################################################
 echo ""
-echo "5. View the optimization results on Optuna's dashboard."
+echo "3. View the optimization results on Optuna's dashboard."
 echo ""
 
 if [ -d ./venv ]; then
@@ -74,7 +56,7 @@ optuna dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/goptu
 
 ##################################################################
 echo ""
-echo "6. Stop MYSQL Server"
+echo "4. Stop MYSQL Server"
 echo ""
 
 docker stop goptuna-mysql

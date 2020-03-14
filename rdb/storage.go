@@ -254,12 +254,22 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 	// the state is set to `template_trial.state`.
 	tempState := trialStateWaiting
 
+	// Avoid to insert zero-time for `NON_ZERO_DATE` mode on MySQL.
+	// See https://github.com/jinzhu/gorm/issues/595
+	var datetimeStart, datetimeComplete *time.Time
+	if !baseTrial.DatetimeStart.IsZero() {
+		datetimeStart = &baseTrial.DatetimeStart
+	}
+	if !baseTrial.DatetimeComplete.IsZero() {
+		datetimeComplete = &baseTrial.DatetimeComplete
+	}
+
 	trial := &trialModel{
 		TrialReferStudy:  studyID,
 		State:            tempState,
 		Value:            baseTrial.Value,
-		DatetimeStart:    &baseTrial.DatetimeStart,
-		DatetimeComplete: &baseTrial.DatetimeComplete,
+		DatetimeStart:    datetimeStart,
+		DatetimeComplete: datetimeComplete,
 	}
 	if err := tx.Create(trial).Error; err != nil {
 		tx.Rollback()
@@ -489,21 +499,16 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 		return tx.Error
 	}
 
-	// TODO(c-bata): Add `FOR UPDATE` clause.
-	//
-	// result := tx.Set("gorm:query_option", "FOR UPDATE").
-	//     First(&trial, "trial_id = ?", trialID)
-	//
-	// But SQLite3 doesn't interpret `FOR UPDATE` clause.
-	// SQLAlchemy can automatically remove it, but Gorm can't.
-	//
-	// Another solution is to add `EnableForUpdateClause=false` option.
-	//
-	// See following pages for the information.
-	// * https://github.com/optuna/optuna/pull/1014
-	// * http://gorm.io/docs/query.html#Extra-Querying-option
 	var trial trialModel
-	result := tx.First(&trial, "trial_id = ?", trialID)
+	var result *gorm.DB
+	if s.db.Dialect().GetName() == "sqlite3" {
+		// TODO(c-bata): Fix concurrency problem on SQLite3.
+		// SQLite3 cannot interpret `FOR UPDATE` clause.
+		result = tx.First(&trial, "trial_id = ?", trialID)
+	} else {
+		result = tx.Set("gorm:query_option", "FOR UPDATE").
+			First(&trial, "trial_id = ?", trialID)
+	}
 	if result.RecordNotFound() {
 		tx.Rollback()
 		return goptuna.ErrInvalidTrialID
@@ -518,7 +523,7 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 		tx.Rollback()
 		return err
 	}
-	if previousState.IsFinished() {
+	if previousState.IsFinished() || previousState == state {
 		tx.Rollback()
 		return goptuna.ErrTrialCannotBeUpdated
 	}
@@ -670,7 +675,10 @@ func (s *Storage) GetAllTrials(studyID int) ([]goptuna.FrozenTrial, error) {
 	var values []trialValueModel
 	var userAttrs []trialUserAttributeModel
 	var systemAttrs []trialSystemAttributeModel
-	if err := s.db.Find(&trials, "study_id = ?", studyID).Error; err != nil {
+	if err := s.db.
+		Order("trial_id").
+		Find(&trials, "study_id = ?", studyID).
+		Error; err != nil {
 		return nil, err
 	}
 	if err := s.db.
@@ -758,20 +766,20 @@ func (s *Storage) mergeTrialsORM(
 	}
 
 	merged := make([]goptuna.FrozenTrial, 0, len(trials))
-	for trialID, trial := range idToTrials {
-		if v, ok := idToParams[trialID]; ok {
-			trial.TrialParams = v
+	for i := range trials {
+		if v, ok := idToParams[trials[i].ID]; ok {
+			trials[i].TrialParams = v
 		}
-		if v, ok := idToValues[trialID]; ok {
-			trial.TrialValues = v
+		if v, ok := idToValues[trials[i].ID]; ok {
+			trials[i].TrialValues = v
 		}
-		if v, ok := idToUserAttrs[trialID]; ok {
-			trial.UserAttributes = v
+		if v, ok := idToUserAttrs[trials[i].ID]; ok {
+			trials[i].UserAttributes = v
 		}
-		if v, ok := idToSystemAttrs[trialID]; ok {
-			trial.SystemAttributes = v
+		if v, ok := idToSystemAttrs[trials[i].ID]; ok {
+			trials[i].SystemAttributes = v
 		}
-		frozen, err := toFrozenTrial(trial)
+		frozen, err := toFrozenTrial(trials[i])
 		if err != nil {
 			return nil, err
 		}

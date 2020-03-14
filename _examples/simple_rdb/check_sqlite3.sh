@@ -4,24 +4,24 @@ export GO111MODULE=on
 DIR=$(cd $(dirname $0); pwd)
 REPOSITORY_ROOT=$(cd $(dirname $(dirname $(dirname $0))); pwd)
 
-set -e
-
-echo ""
-echo "1. Run Goptuna optimization."
-echo ""
+set -x
 
 go run ${DIR}/main.go sqlite3 db.sqlite3
 
-echo ""
-echo "2. View the optimization results on Optuna's dashboard."
-echo ""
+set +x
 
-if [ -d ./venv ]; then
-    source venv/bin/activate
-else
+echo "Create virtualenv"
+
+if [ ! -d ./venv ]; then
     python3.7 -m venv venv
     source venv/bin/activate
     pip install optuna bokeh
+else
+    source venv/bin/activate
 fi
+
+set -x
+
+pip install -U git+https://github.com/optuna/optuna
 
 optuna dashboard --storage sqlite:///db.sqlite3 --study rdb

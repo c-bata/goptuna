@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"math"
 
@@ -9,7 +8,7 @@ import (
 	"github.com/c-bata/goptuna/rdb"
 	"github.com/c-bata/goptuna/tpe"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
@@ -20,45 +19,39 @@ func objective(trial goptuna.Trial) (float64, error) {
 }
 
 func main() {
-	flag.Parse()
-	if len(flag.Args()) == 0 {
-		log.Fatal("please pass dialect and dsn")
-	}
-	dialect := flag.Arg(0)
-	dsn := flag.Arg(1)
-
-	db, err := gorm.Open(dialect, dsn)
+	db, err := gorm.Open("sqlite3", "db.sqlite3")
 	if err != nil {
 		log.Fatal("failed to open db:", err)
 	}
-
+	defer db.Close()
 	rdb.RunAutoMigrate(db)
 	storage := rdb.NewStorage(db)
-	defer db.Close()
 
 	study, err := goptuna.CreateStudy(
-		"rdb",
-		goptuna.StudyOptionStorage(storage),
+		"goptuna-example",
 		goptuna.StudyOptionSampler(tpe.NewSampler()),
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
+		goptuna.StudyOptionStorage(storage),
 		goptuna.StudyOptionLoadIfExists(true),
 	)
 	if err != nil {
-		log.Fatal("failed to create study", err)
+		log.Fatal("failed to create study:", err)
+	}
+
+	for i := 0; i < 5; i++ {
+		err = study.EnqueueTrial(map[string]float64{
+			"x1": float64(i), "x2": float64(i),
+		})
+		if err != nil {
+			log.Fatal("failed to enqueue trial: ", err)
+		}
 	}
 
 	if err = study.Optimize(objective, 50); err != nil {
-		log.Fatal("failed to optimize", err)
+		log.Fatal("failed to optimize:", err)
 	}
 
-	v, err := study.GetBestValue()
-	if err != nil {
-		log.Fatal("failed to get best value", err)
-	}
-	params, err := study.GetBestParams()
-	if err != nil {
-		log.Fatal("failed to get best params:", err)
-	}
+	v, _ := study.GetBestValue()
+	params, _ := study.GetBestParams()
 	log.Printf("Best evaluation=%f (x1=%f, x2=%f)",
 		v, params["x1"].(float64), params["x2"].(float64))
 }
