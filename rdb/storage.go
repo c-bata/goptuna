@@ -489,21 +489,16 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 		return tx.Error
 	}
 
-	// TODO(c-bata): Add `FOR UPDATE` clause.
-	//
-	// result := tx.Set("gorm:query_option", "FOR UPDATE").
-	//     First(&trial, "trial_id = ?", trialID)
-	//
-	// But SQLite3 doesn't interpret `FOR UPDATE` clause.
-	// SQLAlchemy can automatically remove it, but Gorm can't.
-	//
-	// Another solution is to add `EnableForUpdateClause=false` option.
-	//
-	// See following pages for the information.
-	// * https://github.com/optuna/optuna/pull/1014
-	// * http://gorm.io/docs/query.html#Extra-Querying-option
 	var trial trialModel
-	result := tx.First(&trial, "trial_id = ?", trialID)
+	var result *gorm.DB
+	if s.db.Dialect().GetName() == "sqlite3" {
+		// TODO(c-bata): Fix concurrency problem on SQLite3.
+		// SQLite3 cannot interpret `FOR UPDATE` clause.
+		result = tx.First(&trial, "trial_id = ?", trialID)
+	} else {
+		result = tx.Set("gorm:query_option", "FOR UPDATE").
+			First(&trial, "trial_id = ?", trialID)
+	}
 	if result.RecordNotFound() {
 		tx.Rollback()
 		return goptuna.ErrInvalidTrialID
