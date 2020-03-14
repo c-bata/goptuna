@@ -15,6 +15,7 @@ type Solution struct {
 	Value float64
 }
 
+// Optimizer is CMA-ES stochastic optimizer class with ask-and-tell interface.
 type Optimizer struct {
 	mean  []float64
 	sigma float64
@@ -160,40 +161,67 @@ func (c *Optimizer) Generation() int {
 	return c.g
 }
 
-// PopulationSize returns the population size
+// PopulationSize returns the population size.
 func (c *Optimizer) PopulationSize() int {
 	return c.popsize
 }
 
+// Ask a next parameter.
 func (c *Optimizer) Ask() (mat.Matrix, error) {
+	x, err := c.sampleSolution()
+	if err != nil {
+		return nil, err
+	}
 	for i := 0; i < c.maxReSampling; i++ {
-		x, err := c.sampleSolution()
-		if err != nil {
-			return nil, err
-		}
 		if c.isFeasible(x) {
 			return x, nil
 		}
+		x, err = c.sampleSolution()
+		if err != nil {
+			return nil, err
+		}
 	}
-	panic("implement me")
-	return nil, nil
+	err = c.repairInfeasibleParams(x)
+	if err != nil {
+		return nil, err
+	}
+	return x, nil
 }
 
-func (c *Optimizer) isFeasible(matrix mat.Matrix) bool {
+func (c *Optimizer) isFeasible(values *mat.VecDense) bool {
 	if c.bounds == nil {
 		return true
 	}
-	row, column := matrix.Dims()
-	if row != c.dim || column != 1 {
+	if values.Len() != c.dim {
 		return false
 	}
 	for i := 0; i < c.dim; i++ {
-		v := matrix.At(i, 0)
+		v := values.AtVec(i)
 		if !(c.bounds.At(i, 0) < v && c.bounds.At(i, 1) > v) {
 			return false
 		}
 	}
 	return true
+}
+
+func (c *Optimizer) repairInfeasibleParams(values *mat.VecDense) error {
+	if c.bounds == nil {
+		return nil
+	}
+	if values.Len() != c.dim {
+		return errors.New("invalid matrix size")
+	}
+
+	for i := 0; i < c.dim; i++ {
+		v := values.AtVec(i)
+		if c.bounds.At(i, 0) > v {
+			values.SetVec(i, c.bounds.At(i, 0))
+		}
+		if c.bounds.At(i, 1) < v {
+			values.SetVec(i, c.bounds.At(i, 1))
+		}
+	}
+	return nil
 }
 
 func (c *Optimizer) sampleSolution() (*mat.VecDense, error) {
@@ -220,16 +248,15 @@ func (c *Optimizer) sampleSolution() (*mat.VecDense, error) {
 
 	var bd mat.Dense
 	bd.Mul(&b, mat.NewDiagDense(c.dim, d))
-	var y mat.VecDense
-	y.MulVec(&bd, mat.NewVecDense(c.dim, z))
-	var x mat.VecDense
 
-	x.AddVec(&y, mat.NewVecDense(c.dim, repeat(make([]float64, c.dim), c.sigma)))
-	x.AddVec(&x, mat.NewVecDense(c.dim, c.mean))
-
-	return &x, nil
+	values := mat.NewVecDense(c.dim, z)                   // ~ N(0, I)
+	values.MulVec(&bd, values)                            // ~ N(0, C)
+	values.ScaleVec(c.sigma, values)                      // ~ N(0, σ^2 C)
+	values.AddVec(values, mat.NewVecDense(c.dim, c.mean)) // ~ N(m, σ^2 C)
+	return values, nil
 }
 
+// Tell evaluation values.
 func (c *Optimizer) Tell(solutions []*Solution) error {
 	panic("implement me")
 	return nil
