@@ -9,7 +9,6 @@ import (
 	"github.com/c-bata/goptuna/rdb"
 	"github.com/c-bata/goptuna/tpe"
 	"github.com/jinzhu/gorm"
-
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
@@ -33,6 +32,7 @@ func main() {
 		log.Fatal("failed to open db:", err)
 	}
 
+	rdb.RunAutoMigrate(db)
 	storage := rdb.NewStorage(db)
 	defer db.Close()
 
