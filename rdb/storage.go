@@ -254,12 +254,22 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 	// the state is set to `template_trial.state`.
 	tempState := trialStateWaiting
 
+	// Avoid to insert zero-time for `NON_ZERO_DATE` mode on MySQL.
+	// See https://github.com/jinzhu/gorm/issues/595
+	var datetimeStart, datetimeComplete *time.Time
+	if !baseTrial.DatetimeStart.IsZero() {
+		datetimeStart = &baseTrial.DatetimeStart
+	}
+	if !baseTrial.DatetimeComplete.IsZero() {
+		datetimeComplete = &baseTrial.DatetimeComplete
+	}
+
 	trial := &trialModel{
 		TrialReferStudy:  studyID,
 		State:            tempState,
 		Value:            baseTrial.Value,
-		DatetimeStart:    &baseTrial.DatetimeStart,
-		DatetimeComplete: &baseTrial.DatetimeComplete,
+		DatetimeStart:    datetimeStart,
+		DatetimeComplete: datetimeComplete,
 	}
 	if err := tx.Create(trial).Error; err != nil {
 		tx.Rollback()
