@@ -675,7 +675,10 @@ func (s *Storage) GetAllTrials(studyID int) ([]goptuna.FrozenTrial, error) {
 	var values []trialValueModel
 	var userAttrs []trialUserAttributeModel
 	var systemAttrs []trialSystemAttributeModel
-	if err := s.db.Find(&trials, "study_id = ?", studyID).Error; err != nil {
+	if err := s.db.
+		Order("trial_id").
+		Find(&trials, "study_id = ?", studyID).
+		Error; err != nil {
 		return nil, err
 	}
 	if err := s.db.
@@ -763,20 +766,20 @@ func (s *Storage) mergeTrialsORM(
 	}
 
 	merged := make([]goptuna.FrozenTrial, 0, len(trials))
-	for trialID, trial := range idToTrials {
-		if v, ok := idToParams[trialID]; ok {
-			trial.TrialParams = v
+	for i := range trials {
+		if v, ok := idToParams[trials[i].ID]; ok {
+			trials[i].TrialParams = v
 		}
-		if v, ok := idToValues[trialID]; ok {
-			trial.TrialValues = v
+		if v, ok := idToValues[trials[i].ID]; ok {
+			trials[i].TrialValues = v
 		}
-		if v, ok := idToUserAttrs[trialID]; ok {
-			trial.UserAttributes = v
+		if v, ok := idToUserAttrs[trials[i].ID]; ok {
+			trials[i].UserAttributes = v
 		}
-		if v, ok := idToSystemAttrs[trialID]; ok {
-			trial.SystemAttributes = v
+		if v, ok := idToSystemAttrs[trials[i].ID]; ok {
+			trials[i].SystemAttributes = v
 		}
-		frozen, err := toFrozenTrial(trial)
+		frozen, err := toFrozenTrial(trials[i])
 		if err != nil {
 			return nil, err
 		}
