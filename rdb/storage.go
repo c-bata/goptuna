@@ -523,7 +523,7 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 		tx.Rollback()
 		return err
 	}
-	if previousState.IsFinished() {
+	if previousState.IsFinished() || previousState == state {
 		tx.Rollback()
 		return goptuna.ErrTrialCannotBeUpdated
 	}
