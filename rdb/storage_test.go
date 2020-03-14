@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/c-bata/goptuna"
-
 	"github.com/c-bata/goptuna/rdb"
 	"github.com/jinzhu/gorm"
+
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
@@ -389,23 +389,6 @@ func TestStorage_SetTrialState(t *testing.T) {
 	}
 	before := trial.DatetimeComplete
 
-	err = storage.SetTrialState(trialID, goptuna.TrialStateRunning)
-	if err != nil {
-		t.Errorf("error: %v != nil", err)
-		return
-	}
-	trial, err = storage.GetTrial(trialID)
-	if err != nil {
-		t.Errorf("error: %v != nil", err)
-		return
-	}
-	after := trial.DatetimeComplete
-	if before.Unix() != after.Unix() {
-		t.Errorf("DatetimeComplete should not be updated, but changed: %s to %s",
-			before.String(), after.String())
-		return
-	}
-
 	err = storage.SetTrialState(trialID, goptuna.TrialStateComplete)
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
@@ -416,7 +399,7 @@ func TestStorage_SetTrialState(t *testing.T) {
 		t.Errorf("error: %v != nil", err)
 		return
 	}
-	after = trial.DatetimeComplete
+	after := trial.DatetimeComplete
 	if before.Unix() == after.Unix() {
 		t.Errorf("DatetimeComplete should be updated, but got %s", after.String())
 		return
