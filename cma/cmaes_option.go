@@ -25,6 +25,11 @@ func OptimizerOptionMaxReSampling(n int) OptimizerOption {
 
 // OptimizerOptionBounds sets the range of parameters.
 func OptimizerOptionBounds(bounds *mat.Dense) OptimizerOption {
+	_, column := bounds.Dims()
+	if column != 2 {
+		panic("invalid matrix size")
+	}
+
 	return func(cma *Optimizer) {
 		cma.bounds = bounds
 	}

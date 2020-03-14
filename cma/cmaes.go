@@ -183,7 +183,16 @@ func (c *Optimizer) isFeasible(matrix mat.Matrix) bool {
 	if c.bounds == nil {
 		return true
 	}
-	panic("implement me")
+	row, column := matrix.Dims()
+	if row != c.dim || column != 1 {
+		return false
+	}
+	for i := 0; i < c.dim; i++ {
+		v := matrix.At(i, 0)
+		if !(c.bounds.At(i, 0) < v && c.bounds.At(i, 1) > v) {
+			return false
+		}
+	}
 	return true
 }
 
@@ -215,11 +224,7 @@ func (c *Optimizer) sampleSolution() (*mat.VecDense, error) {
 	y.MulVec(&bd, mat.NewVecDense(c.dim, z))
 	var x mat.VecDense
 
-	sigma := make([]float64, c.dim)
-	for i := 0; i < c.dim; i++ {
-		sigma[i] = c.sigma
-	}
-	x.AddVec(&y, mat.NewVecDense(c.dim, sigma))
+	x.AddVec(&y, mat.NewVecDense(c.dim, repeat(make([]float64, c.dim), c.sigma)))
 	x.AddVec(&x, mat.NewVecDense(c.dim, c.mean))
 
 	return &x, nil
