@@ -58,7 +58,7 @@ func (l *StdLogger) Debug(msg string, fields ...interface{}) {
 	if l.Color {
 		prefix = "\033[1;36m" + prefix + "\033[0m"
 	}
-	l.write(fmt.Sprintf("%s%s:", prefix, msg), fields...)
+	l.write(fmt.Sprintf("%s%s", prefix, msg), fields...)
 }
 
 // Info logs a message at LoggerLevelInfo. The message includes any fields
