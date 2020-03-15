@@ -19,6 +19,13 @@ elif args.loglevel == 'error':
     optuna.logging.set_verbosity(optuna.logging.ERROR)
 
 
+class CustomOptunaSolverFactory(OptunaSolverFactory):
+    def specification(self):
+        spec = super().specification()
+        spec.name = "Optuna (CMA-ES)"
+        return spec
+
+
 def create_study(seed):
     sampler = optuna.integration.CmaEsSampler(
         seed=seed,
@@ -29,6 +36,6 @@ def create_study(seed):
 
 
 if __name__ == '__main__':
-    factory = OptunaSolverFactory(create_study)
+    factory = CustomOptunaSolverFactory(create_study)
     runner = solver.SolverRunner(factory)
     runner.run()
