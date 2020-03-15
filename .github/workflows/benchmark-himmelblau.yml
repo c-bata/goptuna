@@ -23,6 +23,7 @@ jobs:
         with:
           python-version: '3.8'
           architecture: 'x64'
+      - run: python -V
       - run: pip install -U pip
       - run: pip install kurobako optuna cma
 
@@ -39,7 +40,7 @@ jobs:
       - run: gcloud info
       - run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Run sigopt/evalset/Ackley Benchmark
+      - name: Run benchmarks of Himmelblau function
         env:
           KUROBAKO: ./kurobako
         run: |
