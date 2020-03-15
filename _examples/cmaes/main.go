@@ -1,47 +1,35 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"math"
 
+	"github.com/c-bata/goptuna"
 	"github.com/c-bata/goptuna/cma"
 )
 
-func objective(x1, x2 float64) float64 {
-	return math.Pow(x1-3, 2) + math.Pow(10*(x2+2), 2)
+func objective(trial goptuna.Trial) (float64, error) {
+	x1, _ := trial.SuggestUniform("x1", -10, 10)
+	x2, _ := trial.SuggestUniform("x2", -10, 10)
+	return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
 }
 
 func main() {
-	mean := []float64{1, 2}
-	sigma0 := 1.3
-	optimizer, err := cma.NewOptimizer(
-		mean, sigma0,
-		cma.OptimizerOptionSeed(0),
+	relativeSampler := cma.NewSampler()
+	study, err := goptuna.CreateStudy(
+		"goptuna-example",
+		goptuna.StudyOptionRelativeSampler(relativeSampler),
 	)
 	if err != nil {
-		panic(err)
+		log.Fatal("failed to create study:", err)
 	}
 
-	solutions := make([]*cma.Solution, optimizer.PopulationSize())
-	for generation := 0; generation < 50; generation++ {
-		for i := 0; i < optimizer.PopulationSize(); i++ {
-			x, err := optimizer.Ask()
-			if err != nil {
-				panic(err)
-			}
-			x1, x2 := x.AtVec(0), x.AtVec(1)
-			v := objective(x1, x2)
-			solutions[i] = &cma.Solution{
-				X:     x,
-				Value: v,
-			}
-			fmt.Printf("generation %d: %f (x1=%f, x2=%f)\n",
-				generation, v, x1, x2)
-		}
-
-		err = optimizer.Tell(solutions)
-		if err != nil {
-			panic(err)
-		}
+	if err = study.Optimize(objective, 200); err != nil {
+		log.Fatal("failed to optimize:", err)
 	}
+
+	v, _ := study.GetBestValue()
+	params, _ := study.GetBestParams()
+	log.Printf("Best evaluation=%f (x1=%f, x2=%f)",
+		v, params["x1"].(float64), params["x2"].(float64))
 }
