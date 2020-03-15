@@ -57,20 +57,6 @@ func vecapply(vec *mat.VecDense, conv func(int, float64) float64) *mat.VecDense 
 	return x
 }
 
-func solutionsToX(solutions []*Solution) *mat.Dense {
-	if len(solutions) == 0 {
-		panic("empty solutions")
-	}
-	lambda := len(solutions)
-	dim := solutions[0].X.Len()
-
-	x := mat.NewDense(lambda, dim, nil)
-	for i := 0; i < lambda; i++ {
-		x.SetRow(i, solutions[i].X.RawVector().Data)
-	}
-	return x
-}
-
 func initMinC(dim int) *mat.SymDense {
 	x := make([]float64, dim*dim)
 	for i := 0; i < dim*dim; i++ {

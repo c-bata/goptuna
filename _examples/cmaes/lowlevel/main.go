@@ -29,11 +29,11 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			x1, x2 := x.AtVec(0), x.AtVec(1)
+			x1, x2 := x[0], x[1]
 			v := objective(x1, x2)
 			solutions[i] = &cmaes.Solution{
-				X:     x,
-				Value: v,
+				Params: x,
+				Value:  v,
 			}
 			fmt.Printf("generation %d: %f (x1=%f, x2=%f)\n",
 				generation, v, x1, x2)

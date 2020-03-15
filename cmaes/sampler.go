@@ -80,7 +80,7 @@ func (s *Sampler) SampleRelative(
 		if !ok || generationID != fmt.Sprintf("%s-%d", s.optimizerID, s.optimizer.Generation()) {
 			continue
 		}
-		x := mat.NewVecDense(len(orderedKeys), nil)
+		x := make([]float64, len(orderedKeys))
 		for j := 0; j < len(orderedKeys); j++ {
 			p, ok := completed[i].InternalParams[orderedKeys[j]]
 			if !ok {
@@ -92,11 +92,11 @@ func (s *Sampler) SampleRelative(
 				p = math.Log(p)
 			}
 
-			x.SetVec(j, p)
+			x[j] = p
 		}
 		solutions = append(solutions, &Solution{
-			X:     x,
-			Value: completed[i].Value,
+			Params: x,
+			Value:  completed[i].Value,
 		})
 
 		if len(solutions) == s.optimizer.PopulationSize() {
@@ -123,7 +123,7 @@ func (s *Sampler) SampleRelative(
 
 	params := make(map[string]float64, len(orderedKeys))
 	for i := range orderedKeys {
-		param := nextParams.AtVec(i)
+		param := nextParams[i]
 		switch searchSpace[orderedKeys[i]].(type) {
 		case goptuna.LogUniformDistribution:
 			param = math.Exp(param)

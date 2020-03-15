@@ -61,8 +61,8 @@ func TestOptimizer_Tell(t *testing.T) {
 			return
 		}
 		solutions[i] = &cmaes.Solution{
-			X:     x,
-			Value: float64(i),
+			Params: x,
+			Value:  float64(i),
 		}
 	}
 	err = optimizer.Tell(solutions)

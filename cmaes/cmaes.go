@@ -6,12 +6,14 @@ import (
 	"math/rand"
 	"sort"
 
+	"gonum.org/v1/gonum/floats"
+
 	"gonum.org/v1/gonum/mat"
 )
 
 type Solution struct {
-	// X is a parameter transformed to N(m, σ^2 C) from Z.
-	X *mat.VecDense
+	// Params is a parameter transformed to N(m, σ^2 C) from Z.
+	Params []float64
 	// Value represents an evaluation value.
 	Value float64
 }
@@ -164,14 +166,14 @@ func (c *Optimizer) PopulationSize() int {
 }
 
 // Ask a next parameter.
-func (c *Optimizer) Ask() (*mat.VecDense, error) {
+func (c *Optimizer) Ask() ([]float64, error) {
 	x, err := c.sampleSolution()
 	if err != nil {
 		return nil, err
 	}
 	for i := 0; i < c.maxReSampling; i++ {
 		if c.isFeasible(x) {
-			return x, nil
+			return x.RawVector().Data, nil
 		}
 		x, err = c.sampleSolution()
 		if err != nil {
@@ -182,7 +184,7 @@ func (c *Optimizer) Ask() (*mat.VecDense, error) {
 	if err != nil {
 		return nil, err
 	}
-	return x, nil
+	return x.RawVector().Data, nil
 }
 
 func (c *Optimizer) isFeasible(values *mat.VecDense) bool {
@@ -273,9 +275,13 @@ func (c *Optimizer) Tell(solutions []*Solution) error {
 	eigsym.Values(d) // d^2
 	floatsSqrtTo(d)  // d
 
-	yk := solutionsToX(solutions) // ~ N(m, σ^2 C)
-	meank := stackvec(c.popsize, c.dim, c.mean)
-	yk.Sub(yk, meank)       // ~ N(0, σ^2 C)
+	yk := mat.NewDense(c.popsize, c.dim, nil)
+	for i := 0; i < c.popsize; i++ {
+		xi := solutions[i].Params           // ~ N(m, σ^2 C)
+		xiSubMean := make([]float64, c.dim) // ~ N(0, σ^2 C)
+		floats.SubTo(xiSubMean, xi, c.mean.RawVector().Data)
+		yk.SetRow(i, xiSubMean)
+	}
 	yk.Scale(1/c.sigma, yk) // ~ N(0, C)
 
 	// Selection and recombination
