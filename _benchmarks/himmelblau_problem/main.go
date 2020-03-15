@@ -39,7 +39,7 @@ type himmelblauProblem struct {
 func (r *himmelblauProblem) CreateEvaluator(params []float64) (kurobako.Evaluator, error) {
 	x1 := params[0]
 	x2 := params[1]
-	return &himmelblauEvaluator{x1, x2}, nil
+	return &himmelblauEvaluator{x1: x1, x2: x2}, nil
 }
 
 type himmelblauEvaluator struct {

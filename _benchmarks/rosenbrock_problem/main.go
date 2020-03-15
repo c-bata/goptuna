@@ -39,7 +39,7 @@ type rosenbrockProblem struct {
 func (r *rosenbrockProblem) CreateEvaluator(params []float64) (kurobako.Evaluator, error) {
 	x1 := params[0]
 	x2 := params[1]
-	return &rosenbrockEvaluator{x1, x2}, nil
+	return &rosenbrockEvaluator{x1: x1, x2: x2}, nil
 }
 
 type rosenbrockEvaluator struct {

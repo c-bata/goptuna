@@ -17,5 +17,5 @@ PROBLEM=$($KUROBAKO problem command ./rosenbrock_problem)
 $KUROBAKO studies \
   --solvers $RANDOM_SOLVER $TPE_SOLVER $CMA_SOLVER $OPTUNA_SOLVER \
   --problems $PROBLEM \
-  --repeats 10 --budget 300 \
-  | $KUROBAKO run --parallelism 5 > $1
+  --repeats 8 --budget 300 \
+  | $KUROBAKO run --parallelism 1 > $1
