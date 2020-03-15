@@ -6,7 +6,7 @@ on:
     - 'internal/**.go'
     - 'tpe/**.go'
 jobs:
-  benchmarks:
+  benchmarks-ackley:
     name: Run kurobako benchmark
     runs-on: ubuntu-latest
 

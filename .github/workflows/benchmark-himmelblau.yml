@@ -2,10 +2,10 @@ name: Run kurobako benchmark
 on:
   pull_request:
     paths:
-    - '.github/workflows/benchmark-ackley.yml'
+    - '.github/workflows/benchmark-himmelblau.yml'
     - 'cma/**.go'
 jobs:
-  benchmarks:
+  benchmarks-himmelblau:
     name: Run kurobako benchmark
     runs-on: ubuntu-latest
 
@@ -23,6 +23,7 @@ jobs:
         with:
           python-version: '3.8'
           architecture: 'x64'
+      - run: pip install -U pip
       - run: pip install kurobako optuna cma
 
       - name: Download kurobako CLI
