@@ -17,10 +17,10 @@ func (r *rosenbrockProblemFactory) Specification() (*kurobako.ProblemSpec, error
 	spec := kurobako.NewProblemSpec("Rosenbrock Function")
 
 	x1 := kurobako.NewVar("x1")
-	x1.Range = kurobako.ContinuousRange{Low: -4, High: 4}.ToRange()
+	x1.Range = kurobako.ContinuousRange{Low: -5, High: 10}.ToRange()
 
 	x2 := kurobako.NewVar("x2")
-	x2.Range = kurobako.ContinuousRange{Low: -4, High: 4}.ToRange()
+	x2.Range = kurobako.ContinuousRange{Low: -5, High: 10}.ToRange()
 
 	spec.Params = []kurobako.Var{x1, x2}
 
