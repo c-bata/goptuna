@@ -37,9 +37,8 @@ func TestOptimizer_Ask(t *testing.T) {
 		t.Errorf("should be nil, but got %s", err)
 		return
 	}
-	r, c := x.Dims()
-	if r != 2 || c != 1 {
-		t.Errorf("should be (2, 1), but got (%d, %d)", r, c)
+	if len(x) != 2 {
+		t.Errorf("dim should be 2, but got %d", len(x))
 	}
 }
 
