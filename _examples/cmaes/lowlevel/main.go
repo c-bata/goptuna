@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/c-bata/goptuna/cma"
+	"github.com/c-bata/goptuna/cmaes"
 )
 
 func objective(x1, x2 float64) float64 {
@@ -14,15 +14,15 @@ func objective(x1, x2 float64) float64 {
 func main() {
 	mean := []float64{1, 2}
 	sigma0 := 1.3
-	optimizer, err := cma.NewOptimizer(
+	optimizer, err := cmaes.NewOptimizer(
 		mean, sigma0,
-		cma.OptimizerOptionSeed(0),
+		cmaes.OptimizerOptionSeed(0),
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	solutions := make([]*cma.Solution, optimizer.PopulationSize())
+	solutions := make([]*cmaes.Solution, optimizer.PopulationSize())
 	for generation := 0; generation < 50; generation++ {
 		for i := 0; i < optimizer.PopulationSize(); i++ {
 			x, err := optimizer.Ask()
@@ -31,7 +31,7 @@ func main() {
 			}
 			x1, x2 := x.AtVec(0), x.AtVec(1)
 			v := objective(x1, x2)
-			solutions[i] = &cma.Solution{
+			solutions[i] = &cmaes.Solution{
 				X:     x,
 				Value: v,
 			}

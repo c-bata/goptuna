@@ -1,4 +1,4 @@
-package cma
+package cmaes
 
 import (
 	"errors"
@@ -73,7 +73,7 @@ func (s *Sampler) SampleRelative(
 
 	solutions := make([]*Solution, 0, s.optimizer.PopulationSize())
 	for i := range completed {
-		gstr, ok := completed[i].SystemAttrs["goptuna:cma:generation"]
+		gstr, ok := completed[i].SystemAttrs["goptuna:cmaes:generation"]
 		if !ok {
 			continue
 		}
@@ -114,7 +114,7 @@ func (s *Sampler) SampleRelative(
 	}
 
 	err = study.Storage.SetTrialSystemAttr(trial.ID,
-		"goptuna:cma:generation", strconv.Itoa(s.optimizer.Generation()))
+		"goptuna:cmaes:generation", strconv.Itoa(s.optimizer.Generation()))
 	if err != nil {
 		return nil, err
 	}

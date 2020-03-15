@@ -1,4 +1,4 @@
-package cma_test
+package cmaes_test
 
 import (
 	"testing"
@@ -6,18 +6,18 @@ import (
 	"gonum.org/v1/gonum/floats"
 	"gonum.org/v1/gonum/mat"
 
-	"github.com/c-bata/goptuna/cma"
+	"github.com/c-bata/goptuna/cmaes"
 )
 
 func TestNewOptimizer(t *testing.T) {
 	mean := []float64{0, 0}
 	sigma0 := 1.3
-	optimizer, err := cma.NewOptimizer(mean, sigma0)
+	optimizer, err := cmaes.NewOptimizer(mean, sigma0)
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
 		return
 	}
-	if dim := cma.ExportDim(optimizer); dim != 2 {
+	if dim := cmaes.ExportDim(optimizer); dim != 2 {
 		t.Errorf("should be 2, but got %d", dim)
 	}
 }
@@ -25,9 +25,9 @@ func TestNewOptimizer(t *testing.T) {
 func TestOptimizer_Ask(t *testing.T) {
 	mean := []float64{1, 2}
 	sigma0 := 1.3
-	optimizer, err := cma.NewOptimizer(
+	optimizer, err := cmaes.NewOptimizer(
 		mean, sigma0,
-		cma.OptimizerOptionSeed(0),
+		cmaes.OptimizerOptionSeed(0),
 	)
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
@@ -46,21 +46,21 @@ func TestOptimizer_Ask(t *testing.T) {
 func TestOptimizer_Tell(t *testing.T) {
 	mean := []float64{1, 2}
 	sigma0 := 1.3
-	optimizer, err := cma.NewOptimizer(
+	optimizer, err := cmaes.NewOptimizer(
 		mean, sigma0,
-		cma.OptimizerOptionSeed(0),
+		cmaes.OptimizerOptionSeed(0),
 	)
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
 	}
-	solutions := make([]*cma.Solution, optimizer.PopulationSize())
+	solutions := make([]*cmaes.Solution, optimizer.PopulationSize())
 	for i := 0; i < optimizer.PopulationSize(); i++ {
 		x, err := optimizer.Ask()
 		if err != nil {
 			t.Errorf("should be nil, but got %s", err)
 			return
 		}
-		solutions[i] = &cma.Solution{
+		solutions[i] = &cmaes.Solution{
 			X:     x,
 			Value: float64(i),
 		}
@@ -109,15 +109,15 @@ func TestOptimizer_IsFeasible(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			optimizer, err := cma.NewOptimizer(
+			optimizer, err := cmaes.NewOptimizer(
 				[]float64{0, 0}, 1.3,
-				cma.OptimizerOptionBounds(tt.bounds),
+				cmaes.OptimizerOptionBounds(tt.bounds),
 			)
 			if err != nil {
 				t.Errorf("should be nil, but got %s", err)
 			}
 
-			feasible := cma.ExportOptimizerIsFeasible(optimizer, tt.value)
+			feasible := cmaes.ExportOptimizerIsFeasible(optimizer, tt.value)
 			if tt.want != feasible {
 				t.Errorf("should be %v, but got %v", tt.want, feasible)
 			}
@@ -153,15 +153,15 @@ func TestOptimizer_RepairInfeasibleParams(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			optimizer, err := cma.NewOptimizer(
+			optimizer, err := cmaes.NewOptimizer(
 				[]float64{0, 0}, 1.3,
-				cma.OptimizerOptionBounds(tt.bounds),
+				cmaes.OptimizerOptionBounds(tt.bounds),
 			)
 			if err != nil {
 				t.Errorf("should be nil, but got %s", err)
 			}
 
-			err = cma.ExportOptimizerRepairInfeasibleParams(optimizer, tt.value)
+			err = cmaes.ExportOptimizerRepairInfeasibleParams(optimizer, tt.value)
 			if err != nil {
 				t.Errorf("should be nil, but got %s", err)
 			}

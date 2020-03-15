@@ -5,7 +5,7 @@ import (
 	"math"
 
 	"github.com/c-bata/goptuna"
-	"github.com/c-bata/goptuna/cma"
+	"github.com/c-bata/goptuna/cmaes"
 )
 
 func objective(trial goptuna.Trial) (float64, error) {
@@ -15,7 +15,7 @@ func objective(trial goptuna.Trial) (float64, error) {
 }
 
 func main() {
-	relativeSampler := cma.NewSampler()
+	relativeSampler := cmaes.NewSampler()
 	study, err := goptuna.CreateStudy(
 		"goptuna-example",
 		goptuna.StudyOptionRelativeSampler(relativeSampler),

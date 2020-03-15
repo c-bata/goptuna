@@ -3,7 +3,7 @@ on:
   pull_request:
     paths:
     - '.github/workflows/benchmark-himmelblau.yml'
-    - 'cma/**.go'
+    - 'cmaes/**.go'
 jobs:
   benchmarks-himmelblau:
     name: Run kurobako benchmark

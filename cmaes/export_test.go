@@ -1,4 +1,4 @@
-package cma
+package cmaes
 
 var (
 	ExportOptimizerIsFeasible             = (*Optimizer).isFeasible

@@ -3,7 +3,7 @@ on:
   pull_request:
     paths:
     - '.github/workflows/benchmark-rosenbrock.yml'
-    - 'cma/**.go'
+    - 'cmaes/**.go'
 jobs:
   benchmarks-rosenbrock:
     name: Run kurobako benchmark

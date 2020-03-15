@@ -1,4 +1,4 @@
-package cma
+package cmaes
 
 import (
 	"errors"
