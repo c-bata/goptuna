@@ -3,6 +3,7 @@ package cma
 import (
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"sort"
 	"strconv"
@@ -85,6 +86,12 @@ func (s *Sampler) SampleRelative(
 			if !ok {
 				return nil, errors.New("invalid internal params")
 			}
+
+			switch searchSpace[orderedKeys[j]].(type) {
+			case goptuna.LogUniformDistribution:
+				p = math.Log(p)
+			}
+
 			x.SetVec(j, p)
 		}
 		solutions = append(solutions, &Solution{
@@ -114,7 +121,12 @@ func (s *Sampler) SampleRelative(
 
 	params := make(map[string]float64, len(orderedKeys))
 	for i := range orderedKeys {
-		params[orderedKeys[i]] = nextParams.AtVec(i)
+		param := nextParams.AtVec(i)
+		switch searchSpace[orderedKeys[i]].(type) {
+		case goptuna.LogUniformDistribution:
+			param = math.Exp(param)
+		}
+		params[orderedKeys[i]] = param
 	}
 	return params, nil
 }
@@ -192,8 +204,10 @@ func initialParam(searchSpace map[string]interface{}) (map[string]float64, float
 			x0[name] = (d.High + d.Low) / 2
 			sigma0 = append(sigma0, (d.High-d.Low)/6)
 		case goptuna.LogUniformDistribution:
-			x0[name] = (d.High + d.Low) / 2
-			sigma0 = append(sigma0, (d.High-d.Low)/6)
+			high := math.Log(d.High)
+			low := math.Log(d.Low)
+			x0[name] = (high + low) / 2
+			sigma0 = append(sigma0, (high-low)/6)
 		case goptuna.IntUniformDistribution:
 			x0[name] = float64(d.High+d.Low) / 2
 			sigma0 = append(sigma0, float64(d.High-d.Low)/6)
