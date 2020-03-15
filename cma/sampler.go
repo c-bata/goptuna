@@ -1,8 +1,6 @@
 package cma
 
 import (
-	"bytes"
-	"encoding/gob"
 	"errors"
 	"fmt"
 	"math"
@@ -23,6 +21,7 @@ type Sampler struct {
 	sigma0         float64
 	rng            *rand.Rand
 	nStartUpTrials int
+	optimizer      *Optimizer
 }
 
 func (s *Sampler) SampleRelative(
@@ -59,24 +58,26 @@ func (s *Sampler) SampleRelative(
 		return nil, nil
 	}
 
-	optimizer, err := s.restoreOrInitOptimizer(searchSpace, completed, orderedKeys)
-	if err != nil {
-		return nil, err
+	if s.optimizer == nil {
+		s.optimizer, err = s.initOptimizer(searchSpace, orderedKeys)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	if optimizer.dim != len(orderedKeys) {
+	if s.optimizer.dim != len(orderedKeys) {
 		// TODO(c-bata): Use logger for warning.
 		fmt.Println("This optimizer does not support dynamic search space.")
 		return nil, nil
 	}
 
-	solutions := make([]*Solution, 0, optimizer.PopulationSize())
+	solutions := make([]*Solution, 0, s.optimizer.PopulationSize())
 	for i := range completed {
 		gstr, ok := completed[i].SystemAttrs["goptuna:cma:generation"]
 		if !ok {
 			continue
 		}
-		if g, err := strconv.Atoi(gstr); err != nil || g != optimizer.Generation() {
+		if g, err := strconv.Atoi(gstr); err != nil || g != s.optimizer.Generation() {
 			continue
 		}
 		x := mat.NewVecDense(len(orderedKeys), nil)
@@ -92,37 +93,22 @@ func (s *Sampler) SampleRelative(
 			Value: completed[i].Value,
 		})
 
-		if len(solutions) == optimizer.PopulationSize() {
+		if len(solutions) == s.optimizer.PopulationSize() {
+			err = s.optimizer.Tell(solutions)
+			if err != nil {
+				return nil, err
+			}
 			break
 		}
 	}
 
-	if len(solutions) == optimizer.PopulationSize() {
-		err = optimizer.Tell(solutions)
-		if err != nil {
-			return nil, err
-		}
-
-		buf := bytes.NewBuffer(nil)
-		err = gob.NewEncoder(buf).Encode(optimizer)
-		if err != nil {
-			return nil, err
-		}
-
-		err = study.Storage.SetTrialSystemAttr(trial.ID, "goptuna:cma:optimizer", buf.String())
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	optimizer.rng = rand.New(rand.NewSource(s.rng.Int63() - int64(trial.Number)))
-	nextParams, err := optimizer.Ask()
+	nextParams, err := s.optimizer.Ask()
 	if err != nil {
 		return nil, err
 	}
 
 	err = study.Storage.SetTrialSystemAttr(trial.ID,
-		"goptuna:cma:generation", strconv.Itoa(optimizer.Generation()))
+		"goptuna:cma:generation", strconv.Itoa(s.optimizer.Generation()))
 	if err != nil {
 		return nil, err
 	}
@@ -134,25 +120,10 @@ func (s *Sampler) SampleRelative(
 	return params, nil
 }
 
-func (s *Sampler) restoreOrInitOptimizer(
+func (s *Sampler) initOptimizer(
 	searchSpace map[string]interface{},
-	completeTrials []goptuna.FrozenTrial,
 	orderedKeys []string,
 ) (*Optimizer, error) {
-	var optimizer Optimizer
-	for i := len(completeTrials) - 1; i >= 0; i-- {
-		optimizerStr, ok := completeTrials[i].SystemAttrs["goptuna:cma:optimizer"]
-		if !ok {
-			continue
-		}
-
-		decoder := gob.NewDecoder(bytes.NewBufferString(optimizerStr))
-		err := decoder.Decode(&optimizer)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	x0, sigma0, err := initialParam(searchSpace)
 	if err != nil {
 		return nil, err
