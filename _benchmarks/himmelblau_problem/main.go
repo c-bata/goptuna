@@ -17,10 +17,10 @@ func (r *himmelblauProblemFactory) Specification() (*kurobako.ProblemSpec, error
 	spec := kurobako.NewProblemSpec("Himmelblau Function")
 
 	x1 := kurobako.NewVar("x1")
-	x1.Range = kurobako.ContinuousRange{-4, 4}.ToRange()
+	x1.Range = kurobako.ContinuousRange{Low: -4, High: 4}.ToRange()
 
 	x2 := kurobako.NewVar("x2")
-	x2.Range = kurobako.ContinuousRange{-4, 4}.ToRange()
+	x2.Range = kurobako.ContinuousRange{Low: -4, High: 4}.ToRange()
 
 	spec.Params = []kurobako.Var{x1, x2}
 
