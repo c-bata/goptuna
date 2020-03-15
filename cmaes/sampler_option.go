@@ -13,3 +13,24 @@ func SamplerOptionSeed(seed int64) SamplerOption {
 		sampler.rng = rand.New(rand.NewSource(seed))
 	}
 }
+
+// SamplerOptionInitialMean sets the initial mean vectors.
+func SamplerOptionInitialMean(mean map[string]float64) SamplerOption {
+	return func(sampler *Sampler) {
+		sampler.x0 = mean
+	}
+}
+
+// SamplerOptionInitialSigma sets the initial sigma.
+func SamplerOptionInitialSigma(sigma float64) SamplerOption {
+	return func(sampler *Sampler) {
+		sampler.sigma0 = sigma
+	}
+}
+
+// SamplerOptionNStartupTrials sets the number of startup trials.
+func SamplerOptionNStartupTrials(nStartupTrials int) SamplerOption {
+	return func(sampler *Sampler) {
+		sampler.nStartUpTrials = nStartupTrials
+	}
+}

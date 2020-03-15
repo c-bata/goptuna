@@ -15,7 +15,8 @@ func objective(trial goptuna.Trial) (float64, error) {
 }
 
 func main() {
-	relativeSampler := cmaes.NewSampler()
+	relativeSampler := cmaes.NewSampler(
+		cmaes.SamplerOptionNStartupTrials(5))
 	study, err := goptuna.CreateStudy(
 		"goptuna-example",
 		goptuna.StudyOptionRelativeSampler(relativeSampler),

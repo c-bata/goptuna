@@ -6,7 +6,6 @@ import (
 	"math"
 	"math/rand"
 	"sort"
-	"strconv"
 
 	"github.com/c-bata/goptuna"
 	"gonum.org/v1/gonum/floats"
@@ -22,8 +21,10 @@ type Sampler struct {
 	rng            *rand.Rand
 	nStartUpTrials int
 	optimizer      *Optimizer
+	optimizerID    string
 }
 
+// SampleRelative samples multiple dimensional parameters in a given search space.
 func (s *Sampler) SampleRelative(
 	study *goptuna.Study,
 	trial goptuna.FrozenTrial,
@@ -63,6 +64,7 @@ func (s *Sampler) SampleRelative(
 		if err != nil {
 			return nil, err
 		}
+		s.optimizerID = fmt.Sprintf("%016d", s.rng.Int())
 	}
 
 	if s.optimizer.dim != len(orderedKeys) {
@@ -73,11 +75,8 @@ func (s *Sampler) SampleRelative(
 
 	solutions := make([]*Solution, 0, s.optimizer.PopulationSize())
 	for i := range completed {
-		gstr, ok := completed[i].SystemAttrs["goptuna:cmaes:generation"]
-		if !ok {
-			continue
-		}
-		if g, err := strconv.Atoi(gstr); err != nil || g != s.optimizer.Generation() {
+		generationID, ok := completed[i].SystemAttrs["goptuna:cmaes:generationId"]
+		if !ok || generationID != fmt.Sprintf("%s-%d", s.optimizerID, s.optimizer.Generation()) {
 			continue
 		}
 		x := mat.NewVecDense(len(orderedKeys), nil)
@@ -113,8 +112,10 @@ func (s *Sampler) SampleRelative(
 		return nil, err
 	}
 
-	err = study.Storage.SetTrialSystemAttr(trial.ID,
-		"goptuna:cmaes:generation", strconv.Itoa(s.optimizer.Generation()))
+	err = study.Storage.SetTrialSystemAttr(
+		trial.ID,
+		"goptuna:cmaes:generationId",
+		fmt.Sprintf("%s-%d", s.optimizerID, s.optimizer.Generation()))
 	if err != nil {
 		return nil, err
 	}
