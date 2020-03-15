@@ -28,6 +28,13 @@ func SamplerOptionInitialSigma(sigma float64) SamplerOption {
 	}
 }
 
+// SamplerOptionOptimizerOptions sets the options for Optimizer.
+func SamplerOptionOptimizerOptions(opts ...OptimizerOption) SamplerOption {
+	return func(sampler *Sampler) {
+		sampler.optimizerOptions = opts
+	}
+}
+
 // SamplerOptionNStartupTrials sets the number of startup trials.
 func SamplerOptionNStartupTrials(nStartupTrials int) SamplerOption {
 	return func(sampler *Sampler) {

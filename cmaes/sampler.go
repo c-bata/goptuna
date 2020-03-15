@@ -16,12 +16,13 @@ var _ goptuna.RelativeSampler = &Sampler{}
 
 // Sampler returns the next search points by using CMA-ES.
 type Sampler struct {
-	x0             map[string]float64
-	sigma0         float64
-	rng            *rand.Rand
-	nStartUpTrials int
-	optimizer      *Optimizer
-	optimizerID    string
+	x0               map[string]float64
+	sigma0           float64
+	rng              *rand.Rand
+	nStartUpTrials   int
+	optimizerOptions []OptimizerOption
+	optimizer        *Optimizer
+	optimizerID      string
 }
 
 // SampleRelative samples multiple dimensional parameters in a given search space.
@@ -156,11 +157,14 @@ func (s *Sampler) initOptimizer(
 		mean[i] = mean0
 	}
 	bounds := getSearchSpaceBounds(searchSpace, orderedKeys)
-	return NewOptimizer(
-		mean, sigma0,
-		OptimizerOptionBounds(bounds),
-		OptimizerOptionSeed(s.rng.Int63()),
-	)
+
+	options := make([]OptimizerOption, 0, 2+len(s.optimizerOptions))
+	options = append(options, OptimizerOptionBounds(bounds))
+	options = append(options, OptimizerOptionSeed(s.rng.Int63()))
+	for _, opt := range s.optimizerOptions {
+		options = append(options, opt)
+	}
+	return NewOptimizer(mean, sigma0, options...)
 }
 
 // NewSampler returns the TPE sampler.
