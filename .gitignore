@@ -6,3 +6,5 @@ vendor/
 *.db
 
 venv/
+
+.ipynb_checkpoints/

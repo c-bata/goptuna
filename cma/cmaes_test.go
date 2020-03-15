@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"gonum.org/v1/gonum/floats"
-
 	"gonum.org/v1/gonum/mat"
 
 	"github.com/c-bata/goptuna/cma"
@@ -41,6 +40,35 @@ func TestOptimizer_Ask(t *testing.T) {
 	r, c := x.Dims()
 	if r != 2 || c != 1 {
 		t.Errorf("should be (2, 1), but got (%d, %d)", r, c)
+	}
+}
+
+func TestOptimizer_Tell(t *testing.T) {
+	mean := []float64{1, 2}
+	sigma0 := 1.3
+	optimizer, err := cma.NewOptimizer(
+		mean, sigma0,
+		cma.OptimizerOptionSeed(0),
+	)
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+	}
+	solutions := make([]*cma.Solution, optimizer.PopulationSize())
+	for i := 0; i < optimizer.PopulationSize(); i++ {
+		x, err := optimizer.Ask()
+		if err != nil {
+			t.Errorf("should be nil, but got %s", err)
+			return
+		}
+		solutions[i] = &cma.Solution{
+			X:     x,
+			Value: float64(i),
+		}
+	}
+	err = optimizer.Tell(solutions)
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+		return
 	}
 }
 
