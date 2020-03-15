@@ -69,8 +69,8 @@ func (s *Sampler) SampleRelative(
 	}
 
 	if s.optimizer.dim != len(orderedKeys) {
-		// TODO(c-bata): Use logger for warning.
-		fmt.Println("This optimizer does not support dynamic search space.")
+		study.GetLogger().Warn("cmaes.Sampler does not support dynamic search space." +
+			" All parameters will be sampled by normal sampler.")
 		return nil, nil
 	}
 
