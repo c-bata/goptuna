@@ -1,6 +1,7 @@
 package cmaes
 
 import (
+	"math"
 	"testing"
 
 	"gonum.org/v1/gonum/floats"
@@ -17,6 +18,37 @@ func TestNewOptimizer(t *testing.T) {
 	}
 	if optimizer.dim != 2 {
 		t.Errorf("should be 2, but got %d", optimizer.dim)
+	}
+	if optimizer.popsize != 6 {
+		t.Errorf("should be 6, but got %d", optimizer.popsize)
+	}
+	if optimizer.mu != 3 {
+		t.Errorf("should be 3, but got %d", optimizer.mu)
+	}
+	if math.Abs(optimizer.muEff-2.0286114646100617) > 0.0001 {
+		t.Errorf("should be 2.0286114646100617, but got %f", optimizer.muEff)
+	}
+	if math.Abs(optimizer.c1-0.1548153998964136) > 0.0001 {
+		t.Errorf("should be 0.1548153998964136, but got %f", optimizer.c1)
+	}
+	if math.Abs(optimizer.cmu-0.05785908507191633) > 0.0001 {
+		t.Errorf("should be 0.05785908507191633, but got %f", optimizer.cmu)
+	}
+	expectedWeights := []float64{0.63704257, 0.28457026, 0.07838717, -0.28638378, -0.76495809, -1.15598178}
+	if !floats.EqualApprox(optimizer.weights.RawVector().Data, expectedWeights, 0.0001) {
+		t.Errorf("should be %#v, but got %#v", expectedWeights, optimizer.weights.RawVector().Data)
+	}
+	if math.Abs(optimizer.cSigma-0.44620498737831715) > 0.0001 {
+		t.Errorf("should be 0.44620498737831715, but got %f", optimizer.cSigma)
+	}
+	if math.Abs(optimizer.dSigma-1.4462049873783172) > 0.0001 {
+		t.Errorf("should be 1.4462049873783172, but got %f", optimizer.dSigma)
+	}
+	if math.Abs(optimizer.cc-0.6245545390268264) > 0.0001 {
+		t.Errorf("should be 0.6245545390268264, but got %f", optimizer.cc)
+	}
+	if math.Abs(optimizer.chiN-1.254272742818995) > 0.0001 {
+		t.Errorf("should be 1.254272742818995, but got %f", optimizer.chiN)
 	}
 }
 

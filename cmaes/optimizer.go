@@ -7,7 +7,6 @@ import (
 	"sort"
 
 	"gonum.org/v1/gonum/floats"
-
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -63,7 +62,7 @@ func NewOptimizer(mean []float64, sigma float64, opts ...OptimizerOption) (*Opti
 	weightsPrimePositiveSum := 0.0
 	weightsPrimeNegativeSum := 0.0
 	for i := 0; i < popsize; i++ {
-		wp := math.Log((float64(popsize)+1)/2 - math.Log(float64(i+1)))
+		wp := math.Log((float64(popsize)+1)/2) - math.Log(float64(i+1))
 		weightsPrime[i] = wp
 
 		if i < mu {
@@ -99,7 +98,7 @@ func NewOptimizer(mean []float64, sigma float64, opts ...OptimizerOption) (*Opti
 		1+c1/cmu,                   // α_μ-
 		1+(2*muEffMinus)/(muEff+2), // α_μ_eff-
 	)
-	alphaMin = math.Min(alphaMin, (1-c1-cmu)/float64(dim)*cmu) // α_{pos_def}^{minus}
+	alphaMin = math.Min(alphaMin, (1-c1-cmu)/(float64(dim)*cmu)) // α_{pos_def}^{minus}
 
 	weights := make([]float64, popsize)
 	for i := 0; i < popsize; i++ {
