@@ -73,7 +73,7 @@ func TestOptimizer_Ask(t *testing.T) {
 }
 
 func TestOptimizer_Tell(t *testing.T) {
-	mean := []float64{1, 2}
+	mean := []float64{0, 0}
 	sigma0 := 1.3
 	optimizer, err := NewOptimizer(
 		mean, sigma0,
@@ -82,22 +82,61 @@ func TestOptimizer_Tell(t *testing.T) {
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
 	}
-	solutions := make([]*Solution, optimizer.PopulationSize())
-	for i := 0; i < optimizer.PopulationSize(); i++ {
-		x, err := optimizer.Ask()
-		if err != nil {
-			t.Errorf("should be nil, but got %s", err)
-			return
-		}
-		solutions[i] = &Solution{
-			Params: x,
-			Value:  float64(i),
-		}
+
+	solutions := []*Solution{
+		{
+			Params: []float64{1.91231201, -1.71265425},
+			Value:  9.439823102089013,
+		},
+		{
+			Params: []float64{1.34432608, -1.46615684},
+			Value:  31.240107864789625,
+		},
+		{
+			Params: []float64{0.18029599, -1.40324121},
+			Value:  43.56283645181167,
+		},
+		{
+			Params: []float64{0.56156551, -0.28068763},
+			Value:  301.54946482426044,
+		},
+		{
+			Params: []float64{1.91285964, -0.15018778},
+			Value:  343.3623991306441,
+		},
+		{
+			Params: []float64{1.35673101, 0.31811501},
+			Value:  540.0660546114952,
+		},
 	}
 	err = optimizer.Tell(solutions)
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
 		return
+	}
+
+	expectedC := []float64{1.18753118, -0.51807317, 0, 1.40915646}
+	if !floats.EqualApprox(optimizer.c.RawSymmetric().Data, expectedC, 0.0001) {
+		t.Errorf("should be %#v, but got %#v", expectedC, optimizer.c.RawSymmetric().Data)
+	}
+
+	expectedPSigma := []float64{1.47322504, -1.47627395}
+	if !floats.EqualApprox(optimizer.pSigma.RawVector().Data, expectedPSigma, 0.0001) {
+		t.Errorf("should be %#v, but got %#v", expectedPSigma, optimizer.pSigma.RawVector().Data)
+	}
+
+	expectedPC := []float64{1.63987933, -1.64327314}
+	if !floats.EqualApprox(optimizer.pc.RawVector().Data, expectedPC, 0.0001) {
+		t.Errorf("should be %#v, but got %#v", expectedPC, optimizer.pc.RawVector().Data)
+	}
+
+	expectedMean := []float64{1.61491227, -1.61825441}
+	if !floats.EqualApprox(optimizer.mean.RawVector().Data, expectedMean, 0.0001) {
+		t.Errorf("should be %#v, but got %#v", expectedMean, optimizer.mean.RawVector().Data)
+	}
+
+	if math.Abs(optimizer.sigma-1.5949829983784432) > 0.0001 {
+		t.Errorf("should be 1.5949829983784432, but got %f", optimizer.sigma)
 	}
 }
 
