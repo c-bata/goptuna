@@ -46,6 +46,7 @@ type Optimizer struct {
 	g   int
 }
 
+// NewOptimizer returns an optimizer object based on CMA-ES.
 func NewOptimizer(mean []float64, sigma float64, opts ...OptimizerOption) (*Optimizer, error) {
 	if sigma <= 0 {
 		return nil, errors.New("sigma should be non-zero positive number")
@@ -156,210 +157,242 @@ func NewOptimizer(mean []float64, sigma float64, opts ...OptimizerOption) (*Opti
 }
 
 // Generation is incremented when a multivariate normal distribution is updated.
-func (c *Optimizer) Generation() int {
-	return c.g
+func (o *Optimizer) Generation() int {
+	return o.g
 }
 
 // PopulationSize returns the population size.
-func (c *Optimizer) PopulationSize() int {
-	return c.popsize
+func (o *Optimizer) PopulationSize() int {
+	return o.popsize
 }
 
 // Ask a next parameter.
-func (c *Optimizer) Ask() ([]float64, error) {
-	x, err := c.sampleSolution()
+func (o *Optimizer) Ask() ([]float64, error) {
+	x, err := o.sampleSolution()
 	if err != nil {
 		return nil, err
 	}
-	for i := 0; i < c.maxReSampling; i++ {
-		if c.isFeasible(x) {
+	for i := 0; i < o.maxReSampling; i++ {
+		if o.isFeasible(x) {
 			return x.RawVector().Data, nil
 		}
-		x, err = c.sampleSolution()
+		x, err = o.sampleSolution()
 		if err != nil {
 			return nil, err
 		}
 	}
-	err = c.repairInfeasibleParams(x)
+	err = o.repairInfeasibleParams(x)
 	if err != nil {
 		return nil, err
 	}
 	return x.RawVector().Data, nil
 }
 
-func (c *Optimizer) isFeasible(values *mat.VecDense) bool {
-	if c.bounds == nil {
+func (o *Optimizer) isFeasible(values *mat.VecDense) bool {
+	if o.bounds == nil {
 		return true
 	}
-	if values.Len() != c.dim {
+	if values.Len() != o.dim {
 		return false
 	}
-	for i := 0; i < c.dim; i++ {
+	for i := 0; i < o.dim; i++ {
 		v := values.AtVec(i)
-		if !(c.bounds.At(i, 0) < v && c.bounds.At(i, 1) > v) {
+		if !(o.bounds.At(i, 0) < v && o.bounds.At(i, 1) > v) {
 			return false
 		}
 	}
 	return true
 }
 
-func (c *Optimizer) repairInfeasibleParams(values *mat.VecDense) error {
-	if c.bounds == nil {
+func (o *Optimizer) repairInfeasibleParams(values *mat.VecDense) error {
+	if o.bounds == nil {
 		return nil
 	}
-	if values.Len() != c.dim {
+	if values.Len() != o.dim {
 		return errors.New("invalid matrix size")
 	}
 
-	for i := 0; i < c.dim; i++ {
+	for i := 0; i < o.dim; i++ {
 		v := values.AtVec(i)
-		if c.bounds.At(i, 0) > v {
-			values.SetVec(i, c.bounds.At(i, 0))
+		if o.bounds.At(i, 0) > v {
+			values.SetVec(i, o.bounds.At(i, 0))
 		}
-		if c.bounds.At(i, 1) < v {
-			values.SetVec(i, c.bounds.At(i, 1))
+		if o.bounds.At(i, 1) < v {
+			values.SetVec(i, o.bounds.At(i, 1))
 		}
 	}
 	return nil
 }
 
-func (c *Optimizer) sampleSolution() (*mat.VecDense, error) {
-	// TODO(c-bata): Cache B and D
+func (o *Optimizer) sampleSolution() (*mat.VecDense, error) {
+	// TODO(o-bata): Cache B and D
 	var eigsym mat.EigenSym
-	ok := eigsym.Factorize(c.c, true)
+	ok := eigsym.Factorize(o.c, true)
 	if !ok {
 		return nil, errors.New("symmetric eigendecomposition failed")
 	}
 
 	var b mat.Dense
 	eigsym.VectorsTo(&b)
-	d := make([]float64, c.dim)
+	d := make([]float64, o.dim)
 	eigsym.Values(d) // d^2
 	floatsSqrtTo(d)  // d
 
-	z := make([]float64, c.dim)
-	for i := 0; i < c.dim; i++ {
-		z[i] = c.rng.NormFloat64()
+	z := make([]float64, o.dim)
+	for i := 0; i < o.dim; i++ {
+		z[i] = o.rng.NormFloat64()
 	}
 
 	var bd mat.Dense
-	bd.Mul(&b, mat.NewDiagDense(c.dim, d))
+	bd.Mul(&b, mat.NewDiagDense(o.dim, d))
 
-	values := mat.NewVecDense(c.dim, z) // ~ N(0, I)
+	values := mat.NewVecDense(o.dim, z) // ~ N(0, I)
 	values.MulVec(&bd, values)          // ~ N(0, C)
-	values.ScaleVec(c.sigma, values)    // ~ N(0, σ^2 C)
-	values.AddVec(values, c.mean)       // ~ N(m, σ^2 C)
+	values.ScaleVec(o.sigma, values)    // ~ N(0, σ^2 C)
+	values.AddVec(values, o.mean)       // ~ N(m, σ^2 C)
 	return values, nil
 }
 
 // Tell evaluation values.
-func (c *Optimizer) Tell(solutions []*Solution) error {
-	if len(solutions) != c.popsize {
+func (o *Optimizer) Tell(solutions []*Solution) error {
+	if len(solutions) != o.popsize {
 		return errors.New("must tell popsize-length solutions")
 	}
 
-	c.g++
+	o.g++
 	sort.Slice(solutions, func(i, j int) bool {
 		return solutions[i].Value < solutions[j].Value
 	})
 
 	var eigsym mat.EigenSym
-	ok := eigsym.Factorize(c.c, true)
+	ok := eigsym.Factorize(o.c, true)
 	if !ok {
 		return errors.New("symmetric eigendecomposition failed")
 	}
 
 	var b mat.Dense
 	eigsym.VectorsTo(&b)
-	d := make([]float64, c.dim)
+	d := make([]float64, o.dim)
 	eigsym.Values(d) // d^2
 	floatsSqrtTo(d)  // d
 
-	yk := mat.NewDense(c.popsize, c.dim, nil)
-	for i := 0; i < c.popsize; i++ {
+	yk := mat.NewDense(o.popsize, o.dim, nil)
+	for i := 0; i < o.popsize; i++ {
 		xi := solutions[i].Params           // ~ N(m, σ^2 C)
-		xiSubMean := make([]float64, c.dim) // ~ N(0, σ^2 C)
-		floats.SubTo(xiSubMean, xi, c.mean.RawVector().Data)
+		xiSubMean := make([]float64, o.dim) // ~ N(0, σ^2 C)
+		floats.SubTo(xiSubMean, xi, o.mean.RawVector().Data)
 		yk.SetRow(i, xiSubMean)
 	}
-	yk.Scale(1/c.sigma, yk) // ~ N(0, C)
+	yk.Scale(1/o.sigma, yk) // ~ N(0, C)
 
 	// Selection and recombination
-	ydotw := mat.NewDense(c.mu, c.dim, nil)
-	ydotw.Copy(yk.Slice(0, c.mu, 0, c.dim))
-	weightsmu := stackvec(c.dim, c.mu, c.weights)
+	ydotw := mat.NewDense(o.mu, o.dim, nil)
+	ydotw.Copy(yk.Slice(0, o.mu, 0, o.dim))
+	weightsmu := stackvec(o.dim, o.mu, o.weights)
 	ydotw.MulElem(ydotw, weightsmu.T())
 
 	yw := sumColumns(ydotw.T())
-	meandiff := mat.NewVecDense(c.dim, nil)
+	meandiff := mat.NewVecDense(o.dim, nil)
 	meandiff.CopyVec(yw)
-	meandiff.ScaleVec(c.cm*c.sigma, meandiff)
-	c.mean.AddVec(c.mean, meandiff)
+	meandiff.ScaleVec(o.cm*o.sigma, meandiff)
+	o.mean.AddVec(o.mean, meandiff)
 
 	// Step-size control
-	dinv := mat.NewDiagDense(c.dim, arrinv(d))
-	c2 := mat.NewDense(c.dim, c.dim, nil)
+	dinv := mat.NewDiagDense(o.dim, arrinv(d))
+	c2 := mat.NewDense(o.dim, o.dim, nil)
 	c2.Product(&b, dinv, b.T()) // C^(-1/2) = B D^(-1) B^T
 
-	c2yw := mat.NewDense(c.dim, 1, nil)
+	c2yw := mat.NewDense(o.dim, 1, nil)
 	c2yw.Product(c2, yw)
-	c2yw.Scale(math.Sqrt(c.cSigma*(2-c.cSigma)*c.muEff), c2yw)
-	c.pSigma.ScaleVec(1-c.cSigma, c.pSigma)
-	c.pSigma.AddVec(c.pSigma, mat.NewVecDense(c.dim, c2yw.RawMatrix().Data))
+	c2yw.Scale(math.Sqrt(o.cSigma*(2-o.cSigma)*o.muEff), c2yw)
+	o.pSigma.ScaleVec(1-o.cSigma, o.pSigma)
+	o.pSigma.AddVec(o.pSigma, mat.NewVecDense(o.dim, c2yw.RawMatrix().Data))
 
-	normPSigma := mat.Norm(c.pSigma, 2)
-	c.sigma *= math.Exp((c.cSigma / c.dSigma) * (normPSigma/c.chiN - 1))
+	normPSigma := mat.Norm(o.pSigma, 2)
+	o.sigma *= math.Exp((o.cSigma / o.dSigma) * (normPSigma/o.chiN - 1))
 
 	hSigmaCondLeft := normPSigma / math.Sqrt(
-		1-math.Pow(1-c.cSigma, float64(2*(c.g+1))))
-	hSigmaCondRight := (1.4 + 2/float64(c.dim+1)) * c.chiN
+		1-math.Pow(1-o.cSigma, float64(2*(o.g+1))))
+	hSigmaCondRight := (1.4 + 2/float64(o.dim+1)) * o.chiN
 	hSigma := 0.0
 	if hSigmaCondLeft < hSigmaCondRight {
 		hSigma = 1.0
 	}
 
 	// eq.45
-	c.pc.ScaleVec(1-c.cc, c.pc)
-	c.pc.AddScaledVec(c.pc, hSigma*math.Sqrt(c.cc*(2-c.cc)*c.muEff), yw)
+	o.pc.ScaleVec(1-o.cc, o.pc)
+	o.pc.AddScaledVec(o.pc, hSigma*math.Sqrt(o.cc*(2-o.cc)*o.muEff), yw)
 
 	// eq.46
-	wio := mat.NewVecDense(c.weights.Len(), nil)
-	wio.CopyVec(c.weights)
-	c2yk := mat.NewDense(c.dim, c.popsize, nil)
+	wio := mat.NewVecDense(o.weights.Len(), nil)
+	wio.CopyVec(o.weights)
+	c2yk := mat.NewDense(o.dim, o.popsize, nil)
 	c2yk.Product(c2, yk.T())
-	wio.MulElemVec(wio, vecapply(c.weights, func(i int, a float64) float64 {
+	wio.MulElemVec(wio, vecapply(o.weights, func(i int, a float64) float64 {
 		if a > 0 {
 			return 1.0
 		}
 		c2xinorm := mat.Norm(c2yk.ColView(i), 2)
-		return float64(c.dim) / math.Pow(c2xinorm, 2)
+		return float64(o.dim) / math.Pow(c2xinorm, 2)
 	}))
 
-	deltaHSigma := (1 - hSigma) * c.cc * (2 - c.cc)
+	deltaHSigma := (1 - hSigma) * o.cc * (2 - o.cc)
 	if deltaHSigma > 1 {
 		panic("invalid delta_h_sigma")
 	}
 
 	// eq.47
-	rankOne := mat.NewSymDense(c.dim, nil)
-	rankOne.SymOuterK(1.0, c.pc)
+	rankOne := mat.NewSymDense(o.dim, nil)
+	rankOne.SymOuterK(1.0, o.pc)
 
-	rankMu := mat.NewSymDense(c.dim, nil)
-	for i := 0; i < c.popsize; i++ {
+	rankMu := mat.NewSymDense(o.dim, nil)
+	for i := 0; i < o.popsize; i++ {
 		wi := wio.AtVec(i)
 		yi := yk.RowView(i)
-		s := mat.NewSymDense(c.dim, nil)
+		s := mat.NewSymDense(o.dim, nil)
 		s.SymOuterK(wi, yi)
 		rankMu.AddSym(rankMu, s)
 	}
 
-	c.c.ScaleSym(1+c.c1*deltaHSigma-c.c1-c.cmu*mat.Sum(c.weights), c.c)
-	rankOne.ScaleSym(c.c1, rankOne)
-	rankMu.ScaleSym(c.cmu, rankMu)
-	c.c.AddSym(c.c, rankOne)
-	c.c.AddSym(c.c, rankMu)
+	o.c.ScaleSym(1+o.c1*deltaHSigma-o.c1-o.cmu*mat.Sum(o.weights), o.c)
+	rankOne.ScaleSym(o.c1, rankOne)
+	rankMu.ScaleSym(o.cmu, rankMu)
+	o.c.AddSym(o.c, rankOne)
+	o.c.AddSym(o.c, rankMu)
 
 	// Avoid eigendecomposition error by arithmetic overflow
-	c.c.AddSym(c.c, initMinC(c.dim))
+	o.c.AddSym(o.c, initMinC(o.dim))
 	return nil
+}
+
+// OptimizerOption is a type of the function to customizing CMA-ES.
+type OptimizerOption func(*Optimizer)
+
+// OptimizerOptionSeed sets seed number.
+func OptimizerOptionSeed(seed int64) OptimizerOption {
+	return func(cma *Optimizer) {
+		cma.rng = rand.New(rand.NewSource(seed))
+	}
+}
+
+// OptimizerOptionMaxReSampling sets a number of max re-sampling.
+func OptimizerOptionMaxReSampling(n int) OptimizerOption {
+	return func(cma *Optimizer) {
+		cma.maxReSampling = n
+	}
+}
+
+// OptimizerOptionBounds sets the range of parameters.
+func OptimizerOptionBounds(bounds *mat.Dense) OptimizerOption {
+	row, column := bounds.Dims()
+	if column != 2 {
+		panic("invalid matrix size")
+	}
+
+	return func(cma *Optimizer) {
+		if row != cma.dim {
+			panic("invalid dimensions")
+		}
+		cma.bounds = bounds
+	}
 }
