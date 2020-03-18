@@ -398,6 +398,11 @@ func (s *Study) GetSystemAttrs() (map[string]string, error) {
 	return s.Storage.GetStudySystemAttrs(s.ID)
 }
 
+// GetLogger returns logger object.
+func (s *Study) GetLogger() Logger {
+	return s.logger
+}
+
 // CreateStudy creates a new Study object.
 func CreateStudy(
 	name string,
