@@ -9,3 +9,5 @@ require (
 	github.com/spf13/cobra v0.0.5
 	gonum.org/v1/gonum v0.7.0
 )
+
+replace github.com/sile/kurobako-go => github.com/c-bata/kurobako-go v0.0.0-20200318161023-cd5a55fdefc4
