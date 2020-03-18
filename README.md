@@ -7,16 +7,17 @@
 
 Bayesian optimization framework for black-box functions, inspired by [Optuna](https://github.com/optuna/optuna).
 This library is not only for hyperparameter tuning of machine learning models.
-Everything will be able to optimized if you can define the objective function (e.g. Optimizing the number of goroutines of your server and the memory buffer size of the caching systems).
+Everything will be able to optimize if you can define the objective function
+(e.g. Optimizing the number of goroutines of your server and the memory buffer size of the caching systems).
 
 Goptuna currently supports following algorithms which are not only bayesian optimization algorithms but also including evolution strategy and bandit algorithms.
 
 * Random search
-* Tree-structured Parzen Estimators (TPE) [1]
-* Covariance Matrix Adaptation Evolution Strategy (CMA-ES) [2]
-* Gaussian Process based Bayesian Optimization (GP-BO) using [goptuna-bayesopt](https://github.com/c-bata/goptuna-bayesopt) [3]
+* TPE: Tree-structured Parzen Estimators [1]
+* CMA-ES: Covariance Matrix Adaptation Evolution Strategy [2]
+* GP-BO: Gaussian Process based Bayesian Optimization using [goptuna-bayesopt](https://github.com/c-bata/goptuna-bayesopt) [3]
 * Median Stopping Rule [4]
-* Optuna Asynchronous Successive Halving Algorithm (Optuna ASHA) [5,6,7]
+* ASHA: Asynchronous Successive Halving Algorithm (Optuna flavored version) [5,6,7]
 
 See the blog post for more details: [Practical bayesian optimization using Goptuna](https://medium.com/@c_bata_/practical-bayesian-optimization-in-go-using-goptuna-edf97195fcb5).
 
