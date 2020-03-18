@@ -35,7 +35,7 @@ func (s *Sampler) SampleRelative(
 		return nil, nil
 	}
 
-	searchSpace = normalizeSearchSpace(searchSpace)
+	searchSpace = supportedSearchSpace(searchSpace)
 	if len(searchSpace) == 1 {
 		// CMA-ES does not support two or more dimensional continuous search space.
 		return nil, goptuna.ErrUnsupportedSearchSpace
@@ -180,7 +180,7 @@ func NewSampler(opts ...SamplerOption) *Sampler {
 	return sampler
 }
 
-func normalizeSearchSpace(searchSpace map[string]interface{}) map[string]interface{} {
+func supportedSearchSpace(searchSpace map[string]interface{}) map[string]interface{} {
 	normalized := make(map[string]interface{}, len(searchSpace))
 	for name := range searchSpace {
 		switch searchSpace[name].(type) {
@@ -237,8 +237,8 @@ func getSearchSpaceBounds(
 			bounds.Set(i, 0, d.Low)
 			bounds.Set(i, 1, d.High)
 		case goptuna.LogUniformDistribution:
-			bounds.Set(i, 0, d.Low)
-			bounds.Set(i, 1, d.High)
+			bounds.Set(i, 0, math.Log(d.Low))
+			bounds.Set(i, 1, math.Log(d.High))
 		case goptuna.IntUniformDistribution:
 			bounds.Set(i, 0, float64(d.Low))
 			bounds.Set(i, 1, float64(d.High))
