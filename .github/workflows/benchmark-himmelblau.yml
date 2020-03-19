@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
     - '.github/workflows/benchmark-himmelblau.yml'
+    - '_benchmarks/run_himmelblau.sh'
     - 'cmaes/**.go'
 jobs:
   benchmarks-himmelblau:

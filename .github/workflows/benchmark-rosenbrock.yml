@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
     - '.github/workflows/benchmark-rosenbrock.yml'
+    - '_benchmarks/run_rosenbrock.sh'
     - 'cmaes/**.go'
 jobs:
   benchmarks-rosenbrock:
