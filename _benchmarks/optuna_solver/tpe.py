@@ -21,15 +21,12 @@ elif args.loglevel == 'error':
 class CustomOptunaSolverFactory(OptunaSolverFactory):
     def specification(self):
         spec = super().specification()
-        spec.name = "Optuna (CMA-ES)"
+        spec.name = "Optuna (TPE)"
         return spec
 
 
 def create_study(seed):
-    sampler = optuna.samplers.CmaEsSampler(
-        seed=seed,
-        warn_independent_sampling=True,
-    )
+    sampler = optuna.samplers.TPESampler(seed=seed)
     return optuna.create_study(sampler=sampler)
 
 

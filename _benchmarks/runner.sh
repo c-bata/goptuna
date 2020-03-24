@@ -32,7 +32,8 @@ go build -o ${BINDIR}/rosenbrock_problem ${DIR}/rosenbrock_problem/main.go
 RANDOM_SOLVER=$($KUROBAKO solver random)
 CMA_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver cmaes)
 TPE_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver tpe)
-#OPTUNA_SOLVER=$($KUROBAKO solver command python ${DIR}/optuna_solver/cmaes.py)
+#OPTUNA_CMA_SOLVER=$($KUROBAKO solver command python ${DIR}/optuna_solver/cmaes.py)
+#OPTUNA_TPE_SOLVER=$($KUROBAKO solver command python ${DIR}/optuna_solver/tpe.py)
 
 case "$1" in
     himmelblau)

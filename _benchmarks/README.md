@@ -10,14 +10,14 @@ If you want to run on your local machines, please execute following after instal
 
 ```console
 $ mkdir -p tmp
-$ ./_benchmarks/run_rosenbrock.sh ./tmp/kurobako.json
+$ ./_benchmark/runner.sh rosenbrock ./tmp/kurobako.json
 $ cat ./tmp/kurobako.json | kurobako plot curve --errorbar -o ./tmp
 ```
 
 `kurobako plot curve` requires gnuplot. If you want to run on Docker container, please execute following:
 
 ```
-$ docker build -t cmaes ./_benchmarks
+$ docker build -t kurobako ./_benchmarks
 $ ./_benchmarks/runner.sh -h
 runner.sh is an entrypoint to run benchmarkers.
 Usage:
@@ -31,12 +31,12 @@ Options:
 Example:
     $ runner.sh rosenbrock ./tmp/kurobako.json
     $ cat ./tmp/kurobako.json | kurobako plot curve --errorbar -o ./tmp
-$ ./benchmark/runner.sh rosenbrock ./tmp/kurobako.json
+$ ./_benchmark/runner.sh rosenbrock ./tmp/kurobako.json
 $ docker run -it --rm -v $PWD/tmp:/volume cmaes
 ```
 
 If you got something error, please investigate using:
 
 ```
-$ docker run -it --rm -v $PWD/tmp:/volume --entrypoint sh cmaes
+$ docker run -it --rm -v $PWD/tmp:/volume --entrypoint sh kurobako
 ```
