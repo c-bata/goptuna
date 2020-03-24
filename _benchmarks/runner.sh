@@ -41,7 +41,7 @@ case "$1" in
           --solvers $RANDOM_SOLVER $CMA_SOLVER \
           --problems $PROBLEM \
           --repeats 8 --budget 300 \
-          | $KUROBAKO run --parallelism 1 > $1
+          | $KUROBAKO run --parallelism 1 > $2
         ;;
     rosenbrock)
         PROBLEM=$($KUROBAKO problem command ${BINDIR}/rosenbrock_problem)
@@ -49,7 +49,7 @@ case "$1" in
           --solvers $RANDOM_SOLVER $CMA_SOLVER \
           --problems $PROBLEM \
           --repeats 8 --budget 300 \
-          | $KUROBAKO run --parallelism 1 > $1
+          | $KUROBAKO run --parallelism 1 > $2
         ;;
     ackley)
         PROBLEM=$($KUROBAKO problem sigopt --dim 5 ackley)
@@ -57,7 +57,7 @@ case "$1" in
           --solvers $RANDOM_SOLVER $TPE_SOLVER \
           --problems $PROBLEM \
           --repeats 10 --budget 100 \
-          | $KUROBAKO run --parallelism 4 > $1
+          | $KUROBAKO run --parallelism 4 > $2
         ;;
     help|--help|-h)
         usage
