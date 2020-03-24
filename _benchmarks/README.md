@@ -18,7 +18,7 @@ $ cat ./tmp/kurobako.json | kurobako plot curve --errorbar -o ./tmp
 
 ```
 $ docker build -t cmaes ./_benchmarks
-$ ./benchmark/himmelblau_runner.sh ./tmp/kurobako.json
+$ ./benchmark/runner.sh ./tmp/kurobako.json
 $ docker run -it --rm -v $PWD/tmp:/volume cmaes
 ```
 

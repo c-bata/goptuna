@@ -3,7 +3,7 @@ on:
   pull_request:
     paths:
     - '.github/workflows/benchmark-rosenbrock.yml'
-    - '_benchmarks/run_rosenbrock.sh'
+    - '_benchmarks/runner.sh'
     - 'cmaes/**.go'
 jobs:
   benchmarks-rosenbrock:
@@ -45,7 +45,7 @@ jobs:
         env:
           KUROBAKO: ./kurobako
         run: |
-          ./_benchmarks/run_rosenbrock.sh ./kurobako-report.json
+          ./_benchmarks/runner.sh rosenbrock ./kurobako-report.json
 
       - name: Plot kurobako result
         uses: c-bata/github-actions-kurobako/plot@v1
