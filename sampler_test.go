@@ -208,22 +208,22 @@ func TestRelativeSampler(t *testing.T) {
 
 	// First trial cannot trigger relative sampler.
 	err = study.Optimize(func(trial goptuna.Trial) (f float64, e error) {
-		_, _ = trial.SuggestUniform("uniform", -10, 10)
-		_, _ = trial.SuggestLogUniform("log_uniform", 1e-10, 1e10)
+		_, _ = trial.SuggestFloat("uniform", -10, 10)
+		_, _ = trial.SuggestLogFloat("log_uniform", 1e-10, 1e10)
 		_, _ = trial.SuggestInt("int", -10, 10)
-		_, _ = trial.SuggestDiscreteUniform("discrete", -10, 10, 0.5)
+		_, _ = trial.SuggestDiscreteFloat("discrete", -10, 10, 0.5)
 		_, _ = trial.SuggestCategorical("categorical", []string{"choice1", "choice2", "choice3"})
 		return 0.0, nil
 	}, 1)
 
 	// Second trial call relative sampler.
 	err = study.Optimize(func(trial goptuna.Trial) (f float64, e error) {
-		uniformParam, _ := trial.SuggestUniform("uniform", -10, 10)
+		uniformParam, _ := trial.SuggestFloat("uniform", -10, 10)
 		if uniformParam != 3 {
 			t.Errorf("should be 3, but got %f", uniformParam)
 		}
 
-		logUniformParam, _ := trial.SuggestLogUniform("log_uniform", 1e-10, 1e10)
+		logUniformParam, _ := trial.SuggestLogFloat("log_uniform", 1e-10, 1e10)
 		if logUniformParam != 100 {
 			t.Errorf("should be 100, but got %f", logUniformParam)
 		}
@@ -233,7 +233,7 @@ func TestRelativeSampler(t *testing.T) {
 			t.Errorf("should be 7, but got %d", intParam)
 		}
 
-		discreteParam, _ := trial.SuggestDiscreteUniform("discrete", -10, 10, 0.5)
+		discreteParam, _ := trial.SuggestDiscreteFloat("discrete", -10, 10, 0.5)
 		if discreteParam != 5.5 {
 			t.Errorf("should be 5.5, but got %f", discreteParam)
 		}
@@ -274,8 +274,8 @@ func TestRelativeSampler_UnsupportedSearchSpace(t *testing.T) {
 
 	// First trial cannot trigger relative sampler.
 	err = study.Optimize(func(trial goptuna.Trial) (f float64, e error) {
-		_, _ = trial.SuggestUniform("x1", -10, 10)
-		_, _ = trial.SuggestLogUniform("x2", 1e-10, 1e10)
+		_, _ = trial.SuggestFloat("x1", -10, 10)
+		_, _ = trial.SuggestLogFloat("x2", 1e-10, 1e10)
 		return 0.0, nil
 	}, 1)
 	if err != nil {
@@ -285,11 +285,11 @@ func TestRelativeSampler_UnsupportedSearchSpace(t *testing.T) {
 
 	// Second trial. RelativeSampler return ErrUnsupportedSearchSpace.
 	err = study.Optimize(func(trial goptuna.Trial) (f float64, e error) {
-		_, e = trial.SuggestUniform("x1", -10, 10)
+		_, e = trial.SuggestFloat("x1", -10, 10)
 		if e != nil {
 			t.Errorf("err should be nil, but got %s", e)
 		}
-		_, e = trial.SuggestLogUniform("x2", 1e-10, 1e10)
+		_, e = trial.SuggestLogFloat("x2", 1e-10, 1e10)
 		if e != nil {
 			t.Errorf("err should be nil, but got %s", e)
 		}
@@ -331,7 +331,7 @@ func TestIntersectionSearchSpace(t *testing.T) {
 
 				if err = study.Optimize(func(trial goptuna.Trial) (v float64, e error) {
 					x, _ := trial.SuggestInt("x", 0, 10)
-					y, _ := trial.SuggestUniform("y", -3, 3)
+					y, _ := trial.SuggestFloat("y", -3, 3)
 					return float64(x) + y, nil
 				}, 1); err != nil {
 					panic(err)
@@ -361,7 +361,7 @@ func TestIntersectionSearchSpace(t *testing.T) {
 				// First Trial
 				if err = study.Optimize(func(trial goptuna.Trial) (v float64, e error) {
 					x, _ := trial.SuggestInt("x", 0, 10)
-					y, _ := trial.SuggestUniform("y", -3, 3)
+					y, _ := trial.SuggestFloat("y", -3, 3)
 					return float64(x) + y, nil
 				}, 1); err != nil {
 					panic(err)
@@ -369,7 +369,7 @@ func TestIntersectionSearchSpace(t *testing.T) {
 
 				// Second Trial
 				if err = study.Optimize(func(trial goptuna.Trial) (v float64, e error) {
-					y, _ := trial.SuggestUniform("y", -3, 3)
+					y, _ := trial.SuggestFloat("y", -3, 3)
 					return y, nil
 				}, 1); err != nil {
 					panic(err)
@@ -395,7 +395,7 @@ func TestIntersectionSearchSpace(t *testing.T) {
 				// First Trial
 				if err = study.Optimize(func(trial goptuna.Trial) (v float64, e error) {
 					x, _ := trial.SuggestInt("x", 0, 10)
-					y, _ := trial.SuggestUniform("y", -3, 3)
+					y, _ := trial.SuggestFloat("y", -3, 3)
 					return float64(x) + y, nil
 				}, 1); err != nil {
 					panic(err)
@@ -403,7 +403,7 @@ func TestIntersectionSearchSpace(t *testing.T) {
 
 				// Second Trial
 				if err = study.Optimize(func(trial goptuna.Trial) (v float64, e error) {
-					y, _ := trial.SuggestUniform("y", -3, 3)
+					y, _ := trial.SuggestFloat("y", -3, 3)
 					return y, nil
 				}, 1); err != nil {
 					panic(err)
@@ -411,12 +411,12 @@ func TestIntersectionSearchSpace(t *testing.T) {
 
 				// Failed trial (ignore error)
 				_ = study.Optimize(func(trial goptuna.Trial) (v float64, e error) {
-					_, _ = trial.SuggestUniform("y", -3, 3)
+					_, _ = trial.SuggestFloat("y", -3, 3)
 					return 0.0, errors.New("something error")
 				}, 1)
 				// Pruned trial
 				if err = study.Optimize(func(trial goptuna.Trial) (v float64, e error) {
-					_, _ = trial.SuggestUniform("y", -3, 3)
+					_, _ = trial.SuggestFloat("y", -3, 3)
 					return 0.0, goptuna.ErrTrialPruned
 				}, 1); err != nil {
 					panic(err)

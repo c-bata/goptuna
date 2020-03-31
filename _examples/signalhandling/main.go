@@ -20,8 +20,8 @@ import (
 func objective(trial goptuna.Trial) (float64, error) {
 	ctx := trial.GetContext()
 
-	x1, _ := trial.SuggestUniform("x1", -10, 10)
-	x2, _ := trial.SuggestUniform("x2", -10, 10)
+	x1, _ := trial.SuggestFloat("x1", -10, 10)
+	x2, _ := trial.SuggestFloat("x2", -10, 10)
 
 	cmd := exec.CommandContext(ctx, "sleep", "1")
 	err := cmd.Run()

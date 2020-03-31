@@ -178,6 +178,12 @@ func (t *Trial) SuggestLogUniform(name string, low, high float64) (float64, erro
 	return t.SuggestLogFloat(name, low, high)
 }
 
+// SuggestDiscreteUniform suggests a value from a discrete uniform distribution.
+// Deprecated: Please use SuggestDiscreteFloat method.
+func (t *Trial) SuggestDiscreteUniform(name string, low, high, q float64) (float64, error) {
+	return t.SuggestDiscreteFloat(name, low, high, q)
+}
+
 // SuggestFloat suggests a value for the floating point parameter.
 func (t *Trial) SuggestFloat(name string, low, high float64) (float64, error) {
 	if low > high {
@@ -193,9 +199,24 @@ func (t *Trial) SuggestLogFloat(name string, low, high float64) (float64, error)
 	if low > high {
 		return 0, errors.New("'low' must be smaller than or equal to the 'high'")
 	}
-	return t.suggest(name, UniformDistribution{
+	return t.suggest(name, LogUniformDistribution{
 		High: high, Low: low,
 	})
+}
+
+// SuggestDiscreteFloat suggests a value for the discrete floating point parameter.
+func (t *Trial) SuggestDiscreteFloat(name string, low, high, q float64) (float64, error) {
+	if low > high {
+		return 0, errors.New("'low' must be smaller than or equal to the 'high'")
+	}
+	d := DiscreteUniformDistribution{
+		High: high, Low: low, Q: q,
+	}
+	ir, err := t.suggest(name, d)
+	if err != nil {
+		return 0, err
+	}
+	return d.ToExternalRepr(ir).(float64), err
 }
 
 // SuggestInt suggests an integer parameter.
@@ -203,11 +224,10 @@ func (t *Trial) SuggestInt(name string, low, high int) (int, error) {
 	if low > high {
 		return 0, errors.New("'low' must be smaller than or equal to the 'high'")
 	}
-	d := IntUniformDistribution{
+	v, err := t.suggest(name, IntUniformDistribution{
 		High: high, Low: low,
-	}
-	v, err := t.suggest(name, d)
-	return d.ToExternalRepr(v).(int), err
+	})
+	return int(v), err
 }
 
 // SuggestIntWithStep suggests an integer parameter.
@@ -223,21 +243,6 @@ func (t *Trial) SuggestIntWithStep(name string, low, high, step int) (int, error
 	}
 	v, err := t.suggest(name, d)
 	return d.ToExternalRepr(v).(int), err
-}
-
-// SuggestDiscreteUniform suggests a value from a discrete uniform distribution.
-func (t *Trial) SuggestDiscreteUniform(name string, low, high, q float64) (float64, error) {
-	if low > high {
-		return 0, errors.New("'low' must be smaller than or equal to the 'high'")
-	}
-	d := DiscreteUniformDistribution{
-		High: high, Low: low, Q: q,
-	}
-	ir, err := t.suggest(name, d)
-	if err != nil {
-		return 0, err
-	}
-	return d.ToExternalRepr(ir).(float64), err
 }
 
 // SuggestCategorical suggests an categorical parameter.
