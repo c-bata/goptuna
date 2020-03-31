@@ -167,7 +167,19 @@ func (t *Trial) Number() (int, error) {
 }
 
 // SuggestUniform suggests a value from a uniform distribution.
+// Deprecated: Please use SuggestFloat method.
 func (t *Trial) SuggestUniform(name string, low, high float64) (float64, error) {
+	return t.SuggestFloat(name, low, high)
+}
+
+// SuggestLogUniform suggests a value from a uniform distribution in the log domain.
+// Deprecated: Please use SuggestLogFloat method.
+func (t *Trial) SuggestLogUniform(name string, low, high float64) (float64, error) {
+	return t.SuggestLogFloat(name, low, high)
+}
+
+// SuggestFloat suggests a value for the floating point parameter.
+func (t *Trial) SuggestFloat(name string, low, high float64) (float64, error) {
 	if low > high {
 		return 0, errors.New("'low' must be smaller than or equal to the 'high'")
 	}
@@ -176,15 +188,14 @@ func (t *Trial) SuggestUniform(name string, low, high float64) (float64, error) 
 	})
 }
 
-// SuggestLogUniform suggests a value from a uniform distribution in the log domain.
-func (t *Trial) SuggestLogUniform(name string, low, high float64) (float64, error) {
+// SuggestLogFloat suggests a value for the log-scale floating point parameter.
+func (t *Trial) SuggestLogFloat(name string, low, high float64) (float64, error) {
 	if low > high {
 		return 0, errors.New("'low' must be smaller than or equal to the 'high'")
 	}
-	v, err := t.suggest(name, LogUniformDistribution{
+	return t.suggest(name, UniformDistribution{
 		High: high, Low: low,
 	})
-	return v, err
 }
 
 // SuggestInt suggests an integer parameter.
