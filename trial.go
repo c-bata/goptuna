@@ -167,19 +167,19 @@ func (t *Trial) Number() (int, error) {
 }
 
 // SuggestUniform suggests a value from a uniform distribution.
-// Deprecated: Please use SuggestFloat method.
+// Deprecated: This method will be removed at v1.0.0. Please use SuggestFloat method.
 func (t *Trial) SuggestUniform(name string, low, high float64) (float64, error) {
 	return t.SuggestFloat(name, low, high)
 }
 
 // SuggestLogUniform suggests a value from a uniform distribution in the log domain.
-// Deprecated: Please use SuggestLogFloat method.
+// Deprecated: This method will be removed at v1.0.0. Please use SuggestLogFloat method.
 func (t *Trial) SuggestLogUniform(name string, low, high float64) (float64, error) {
 	return t.SuggestLogFloat(name, low, high)
 }
 
 // SuggestDiscreteUniform suggests a value from a discrete uniform distribution.
-// Deprecated: Please use SuggestDiscreteFloat method.
+// Deprecated: This method will be removed at v1.0.0. Please use SuggestDiscreteFloat method.
 func (t *Trial) SuggestDiscreteUniform(name string, low, high, q float64) (float64, error) {
 	return t.SuggestDiscreteFloat(name, low, high, q)
 }
@@ -224,14 +224,15 @@ func (t *Trial) SuggestInt(name string, low, high int) (int, error) {
 	if low > high {
 		return 0, errors.New("'low' must be smaller than or equal to the 'high'")
 	}
-	v, err := t.suggest(name, IntUniformDistribution{
+	d := IntUniformDistribution{
 		High: high, Low: low,
-	})
-	return int(v), err
+	}
+	v, err := t.suggest(name, d)
+	return d.ToExternalRepr(v).(int), err
 }
 
-// SuggestIntWithStep suggests an integer parameter.
-func (t *Trial) SuggestIntWithStep(name string, low, high, step int) (int, error) {
+// SuggestStepInt suggests a step-interval integer parameter.
+func (t *Trial) SuggestStepInt(name string, low, high, step int) (int, error) {
 	if low > high {
 		return 0, errors.New("'low' must be smaller than or equal to the 'high'")
 	}
