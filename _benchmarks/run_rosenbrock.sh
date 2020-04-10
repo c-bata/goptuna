@@ -12,11 +12,12 @@ RANDOM_SOLVER=$($KUROBAKO solver random)
 
 CMA_SOLVER=$($KUROBAKO solver command ./cma_solver)
 TPE_SOLVER=$($KUROBAKO solver command ./tpe_solver)
-OPTUNA_SOLVER=$($KUROBAKO solver command python ./_benchmarks/optuna_solver/cmaes.py)
+# It has a circular import problem.
+# OPTUNA_SOLVER=$($KUROBAKO solver command python ./_benchmarks/optuna_solver/cmaes.py)
 PROBLEM=$($KUROBAKO problem command ./rosenbrock_problem)
 
 $KUROBAKO studies \
-  --solvers $RANDOM_SOLVER $TPE_SOLVER $CMA_SOLVER $OPTUNA_SOLVER \
+  --solvers $RANDOM_SOLVER $TPE_SOLVER $CMA_SOLVER \
   --problems $PROBLEM \
   --repeats 8 --budget 300 \
   | $KUROBAKO run --parallelism 1 > $1

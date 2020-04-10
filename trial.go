@@ -83,6 +83,10 @@ func (t *Trial) isFixedParam(name string, distribution interface{}) (float64, bo
 		if !typedDistribution.Contains(internalParam) {
 			return 0, false, nil
 		}
+	case StepIntUniformDistribution:
+		if !typedDistribution.Contains(internalParam) {
+			return 0, false, nil
+		}
 	case CategoricalDistribution:
 		if !typedDistribution.Contains(internalParam) {
 			return 0, false, nil
@@ -188,10 +192,26 @@ func (t *Trial) SuggestInt(name string, low, high int) (int, error) {
 	if low > high {
 		return 0, errors.New("'low' must be smaller than or equal to the 'high'")
 	}
-	v, err := t.suggest(name, IntUniformDistribution{
+	d := IntUniformDistribution{
 		High: high, Low: low,
-	})
-	return int(v), err
+	}
+	v, err := t.suggest(name, d)
+	return d.ToExternalRepr(v).(int), err
+}
+
+// SuggestIntWithStep suggests an integer parameter.
+func (t *Trial) SuggestIntWithStep(name string, low, high, step int) (int, error) {
+	if low > high {
+		return 0, errors.New("'low' must be smaller than or equal to the 'high'")
+	}
+	if step <= 0 {
+		return 0, errors.New("'step' must be larger than 0")
+	}
+	d := StepIntUniformDistribution{
+		High: high, Low: low, Step: step,
+	}
+	v, err := t.suggest(name, d)
+	return d.ToExternalRepr(v).(int), err
 }
 
 // SuggestDiscreteUniform suggests a value from a discrete uniform distribution.

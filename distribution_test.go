@@ -42,6 +42,14 @@ func TestDistributionConversionBetweenDistributionAndJSON(t *testing.T) {
 			},
 		},
 		{
+			name: "step int uniform distribution",
+			distribution: goptuna.StepIntUniformDistribution{
+				High: 20,
+				Low:  5,
+				Step: 2,
+			},
+		},
+		{
 			name: "categorical distribution",
 			distribution: goptuna.CategoricalDistribution{
 				Choices: []string{"foo", "bar"},
@@ -89,6 +97,24 @@ func TestDistributionToExternalRepresentation(t *testing.T) {
 			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
 			args:         3.0,
 			want:         3,
+		},
+		{
+			name:         "step int uniform distribution 1",
+			distribution: &goptuna.StepIntUniformDistribution{Low: 0, High: 10, Step: 2},
+			args:         2.2,
+			want:         2,
+		},
+		{
+			name:         "step int uniform distribution 2",
+			distribution: &goptuna.StepIntUniformDistribution{Low: 0, High: 10, Step: 3},
+			args:         2.2,
+			want:         3,
+		},
+		{
+			name:         "step int uniform distribution 2",
+			distribution: &goptuna.StepIntUniformDistribution{Low: -1, High: 10, Step: 3},
+			args:         0.6,
+			want:         2,
 		},
 		{
 			name:         "discrete uniform distribution 1",
@@ -171,6 +197,21 @@ func TestDistributionSingle(t *testing.T) {
 			want:         false,
 		},
 		{
+			name:         "step int uniform distribution true",
+			distribution: &goptuna.StepIntUniformDistribution{Low: 10, High: 10, Step: 2},
+			want:         true,
+		},
+		{
+			name:         "step int uniform distribution true when step is greater than high-low",
+			distribution: &goptuna.StepIntUniformDistribution{Low: 0, High: 1, Step: 2},
+			want:         true,
+		},
+		{
+			name:         "step int uniform distribution false",
+			distribution: &goptuna.StepIntUniformDistribution{Low: 0, High: 10, Step: 2},
+			want:         false,
+		},
+		{
 			name:         "categorical distribution true",
 			distribution: &goptuna.CategoricalDistribution{Choices: []string{"a"}},
 			want:         true,
@@ -248,6 +289,24 @@ func TestDistributionContains(t *testing.T) {
 		{
 			name:         "int uniform distribution higher",
 			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
+			args:         15,
+			want:         false,
+		},
+		{
+			name:         "step int uniform distribution true",
+			distribution: &goptuna.StepIntUniformDistribution{Low: 0, High: 10, Step: 2},
+			args:         3,
+			want:         true,
+		},
+		{
+			name:         "step int uniform distribution lower",
+			distribution: &goptuna.StepIntUniformDistribution{Low: 0, High: 10, Step: 2},
+			args:         -3,
+			want:         false,
+		},
+		{
+			name:         "step int uniform distribution higher",
+			distribution: &goptuna.StepIntUniformDistribution{Low: 0, High: 10, Step: 2},
 			args:         15,
 			want:         false,
 		},

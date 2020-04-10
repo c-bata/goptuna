@@ -27,7 +27,7 @@ class CustomOptunaSolverFactory(OptunaSolverFactory):
 
 
 def create_study(seed):
-    sampler = optuna.integration.CmaEsSampler(
+    sampler = optuna.samplers.CmaEsSampler(
         seed=seed,
         n_startup_trials=args.startup,
         warn_independent_sampling=True,
