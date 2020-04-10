@@ -1,3 +1,2 @@
 optuna
-cma
 kurobako
