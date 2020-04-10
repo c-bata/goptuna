@@ -17,7 +17,7 @@ func TestTrial_Suggest(t *testing.T) {
 			name: "SuggestUniform",
 			objective: func(trial goptuna.Trial) (float64, error) {
 				// low is larger than high
-				x1, err := trial.SuggestUniform("x", -10, 10)
+				x1, err := trial.SuggestFloat("x", -10, 10)
 				if err != nil {
 					return -1, err
 				}
@@ -29,7 +29,7 @@ func TestTrial_Suggest(t *testing.T) {
 			name: "SuggestUniform: low is larger than high",
 			objective: func(trial goptuna.Trial) (float64, error) {
 				// low is larger than high
-				x1, err := trial.SuggestUniform("x", 10, -10)
+				x1, err := trial.SuggestFloat("x", 10, -10)
 				if err != nil {
 					return -1, err
 				}
@@ -40,7 +40,7 @@ func TestTrial_Suggest(t *testing.T) {
 		{
 			name: "SuggestLogUniform",
 			objective: func(trial goptuna.Trial) (float64, error) {
-				x1, err := trial.SuggestLogUniform("x", 1e5, 1e10)
+				x1, err := trial.SuggestLogFloat("x", 1e5, 1e10)
 				if err != nil {
 					return -1, err
 				}
@@ -51,7 +51,7 @@ func TestTrial_Suggest(t *testing.T) {
 		{
 			name: "SuggestLogUniform: low is larger than high",
 			objective: func(trial goptuna.Trial) (float64, error) {
-				x1, err := trial.SuggestLogUniform("x", 1e10, 1e5)
+				x1, err := trial.SuggestLogFloat("x", 1e10, 1e5)
 				if err != nil {
 					return -1, err
 				}
@@ -62,7 +62,7 @@ func TestTrial_Suggest(t *testing.T) {
 		{
 			name: "SuggestDiscreteUniform",
 			objective: func(trial goptuna.Trial) (float64, error) {
-				x1, err := trial.SuggestDiscreteUniform("x", -10, 10, 0.5)
+				x1, err := trial.SuggestDiscreteFloat("x", -10, 10, 0.5)
 				if err != nil {
 					return -1, err
 				}
@@ -73,7 +73,7 @@ func TestTrial_Suggest(t *testing.T) {
 		{
 			name: "SuggestDiscreteUniform: low is larger than high",
 			objective: func(trial goptuna.Trial) (float64, error) {
-				x1, err := trial.SuggestDiscreteUniform("x", 10, -10, 0.5)
+				x1, err := trial.SuggestDiscreteFloat("x", 10, -10, 0.5)
 				if err != nil {
 					return -1, err
 				}

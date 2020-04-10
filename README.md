@@ -44,8 +44,8 @@ import (
 // Define an objective function we want to minimize.
 func objective(trial goptuna.Trial) (float64, error) {
     // Define a search space of the input values.
-    x1, _ := trial.SuggestUniform("x1", -10, 10)
-    x2, _ := trial.SuggestUniform("x2", -10, 10)
+    x1, _ := trial.SuggestFloat("x1", -10, 10)
+    x2, _ := trial.SuggestFloat("x2", -10, 10)
 
     // Here is a two-dimensional quadratic function.
     // F(x1, x2) = (x1 - 2)^2 + (x2 + 5)^2
