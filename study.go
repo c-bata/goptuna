@@ -180,52 +180,6 @@ func (s *Study) WithContext(ctx context.Context) {
 	s.ctx = ctx
 }
 
-func (s *Study) callRelativeSampler(trialID int) (
-	map[string]interface{},
-	map[string]float64,
-	error,
-) {
-	if s.RelativeSampler == nil {
-		return nil, nil, nil
-	}
-
-	frozen, err := s.Storage.GetTrial(trialID)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var searchSpace map[string]interface{}
-	if s.definedSearchSpace != nil {
-		searchSpace = s.definedSearchSpace
-	} else {
-		searchSpace, err = IntersectionSearchSpace(s)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-	if searchSpace == nil {
-		return nil, nil, nil
-	}
-
-	for paramName := range searchSpace {
-		distribution := searchSpace[paramName]
-		if yes, _ := DistributionIsSingle(distribution); yes {
-			delete(searchSpace, paramName)
-		}
-	}
-
-	relativeParams, err := s.RelativeSampler.SampleRelative(s, frozen, searchSpace)
-	if err == ErrUnsupportedSearchSpace {
-		s.logger.Warn("Your objective function contains unsupported search space for RelativeSampler.",
-			fmt.Sprintf("trialID=%d", trialID),
-			fmt.Sprintf("searchSpace=%#v", searchSpace))
-		return nil, nil, nil
-	} else if err != nil {
-		return nil, nil, err
-	}
-	return searchSpace, relativeParams, nil
-}
-
 func (s *Study) runTrial(objective FuncObjective) (int, error) {
 	trialID, err := s.popWaitingTrialID()
 	if err != nil {
@@ -241,19 +195,18 @@ func (s *Study) runTrial(objective FuncObjective) (int, error) {
 			return -1, errCreateNewTrial
 		}
 	}
-	searchSpace, relativeParams, err := s.callRelativeSampler(trialID)
+
+	trial := Trial{
+		Study: s,
+		ID:    trialID,
+	}
+	err = trial.CallRelativeSampler()
 	if err != nil {
 		s.logger.Error("failed to call relative sampler",
 			fmt.Sprintf("err=%s", err))
 		return -1, err
 	}
 
-	trial := Trial{
-		Study:               s,
-		ID:                  trialID,
-		relativeParams:      relativeParams,
-		relativeSearchSpace: searchSpace,
-	}
 	evaluation, objerr := objective(trial)
 	var state TrialState
 	if objerr == ErrTrialPruned {
