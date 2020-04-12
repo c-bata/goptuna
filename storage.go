@@ -588,6 +588,10 @@ func (s *InMemoryStorage) GetStudyDirection(studyID int) (StudyDirection, error)
 func (s *InMemoryStorage) GetTrial(trialID int) (FrozenTrial, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+
+	if !s.validateTrialID(trialID) {
+		return FrozenTrial{}, ErrInvalidTrialID
+	}
 	return s.trials[trialID], nil
 }
 
