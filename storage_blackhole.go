@@ -209,7 +209,7 @@ func (s *BlackHoleStorage) CreateNewTrial(studyID int) (int, error) {
 
 	var err error
 	idx := s.getTrialIndex(trialID)
-	if !s.trials[idx].State.IsFinished() {
+	if s.isPartiallyDeleted() && !s.trials[idx].State.IsFinished() {
 		err = ErrDeleteNonFinishedTrial
 	}
 
@@ -449,8 +449,9 @@ func (s *BlackHoleStorage) GetAllTrials(studyID int) ([]FrozenTrial, error) {
 	}
 
 	trials := make([]FrozenTrial, 0, n)
-	for i := range s.trials {
-		trials = append(trials, s.trials[i])
+	for i := 0; i < len(s.trials); i++ {
+		idx := s.getTrialIndex(s.counter + i)
+		trials = append(trials, s.trials[idx])
 	}
 	return trials, err
 }
@@ -495,6 +496,7 @@ func (s *BlackHoleStorage) GetTrialUserAttrs(trialID int) (map[string]string, er
 
 // GetTrialSystemAttrs to restore the attributes for the system.
 func (s *BlackHoleStorage) GetTrialSystemAttrs(trialID int) (map[string]string, error) {
+	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	if err := s.checkTrialID(trialID); err != nil {
@@ -526,7 +528,7 @@ func (s *BlackHoleStorage) checkTrialID(trialID int) error {
 		// counter represents an id for next trial.
 		return ErrInvalidTrialID
 	}
-	if s.counter-s.nTrials >= trialID {
+	if s.counter-s.nTrials < trialID {
 		return nil
 	}
 	return ErrTrialAlreadyDeleted
