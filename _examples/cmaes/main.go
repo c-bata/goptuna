@@ -27,7 +27,7 @@ func main() {
 		log.Fatal("failed to create study:", err)
 	}
 
-	if err = study.Optimize(objective, 200); err != nil {
+	if err = study.Optimize(objective, 10000); err != nil {
 		log.Fatal("failed to optimize:", err)
 	}
 

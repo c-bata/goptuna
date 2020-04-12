@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	// ErrTrialsAlreadyDeleted means that trial is already deleted.
+	// ErrTrialAlreadyDeleted means that trial is already deleted.
 	ErrTrialAlreadyDeleted = errors.New("trial is already deleted")
 	// ErrTrialsPartiallyDeleted means that trials are partially deleted.
 	ErrTrialsPartiallyDeleted = errors.New("some trials are already deleted")
