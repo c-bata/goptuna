@@ -150,7 +150,7 @@ func TestDistributionToExternalRepresentation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.distribution.ToExternalRepr(tt.args); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UniformDistribution.ToExternalRepr() = %v, want %v", got, tt.want)
+				t.Errorf("Distribution.ToExternalRepr() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -231,7 +231,7 @@ func TestDistributionSingle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.distribution.Single(); got != tt.want {
-				t.Errorf("UniformDistribution.Single() = %v, want %v", got, tt.want)
+				t.Errorf("Distribution.Single() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -281,9 +281,21 @@ func TestDistributionContains(t *testing.T) {
 			want:         false,
 		},
 		{
-			name:         "int uniform distribution true",
+			name:         "int uniform distribution true 1",
 			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
 			args:         3,
+			want:         true,
+		},
+		{
+			name:         "int uniform distribution true 2",
+			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
+			args:         -0.4999,
+			want:         true,
+		},
+		{
+			name:         "int uniform distribution true 3",
+			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
+			args:         10.4999,
 			want:         true,
 		},
 		{
@@ -374,7 +386,7 @@ func TestDistributionContains(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.distribution.Contains(tt.args); got != tt.want {
-				t.Errorf("UniformDistribution.ToInternalRepr() = %v, want %v", got, tt.want)
+				t.Errorf("Distribution.ToInternalRepr() = %v, want %v", got, tt.want)
 			}
 		})
 	}
