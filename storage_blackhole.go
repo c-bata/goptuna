@@ -4,13 +4,11 @@ import (
 	"errors"
 	"sync"
 	"time"
-
-	"github.com/c-bata/goptuna"
 )
 
 var (
 	// ErrTrialsAlreadyDeleted means that trial is already deleted.
-	ErrTrialsAlreadyDeleted = errors.New("trial is already deleted")
+	ErrTrialAlreadyDeleted = errors.New("trial is already deleted")
 	// ErrTrialsPartiallyDeleted means that trials are partially deleted.
 	ErrTrialsPartiallyDeleted = errors.New("some trials are already deleted")
 	// ErrDeleteNonFinishedTrial means that non finished trial is deleted.
@@ -57,13 +55,13 @@ func (s *BlackHoleStorage) CreateNewStudy(name string) (int, error) {
 // DeleteStudy deletes a study.
 func (s *BlackHoleStorage) DeleteStudy(studyID int) error {
 	if !s.checkStudyID(studyID) {
-		return goptuna.ErrInvalidStudyID
+		return ErrInvalidStudyID
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.direction = goptuna.StudyDirectionMinimize
-	s.trials = make([]goptuna.FrozenTrial, 0, 128)
+	s.direction = StudyDirectionMinimize
+	s.trials = make([]FrozenTrial, 0, 128)
 	s.userAttrs = make(map[string]string, 8)
 	s.systemAttrs = make(map[string]string, 8)
 	s.studyName = DefaultStudyNamePrefix + InMemoryStorageStudyUUID
@@ -73,7 +71,7 @@ func (s *BlackHoleStorage) DeleteStudy(studyID int) error {
 // SetStudyDirection sets study direction of the objective.
 func (s *BlackHoleStorage) SetStudyDirection(studyID int, direction StudyDirection) error {
 	if !s.checkStudyID(studyID) {
-		return goptuna.ErrInvalidStudyID
+		return ErrInvalidStudyID
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -106,7 +104,7 @@ func (s *BlackHoleStorage) GetStudyIDFromName(name string) (int, error) {
 	defer s.mu.RUnlock()
 
 	if name != s.studyName {
-		return -1, goptuna.ErrNotFound
+		return -1, ErrNotFound
 	}
 	return InMemoryStorageStudyID, nil
 }
@@ -120,7 +118,7 @@ func (s *BlackHoleStorage) GetStudyIDFromTrialID(trialID int) (int, error) {
 	if s.counter > trialID {
 		return InMemoryStorageStudyID, nil
 	}
-	return -1, goptuna.ErrNotFound
+	return -1, ErrNotFound
 }
 
 // GetStudyNameFromID return the study name from study id.
@@ -129,7 +127,7 @@ func (s *BlackHoleStorage) GetStudyNameFromID(studyID int) (string, error) {
 	defer s.mu.RUnlock()
 
 	if !s.checkStudyID(studyID) {
-		return "", goptuna.ErrNotFound
+		return "", ErrNotFound
 	}
 	return s.studyName, nil
 }
@@ -137,7 +135,7 @@ func (s *BlackHoleStorage) GetStudyNameFromID(studyID int) (string, error) {
 // GetStudyDirection returns study direction of the objective.
 func (s *BlackHoleStorage) GetStudyDirection(studyID int) (StudyDirection, error) {
 	if !s.checkStudyID(studyID) {
-		return goptuna.StudyDirectionMinimize, goptuna.ErrInvalidStudyID
+		return StudyDirectionMinimize, ErrInvalidStudyID
 	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -197,37 +195,215 @@ func (s *BlackHoleStorage) GetAllStudySummaries() ([]StudySummary, error) {
 	}, nil
 }
 
+// CreateNewTrial creates trial and returns trialID.
 func (s *BlackHoleStorage) CreateNewTrial(studyID int) (int, error) {
-	panic("implement me")
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if !s.checkStudyID(studyID) {
+		return -1, ErrInvalidStudyID
+	}
+	number := s.counter
+	trialID := number
+	s.counter++
+
+	var err error
+	idx := s.getTrialIndex(trialID)
+	if !s.trials[idx].State.IsFinished() {
+		err = ErrDeleteNonFinishedTrial
+	}
+
+	s.trials[idx] = FrozenTrial{
+		ID:                 trialID,
+		Number:             number,
+		State:              TrialStateRunning,
+		Value:              0,
+		IntermediateValues: make(map[int]float64, 8),
+		DatetimeStart:      time.Now(),
+		DatetimeComplete:   time.Time{},
+		InternalParams:     make(map[string]float64, 8),
+		Params:             make(map[string]interface{}, 8),
+		Distributions:      make(map[string]interface{}, 8),
+		UserAttrs:          make(map[string]string, 8),
+		SystemAttrs:        make(map[string]string, 8),
+	}
+	return trialID, err
 }
 
+// CloneTrial creates new Trial from the given base Trial.
 func (s *BlackHoleStorage) CloneTrial(studyID int, baseTrial FrozenTrial) (int, error) {
-	panic("implement me")
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if !s.checkStudyID(studyID) {
+		return -1, ErrInvalidStudyID
+	}
+	number := s.counter
+	trialID := number
+	s.counter++
+
+	var err error
+	idx := s.getTrialIndex(trialID)
+	if !s.trials[idx].State.IsFinished() {
+		err = ErrDeleteNonFinishedTrial
+	}
+	s.trials[idx] = FrozenTrial{
+		ID:                 trialID,
+		StudyID:            studyID,
+		Number:             number,
+		State:              baseTrial.State,
+		Value:              baseTrial.Value,
+		IntermediateValues: baseTrial.IntermediateValues,
+		DatetimeStart:      baseTrial.DatetimeStart,
+		DatetimeComplete:   baseTrial.DatetimeComplete,
+		InternalParams:     baseTrial.InternalParams,
+		Params:             baseTrial.Params,
+		Distributions:      baseTrial.Distributions,
+		UserAttrs:          baseTrial.UserAttrs,
+		SystemAttrs:        baseTrial.SystemAttrs,
+	}
+	return trialID, err
 }
 
+// SetTrialValue sets the value of trial.
 func (s *BlackHoleStorage) SetTrialValue(trialID int, value float64) error {
-	panic("implement me")
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if err := s.checkTrialID(trialID); err != nil {
+		return err
+	}
+	idx := s.getTrialIndex(trialID)
+	trial := s.trials[idx]
+	if trial.State.IsFinished() {
+		return ErrTrialCannotBeUpdated
+	}
+	trial.Value = value
+	s.trials[idx] = trial
+	return nil
 }
 
+// SetTrialIntermediateValue sets the intermediate value of trial.
 func (s *BlackHoleStorage) SetTrialIntermediateValue(trialID int, step int, value float64) error {
-	panic("implement me")
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if err := s.checkTrialID(trialID); err != nil {
+		return err
+	}
+
+	idx := s.getTrialIndex(trialID)
+	trial := s.trials[idx]
+	if trial.State.IsFinished() {
+		return ErrTrialCannotBeUpdated
+	}
+
+	for key := range trial.IntermediateValues {
+		if key == step {
+			return errors.New("step value is already exist")
+		}
+	}
+
+	trial.IntermediateValues[step] = value
+	s.trials[idx] = trial
+	return nil
 }
 
-func (s *BlackHoleStorage) SetTrialParam(trialID int, paramName string, paramValueInternal float64,
-	distribution interface{}) error {
-	panic("implement me")
+// SetTrialParam sets the sampled parameters of trial.
+func (s *BlackHoleStorage) SetTrialParam(
+	trialID int,
+	paramName string,
+	paramValueInternal float64,
+	distribution interface{},
+) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if err := s.checkTrialID(trialID); err != nil {
+		return err
+	}
+
+	idx := s.getTrialIndex(trialID)
+	trial := s.trials[idx]
+
+	// Check trial is able to update
+	if trial.State.IsFinished() {
+		return ErrTrialCannotBeUpdated
+	}
+
+	paramValueExternal, err := ToExternalRepresentation(distribution, paramValueInternal)
+	if err != nil {
+		return err
+	}
+
+	trial.Distributions[paramName] = distribution
+	trial.InternalParams[paramName] = paramValueInternal
+	trial.Params[paramName] = paramValueExternal
+	s.trials[idx] = trial
+	return nil
 }
 
+// SetTrialState sets the state of trial.
 func (s *BlackHoleStorage) SetTrialState(trialID int, state TrialState) error {
-	panic("implement me")
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if err := s.checkTrialID(trialID); err != nil {
+		return err
+	}
+	idx := s.getTrialIndex(trialID)
+	trial := s.trials[idx]
+	if trial.State.IsFinished() {
+		return ErrTrialCannotBeUpdated
+	}
+	trial.State = state
+	if trial.State.IsFinished() {
+		trial.DatetimeComplete = time.Now()
+	}
+	s.trials[idx] = trial
+	return nil
 }
 
+// SetTrialUserAttr to store the value for the user.
 func (s *BlackHoleStorage) SetTrialUserAttr(trialID int, key string, value string) error {
-	panic("implement me")
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if err := s.checkTrialID(trialID); err != nil {
+		return err
+	}
+	for i := range s.trials {
+		if s.trials[i].ID != trialID {
+			continue
+		}
+		if s.trials[i].State != TrialStateComplete {
+			return ErrTrialCannotBeUpdated
+		}
+		s.trials[i].UserAttrs[key] = value
+		return nil
+	}
+	panic("must not reach here")
 }
 
+// SetTrialSystemAttr to store the value for the system.
 func (s *BlackHoleStorage) SetTrialSystemAttr(trialID int, key string, value string) error {
-	panic("implement me")
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if err := s.checkTrialID(trialID); err != nil {
+		return err
+	}
+	for i := range s.trials {
+		if s.trials[i].ID != trialID {
+			continue
+		}
+		if s.trials[i].State != TrialStateComplete {
+			return ErrTrialCannotBeUpdated
+		}
+		s.trials[i].SystemAttrs[key] = value
+		return nil
+	}
+	panic("must not reach here")
 }
 
 func (s *BlackHoleStorage) GetTrialNumberFromID(trialID int) (int, error) {
@@ -264,4 +440,23 @@ func (s *BlackHoleStorage) GetTrialSystemAttrs(trialID int) (map[string]string, 
 
 func (s *BlackHoleStorage) checkStudyID(studyID int) bool {
 	return studyID == InMemoryStorageStudyID
+}
+
+func (s *BlackHoleStorage) getTrialIndex(trialID int) int {
+	return trialID % s.nTrials
+}
+
+func (s *BlackHoleStorage) checkTrialID(trialID int) error {
+	// | nTrials | counter |  trials |
+	// |       3 |       0 |      [] |
+	// |       3 |       3 | [0,1,2] |
+	// |       3 |       4 | [1,2,3] |
+	if trialID < 0 || trialID >= s.counter {
+		// counter represents an id for next trial.
+		return ErrInvalidTrialID
+	}
+	if s.counter-s.nTrials >= trialID {
+		return nil
+	}
+	return ErrTrialAlreadyDeleted
 }
