@@ -348,7 +348,6 @@ func (s *InMemoryStorage) SetTrialValue(trialID int, value float64) error {
 }
 
 // SetTrialIntermediateValue sets the intermediate value of trial.
-// While sets the intermediate value, trial.Value is also updated.
 func (s *InMemoryStorage) SetTrialIntermediateValue(trialID int, step int, value float64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -366,10 +365,6 @@ func (s *InMemoryStorage) SetTrialIntermediateValue(trialID int, step int, value
 			return errors.New("step value is already exist")
 		}
 	}
-
-	// This is essentially the same with Optuna (at v0.14.0).
-	// See https://github.com/optuna/optuna/blob/v0.14.0/optuna/trial.py#L371-L373
-	trial.Value = value
 
 	trial.IntermediateValues[step] = value
 	s.trials[trialID] = trial
