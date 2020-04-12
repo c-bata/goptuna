@@ -46,8 +46,10 @@ func (s *Sampler) SampleRelative(
 	}
 	sort.Strings(orderedKeys)
 
+	var detectPartiallyDeleted bool
 	trials, err := study.GetTrials()
 	if err == goptuna.ErrTrialsPartiallyDeleted {
+		detectPartiallyDeleted = true
 		err = nil
 	} else if err != nil {
 		return nil, err
@@ -68,6 +70,10 @@ func (s *Sampler) SampleRelative(
 			return nil, err
 		}
 		s.optimizerID = fmt.Sprintf("%016d", s.rng.Int())
+	}
+
+	if detectPartiallyDeleted && len(completed) < s.optimizer.PopulationSize() {
+		return nil, goptuna.ErrTrialsPartiallyDeleted
 	}
 
 	if s.optimizer.dim != len(orderedKeys) {
