@@ -372,17 +372,12 @@ func (s *BlackHoleStorage) SetTrialUserAttr(trialID int, key string, value strin
 	if err := s.checkTrialID(trialID); err != nil {
 		return err
 	}
-	for i := range s.trials {
-		if s.trials[i].ID != trialID {
-			continue
-		}
-		if s.trials[i].State != TrialStateComplete {
-			return ErrTrialCannotBeUpdated
-		}
-		s.trials[i].UserAttrs[key] = value
-		return nil
+	idx := s.getTrialIndex(trialID)
+	if s.trials[idx].State.IsFinished() {
+		return ErrTrialCannotBeUpdated
 	}
-	panic("must not reach here")
+	s.trials[idx].UserAttrs[key] = value
+	return nil
 }
 
 // SetTrialSystemAttr to store the value for the system.
@@ -393,49 +388,125 @@ func (s *BlackHoleStorage) SetTrialSystemAttr(trialID int, key string, value str
 	if err := s.checkTrialID(trialID); err != nil {
 		return err
 	}
-	for i := range s.trials {
-		if s.trials[i].ID != trialID {
-			continue
-		}
-		if s.trials[i].State != TrialStateComplete {
-			return ErrTrialCannotBeUpdated
-		}
-		s.trials[i].SystemAttrs[key] = value
-		return nil
+	idx := s.getTrialIndex(trialID)
+	if s.trials[idx].State == TrialStateComplete {
+		return ErrTrialCannotBeUpdated
 	}
-	panic("must not reach here")
+	s.trials[idx].SystemAttrs[key] = value
+	return nil
 }
 
+// GetTrialNumberFromID returns the trial's number.
 func (s *BlackHoleStorage) GetTrialNumberFromID(trialID int) (int, error) {
-	panic("implement me")
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	err := s.checkTrialID(trialID)
+	if err == ErrTrialAlreadyDeleted {
+		return trialID, err
+	}
+	return -1, err
 }
 
+// GetTrialParam returns the internal parameter of the trial
 func (s *BlackHoleStorage) GetTrialParam(trialID int, paramName string) (float64, error) {
-	panic("implement me")
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if err := s.checkTrialID(trialID); err != nil {
+		return -1, err
+	}
+	idx := s.getTrialIndex(trialID)
+	ir, ok := s.trials[idx].InternalParams[paramName]
+	if !ok {
+		return -1.0, errors.New("param doesn't exist")
+	}
+	return ir, nil
 }
 
+// GetTrial returns Trial.
 func (s *BlackHoleStorage) GetTrial(trialID int) (FrozenTrial, error) {
-	panic("implement me")
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if err := s.checkTrialID(trialID); err != nil {
+		return FrozenTrial{}, err
+	}
+	idx := s.getTrialIndex(trialID)
+	return s.trials[idx], nil
 }
 
+// GetAllTrials returns the all trials.
 func (s *BlackHoleStorage) GetAllTrials(studyID int) ([]FrozenTrial, error) {
-	panic("implement me")
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var err error
+	n := s.nTrials
+	if s.isPartiallyDeleted() {
+		err = ErrTrialsPartiallyDeleted
+	} else {
+		n = s.counter
+	}
+
+	trials := make([]FrozenTrial, 0, n)
+	for i := range s.trials {
+		trials = append(trials, s.trials[i])
+	}
+	return trials, err
 }
 
+// GetBestTrial returns the best trial.
 func (s *BlackHoleStorage) GetBestTrial(studyID int) (FrozenTrial, error) {
-	panic("implement me")
+	var err error
+	if s.bestTrial.State != TrialStateComplete {
+		err = ErrNoCompletedTrials
+	}
+	return s.bestTrial, err
 }
 
+// GetTrialParams returns the external parameters in the trial
 func (s *BlackHoleStorage) GetTrialParams(trialID int) (map[string]interface{}, error) {
-	panic("implement me")
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if err := s.checkTrialID(trialID); err != nil {
+		return nil, err
+	}
+	idx := s.getTrialIndex(trialID)
+	return s.trials[idx].Params, nil
 }
 
+// GetTrialUserAttrs to restore the attributes for the user.
 func (s *BlackHoleStorage) GetTrialUserAttrs(trialID int) (map[string]string, error) {
-	panic("implement me")
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if err := s.checkTrialID(trialID); err != nil {
+		return nil, err
+	}
+
+	idx := s.getTrialIndex(trialID)
+	n := make(map[string]string, len(s.trials[idx].UserAttrs))
+	for k := range s.trials[idx].UserAttrs {
+		n[k] = s.trials[idx].UserAttrs[k]
+	}
+	return n, nil
 }
 
+// GetTrialSystemAttrs to restore the attributes for the system.
 func (s *BlackHoleStorage) GetTrialSystemAttrs(trialID int) (map[string]string, error) {
-	panic("implement me")
+	defer s.mu.RUnlock()
+
+	if err := s.checkTrialID(trialID); err != nil {
+		return nil, err
+	}
+
+	idx := s.getTrialIndex(trialID)
+	n := make(map[string]string, len(s.trials[idx].SystemAttrs))
+	for k := range s.trials[idx].SystemAttrs {
+		n[k] = s.trials[idx].SystemAttrs[k]
+	}
+	return n, nil
 }
 
 func (s *BlackHoleStorage) checkStudyID(studyID int) bool {
@@ -459,4 +530,12 @@ func (s *BlackHoleStorage) checkTrialID(trialID int) error {
 		return nil
 	}
 	return ErrTrialAlreadyDeleted
+}
+
+func (s *BlackHoleStorage) isPartiallyDeleted() bool {
+	// | nTrials | counter |  trials |
+	// |       3 |       0 |      [] |
+	// |       3 |       3 | [0,1,2] |
+	// |       3 |       4 | [1,2,3] |
+	return s.counter > s.nTrials
 }
