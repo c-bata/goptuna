@@ -430,10 +430,14 @@ func (s *InMemoryStorage) SetTrialUserAttr(trialID int, key string, value string
 	defer s.mu.Unlock()
 
 	for i := range s.trials {
-		if s.trials[i].ID == trialID && s.trials[i].State != TrialStateComplete {
-			s.trials[i].UserAttrs[key] = value
-			return nil
+		if s.trials[i].ID != trialID {
+			continue
 		}
+		if s.trials[i].State != TrialStateComplete {
+			return ErrTrialCannotBeUpdated
+		}
+		s.trials[i].UserAttrs[key] = value
+		return nil
 	}
 	return ErrInvalidTrialID
 }
@@ -444,10 +448,14 @@ func (s *InMemoryStorage) SetTrialSystemAttr(trialID int, key string, value stri
 	defer s.mu.Unlock()
 
 	for i := range s.trials {
-		if s.trials[i].ID == trialID && s.trials[i].State != TrialStateComplete {
-			s.trials[i].SystemAttrs[key] = value
-			return nil
+		if s.trials[i].ID != trialID {
+			continue
 		}
+		if s.trials[i].State != TrialStateComplete {
+			return ErrTrialCannotBeUpdated
+		}
+		s.trials[i].SystemAttrs[key] = value
+		return nil
 	}
 	return ErrInvalidTrialID
 }
