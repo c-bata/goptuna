@@ -433,7 +433,7 @@ func (s *InMemoryStorage) SetTrialUserAttr(trialID int, key string, value string
 		if s.trials[i].ID != trialID {
 			continue
 		}
-		if s.trials[i].State != TrialStateComplete {
+		if s.trials[i].State == TrialStateComplete {
 			return ErrTrialCannotBeUpdated
 		}
 		s.trials[i].UserAttrs[key] = value
@@ -451,7 +451,7 @@ func (s *InMemoryStorage) SetTrialSystemAttr(trialID int, key string, value stri
 		if s.trials[i].ID != trialID {
 			continue
 		}
-		if s.trials[i].State != TrialStateComplete {
+		if s.trials[i].State == TrialStateComplete {
 			return ErrTrialCannotBeUpdated
 		}
 		s.trials[i].SystemAttrs[key] = value
