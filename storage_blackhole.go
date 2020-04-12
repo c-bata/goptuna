@@ -359,6 +359,7 @@ func (s *BlackHoleStorage) SetTrialState(trialID int, state TrialState) error {
 	trial.State = state
 	if trial.State.IsFinished() {
 		trial.DatetimeComplete = time.Now()
+		s.updateBestTrial(trial)
 	}
 	s.trials[idx] = trial
 	return nil
@@ -540,4 +541,24 @@ func (s *BlackHoleStorage) isPartiallyDeleted() bool {
 	// |       3 |       3 | [0,1,2] |
 	// |       3 |       4 | [1,2,3] |
 	return s.counter > s.nTrials
+}
+
+func (s *BlackHoleStorage) updateBestTrial(trial FrozenTrial) {
+	if trial.State != TrialStateComplete {
+		return
+	}
+
+	if s.bestTrial.State != TrialStateComplete {
+		s.bestTrial = trial
+		return
+	}
+
+	if s.direction == StudyDirectionMaximize && trial.Value > s.bestTrial.Value {
+		s.bestTrial = trial
+		return
+	}
+	if s.direction == StudyDirectionMinimize && trial.Value < s.bestTrial.Value {
+		s.bestTrial = trial
+		return
+	}
 }
