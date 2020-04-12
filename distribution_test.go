@@ -89,14 +89,20 @@ func TestDistributionToExternalRepresentation(t *testing.T) {
 		{
 			name:         "log uniform distribution",
 			distribution: &goptuna.LogUniformDistribution{Low: 1e-2, High: 1e3},
-			args:         float64(1e2),
-			want:         float64(1e2),
+			args:         1e2,
+			want:         1e2,
 		},
 		{
-			name:         "int uniform distribution",
+			name:         "int uniform distribution 1",
 			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
 			args:         3.0,
 			want:         3,
+		},
+		{
+			name:         "int uniform distribution 2",
+			distribution: &goptuna.IntUniformDistribution{Low: 0, High: 10},
+			args:         1.6,
+			want:         2,
 		},
 		{
 			name:         "step int uniform distribution 1",

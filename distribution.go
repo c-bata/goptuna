@@ -92,7 +92,7 @@ const IntUniformDistributionName = "IntUniformDistribution"
 
 // ToExternalRepr to convert internal representation of a parameter value into external representation.
 func (d *IntUniformDistribution) ToExternalRepr(ir float64) interface{} {
-	return int(ir)
+	return int(math.Round(ir))
 }
 
 // Single to test whether the range of this distribution contains just a single value.
