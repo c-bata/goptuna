@@ -19,7 +19,9 @@ func main() {
 		cmaes.SamplerOptionNStartupTrials(5))
 	study, err := goptuna.CreateStudy(
 		"goptuna-example",
+		goptuna.StudyOptionStorage(goptuna.NewBlackholeStorage(20)),
 		goptuna.StudyOptionRelativeSampler(relativeSampler),
+		goptuna.StudyOptionIgnoreError(false),
 	)
 	if err != nil {
 		log.Fatal("failed to create study:", err)
@@ -29,8 +31,14 @@ func main() {
 		log.Fatal("failed to optimize:", err)
 	}
 
-	v, _ := study.GetBestValue()
-	params, _ := study.GetBestParams()
+	v, err := study.GetBestValue()
+	if err != nil {
+		log.Fatal("failed to get best value:", err)
+	}
+	params, err := study.GetBestParams()
+	if err != nil {
+		log.Fatal("failed to get best params:", err)
+	}
 	log.Printf("Best evaluation=%f (x1=%f, x2=%f)",
 		v, params["x1"].(float64), params["x2"].(float64))
 }
