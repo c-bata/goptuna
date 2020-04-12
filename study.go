@@ -182,7 +182,9 @@ func (s *Study) WithContext(ctx context.Context) {
 
 func (s *Study) runTrial(objective FuncObjective) (int, error) {
 	trialID, err := s.popWaitingTrialID()
-	if err != nil {
+	if err == ErrTrialsPartiallyDeleted {
+		err = nil
+	} else if err != nil {
 		s.logger.Error("failed to pop a waiting trial",
 			fmt.Sprintf("err=%s", err))
 		return -1, err

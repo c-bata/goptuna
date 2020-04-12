@@ -43,7 +43,10 @@ func IntersectionSearchSpace(study *Study) (map[string]interface{}, error) {
 	var searchSpace map[string]interface{}
 
 	trials, err := study.GetTrials()
-	if err != nil {
+	if err == ErrTrialsPartiallyDeleted {
+		study.logger.Warn("IntersectionSearchSpace: GetTrials return " + err.Error())
+		err = nil
+	} else if err != nil {
 		return nil, err
 	}
 

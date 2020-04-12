@@ -47,7 +47,9 @@ func (s *Sampler) SampleRelative(
 	sort.Strings(orderedKeys)
 
 	trials, err := study.GetTrials()
-	if err != nil {
+	if err == goptuna.ErrTrialsPartiallyDeleted {
+		err = nil
+	} else if err != nil {
 		return nil, err
 	}
 	completed := make([]goptuna.FrozenTrial, 0, len(trials))
