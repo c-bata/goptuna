@@ -285,7 +285,7 @@ func (s *InMemoryStorage) CreateNewTrial(studyID int) (int, error) {
 	// trialID equals the number because InMemoryStorage has only 1 study.
 	trialID := number
 	s.trials = append(s.trials, FrozenTrial{
-		ID:                 number,
+		ID:                 trialID,
 		Number:             number,
 		State:              TrialStateRunning,
 		Value:              0,
@@ -303,6 +303,9 @@ func (s *InMemoryStorage) CreateNewTrial(studyID int) (int, error) {
 
 // CloneTrial creates new Trial from the given base Trial.
 func (s *InMemoryStorage) CloneTrial(studyID int, baseTrial FrozenTrial) (int, error) {
+	if !s.checkStudyID(studyID) {
+		return -1, ErrInvalidStudyID
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
