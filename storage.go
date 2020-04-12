@@ -335,7 +335,7 @@ func (s *InMemoryStorage) SetTrialValue(trialID int, value float64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if trialID >= len(s.trials) {
+	if !s.validateTrialID(trialID) {
 		return ErrInvalidTrialID
 	}
 	trial := s.trials[trialID]
@@ -352,7 +352,7 @@ func (s *InMemoryStorage) SetTrialIntermediateValue(trialID int, step int, value
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if trialID >= len(s.trials) {
+	if !s.validateTrialID(trialID) {
 		return ErrInvalidTrialID
 	}
 	trial := s.trials[trialID]
@@ -382,7 +382,7 @@ func (s *InMemoryStorage) SetTrialParam(
 	defer s.mu.Unlock()
 
 	// Check param has not been set; otherwise, return error
-	if trialID >= len(s.trials) {
+	if !s.validateTrialID(trialID) {
 		return ErrInvalidTrialID
 	}
 	trial := s.trials[trialID]
@@ -409,7 +409,7 @@ func (s *InMemoryStorage) SetTrialState(trialID int, state TrialState) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if trialID >= len(s.trials) {
+	if !s.validateTrialID(trialID) {
 		return ErrInvalidTrialID
 	}
 	trial := s.trials[trialID]
@@ -429,17 +429,15 @@ func (s *InMemoryStorage) SetTrialUserAttr(trialID int, key string, value string
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	for i := range s.trials {
-		if s.trials[i].ID != trialID {
-			continue
-		}
-		if s.trials[i].State == TrialStateComplete {
-			return ErrTrialCannotBeUpdated
-		}
-		s.trials[i].UserAttrs[key] = value
-		return nil
+	if !s.validateTrialID(trialID) {
+		return ErrInvalidTrialID
 	}
-	return ErrInvalidTrialID
+
+	if s.trials[trialID].State.IsFinished() {
+		return ErrTrialCannotBeUpdated
+	}
+	s.trials[trialID].UserAttrs[key] = value
+	return nil
 }
 
 // SetTrialSystemAttr to store the value for the system.
@@ -447,17 +445,15 @@ func (s *InMemoryStorage) SetTrialSystemAttr(trialID int, key string, value stri
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	for i := range s.trials {
-		if s.trials[i].ID != trialID {
-			continue
-		}
-		if s.trials[i].State == TrialStateComplete {
-			return ErrTrialCannotBeUpdated
-		}
-		s.trials[i].SystemAttrs[key] = value
-		return nil
+	if !s.validateTrialID(trialID) {
+		return ErrInvalidTrialID
 	}
-	return ErrInvalidTrialID
+
+	if s.trials[trialID].State.IsFinished() {
+		return ErrTrialCannotBeUpdated
+	}
+	s.trials[trialID].SystemAttrs[key] = value
+	return nil
 }
 
 // GetTrialNumberFromID returns the trial's number.
@@ -465,12 +461,10 @@ func (s *InMemoryStorage) GetTrialNumberFromID(trialID int) (int, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	for i := range s.trials {
-		if s.trials[i].ID == trialID {
-			return trialID, nil
-		}
+	if !s.validateTrialID(trialID) {
+		return -1, ErrInvalidTrialID
 	}
-	return -1, ErrInvalidTrialID
+	return trialID, nil
 }
 
 // GetTrialParam returns the internal parameter of the trial
@@ -478,16 +472,14 @@ func (s *InMemoryStorage) GetTrialParam(trialID int, paramName string) (float64,
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	for i := range s.trials {
-		if s.trials[i].ID == trialID {
-			ir, ok := s.trials[i].InternalParams[paramName]
-			if !ok {
-				return -1.0, errors.New("param doesn't exist")
-			}
-			return ir, nil
-		}
+	if !s.validateTrialID(trialID) {
+		return -1, ErrInvalidTrialID
 	}
-	return -1, ErrInvalidTrialID
+	ir, ok := s.trials[trialID].InternalParams[paramName]
+	if !ok {
+		return -1.0, errors.New("param doesn't exist")
+	}
+	return ir, nil
 }
 
 // GetTrialParams returns the external parameters in the trial
@@ -495,12 +487,10 @@ func (s *InMemoryStorage) GetTrialParams(trialID int) (map[string]interface{}, e
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	for i := range s.trials {
-		if s.trials[i].ID == trialID {
-			return s.trials[i].Params, nil
-		}
+	if !s.validateTrialID(trialID) {
+		return nil, ErrInvalidTrialID
 	}
-	return nil, ErrInvalidTrialID
+	return s.trials[trialID].Params, nil
 }
 
 // GetTrialUserAttrs to restore the attributes for the user.
@@ -508,16 +498,14 @@ func (s *InMemoryStorage) GetTrialUserAttrs(trialID int) (map[string]string, err
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	for _, t := range s.trials {
-		if t.ID == trialID {
-			n := make(map[string]string, len(t.UserAttrs))
-			for k := range t.UserAttrs {
-				n[k] = t.UserAttrs[k]
-			}
-			return n, nil
-		}
+	if !s.validateTrialID(trialID) {
+		return nil, ErrInvalidTrialID
 	}
-	return nil, ErrNotFound
+	n := make(map[string]string, len(s.trials[trialID].UserAttrs))
+	for k := range s.trials[trialID].UserAttrs {
+		n[k] = s.trials[trialID].UserAttrs[k]
+	}
+	return n, nil
 }
 
 // GetTrialSystemAttrs to restore the attributes for the system.
@@ -525,16 +513,14 @@ func (s *InMemoryStorage) GetTrialSystemAttrs(trialID int) (map[string]string, e
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	for _, t := range s.trials {
-		if t.ID == trialID {
-			n := make(map[string]string, len(t.SystemAttrs))
-			for k := range t.SystemAttrs {
-				n[k] = t.SystemAttrs[k]
-			}
-			return n, nil
-		}
+	if !s.validateTrialID(trialID) {
+		return nil, ErrInvalidTrialID
 	}
-	return nil, ErrNotFound
+	n := make(map[string]string, len(s.trials[trialID].SystemAttrs))
+	for k := range s.trials[trialID].SystemAttrs {
+		n[k] = s.trials[trialID].SystemAttrs[k]
+	}
+	return n, nil
 }
 
 // GetBestTrial returns the best trial.
@@ -603,4 +589,8 @@ func (s *InMemoryStorage) GetTrial(trialID int) (FrozenTrial, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.trials[trialID], nil
+}
+
+func (s *InMemoryStorage) validateTrialID(trialID int) bool {
+	return trialID >= 0 && trialID < len(s.trials)
 }
