@@ -102,11 +102,11 @@ func (d *IntUniformDistribution) Single() bool {
 
 // Contains to check a parameter value is contained in the range of this distribution.
 func (d *IntUniformDistribution) Contains(ir float64) bool {
-	value := int(ir)
+	value := d.ToExternalRepr(ir).(int)
 	if d.Single() {
 		return value == d.Low
 	}
-	return d.Low <= value && value < d.High
+	return d.Low <= value && value <= d.High
 }
 
 // StepIntUniformDistributionName is the identifier name of IntUniformDistribution
