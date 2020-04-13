@@ -9,8 +9,14 @@ import (
 )
 
 func objective(trial goptuna.Trial) (float64, error) {
-	x1, _ := trial.SuggestFloat("x1", -10, 10)
-	x2, _ := trial.SuggestFloat("x2", -10, 10)
+	x1, err := trial.SuggestFloat("x1", -10, 10)
+	if err != nil {
+		return -1, err
+	}
+	x2, err := trial.SuggestFloat("x2", -10, 10)
+	if err != nil {
+		return -1, err
+	}
 	return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
 }
 
@@ -19,7 +25,7 @@ func main() {
 		cmaes.SamplerOptionNStartupTrials(0))
 	study, err := goptuna.CreateStudy(
 		"goptuna-example",
-		goptuna.StudyOptionStorage(goptuna.NewBlackholeStorage(20)),
+		goptuna.StudyOptionStorage(goptuna.NewBlackHoleStorage(20)),
 		goptuna.StudyOptionRelativeSampler(relativeSampler),
 		goptuna.StudyOptionDefineSearchSpace(map[string]interface{}{
 			"x1": goptuna.UniformDistribution{

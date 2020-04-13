@@ -26,6 +26,8 @@ jobs:
         GO111MODULE: on
       run: |
         make build
+        ./bin/cmaes
+        ./bin/cmaes_blackhole
         ./bin/simple_tpe
         ./bin/concurrency
         ./bin/trialnotify

@@ -17,7 +17,8 @@ var (
 
 var _ Storage = &BlackHoleStorage{}
 
-func NewBlackholeStorage(n int) *BlackHoleStorage {
+// NewBlackHoleStorage returns BlackHoleStorage.
+func NewBlackHoleStorage(n int) *BlackHoleStorage {
 	return &BlackHoleStorage{
 		direction:   StudyDirectionMinimize,
 		counter:     0,
@@ -30,8 +31,14 @@ func NewBlackholeStorage(n int) *BlackHoleStorage {
 	}
 }
 
-// BlackholeStorage is an in-memory storage, but designed for over 10k trials.
-// This storage just holds the latest N trials you specified.
+// BlackHoleStorage is an in-memory storage, but designed for over 100k trials.
+// Please note that this storage just holds the 'nTrials' trials.
+//
+// Methods to create a trial might return ErrDeleteNonFinishedTrial.
+// GetAllTrials method might return ErrTrialsPartiallyDeleted.
+// Methods to get or update a trial might return ErrTrialAlreadyDeleted.
+//
+// Currently, RandomSampler and CMA-ES sampler supports this storage.
 type BlackHoleStorage struct {
 	direction   StudyDirection
 	counter     int

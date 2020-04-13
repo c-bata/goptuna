@@ -46,12 +46,8 @@ func (s *Sampler) SampleRelative(
 	}
 	sort.Strings(orderedKeys)
 
-	var detectPartiallyDeleted bool
 	trials, err := study.GetTrials()
-	if err == goptuna.ErrTrialsPartiallyDeleted {
-		detectPartiallyDeleted = true
-		err = nil
-	} else if err != nil {
+	if err != nil && err != goptuna.ErrTrialsPartiallyDeleted {
 		return nil, err
 	}
 	completed := make([]goptuna.FrozenTrial, 0, len(trials))
@@ -61,8 +57,19 @@ func (s *Sampler) SampleRelative(
 		}
 	}
 	if len(completed) < s.nStartUpTrials {
-		return nil, nil
+		// If catch ErrTrialsPartiallyDeleted, nStartUpTrials should be smaller than len(completed).
+		study.GetLogger().Error("Your BlackHoleStorage buffer is too small.",
+			fmt.Sprintf("nStartUpTrials:%d", s.nStartUpTrials))
+		return nil, err
 	}
+	if err == goptuna.ErrTrialsPartiallyDeleted && s.optimizer != nil &&
+		len(completed) < s.optimizer.PopulationSize() {
+		// If catch ErrTrialsPartiallyDeleted, population size should be smaller than len(completed).
+		study.GetLogger().Error("Your BlackHoleStorage buffer is too small.",
+			fmt.Sprintf("popsize:%d", s.optimizer.PopulationSize()))
+		return nil, err
+	}
+	err = nil
 
 	if s.optimizer == nil {
 		s.optimizer, err = s.initOptimizer(searchSpace, orderedKeys)
@@ -70,10 +77,6 @@ func (s *Sampler) SampleRelative(
 			return nil, err
 		}
 		s.optimizerID = fmt.Sprintf("%016d", s.rng.Int())
-	}
-
-	if detectPartiallyDeleted && len(completed) < s.optimizer.PopulationSize() {
-		return nil, goptuna.ErrTrialsPartiallyDeleted
 	}
 
 	if s.optimizer.dim != len(orderedKeys) {
