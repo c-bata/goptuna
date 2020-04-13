@@ -2,7 +2,13 @@ package goptuna
 
 import (
 	"encoding/json"
+	"errors"
 	"math"
+)
+
+var (
+	// ErrUnknownDistribution returns the distribution is unknown.
+	ErrUnknownDistribution = errors.New("unknown distribution")
 )
 
 // Distribution represents a parameter that can be optimized.
