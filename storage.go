@@ -57,8 +57,6 @@ const InMemoryStorageStudyID = 1
 const InMemoryStorageStudyUUID = "00000000-0000-0000-0000-000000000000"
 
 var (
-	// ErrNotFound represents not found.
-	ErrNotFound = errors.New("not found")
 	// ErrInvalidStudyID represents invalid study id.
 	ErrInvalidStudyID = errors.New("invalid study id")
 	// ErrInvalidTrialID represents invalid trial id.
@@ -67,10 +65,6 @@ var (
 	ErrTrialCannotBeUpdated = errors.New("trial cannot be updated")
 	// ErrNoCompletedTrials represents no trials are completed yet.
 	ErrNoCompletedTrials = errors.New("no trials are completed yet")
-	// ErrUnknownDistribution returns the distribution is unknown.
-	ErrUnknownDistribution = errors.New("unknown distribution")
-	// ErrTrialPruned represents the pruned.
-	ErrTrialPruned = errors.New("trial is pruned")
 )
 
 // NewInMemoryStorage returns new memory storage.
@@ -155,7 +149,7 @@ func (s *InMemoryStorage) GetStudyIDFromName(name string) (int, error) {
 	defer s.mu.RUnlock()
 
 	if name != s.studyName {
-		return -1, ErrNotFound
+		return -1, errors.New("study not found")
 	}
 	return InMemoryStorageStudyID, nil
 }
@@ -170,7 +164,7 @@ func (s *InMemoryStorage) GetStudyIDFromTrialID(trialID int) (int, error) {
 			return InMemoryStorageStudyID, nil
 		}
 	}
-	return -1, ErrNotFound
+	return -1, errors.New("study not found")
 }
 
 // GetStudyNameFromID return the study name from study id.
@@ -179,7 +173,7 @@ func (s *InMemoryStorage) GetStudyNameFromID(studyID int) (string, error) {
 	defer s.mu.RUnlock()
 
 	if !s.checkStudyID(studyID) {
-		return "", ErrNotFound
+		return "", errors.New("study not found")
 	}
 	return s.studyName, nil
 }
