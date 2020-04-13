@@ -111,7 +111,7 @@ func (s *BlackHoleStorage) GetStudyIDFromName(name string) (int, error) {
 	defer s.mu.RUnlock()
 
 	if name != s.studyName {
-		return -1, ErrNotFound
+		return -1, errors.New("study not found")
 	}
 	return InMemoryStorageStudyID, nil
 }
@@ -125,7 +125,7 @@ func (s *BlackHoleStorage) GetStudyIDFromTrialID(trialID int) (int, error) {
 	if s.counter > trialID {
 		return InMemoryStorageStudyID, nil
 	}
-	return -1, ErrNotFound
+	return -1, errors.New("study not found")
 }
 
 // GetStudyNameFromID return the study name from study id.
@@ -134,7 +134,7 @@ func (s *BlackHoleStorage) GetStudyNameFromID(studyID int) (string, error) {
 	defer s.mu.RUnlock()
 
 	if !s.checkStudyID(studyID) {
-		return "", ErrNotFound
+		return "", errors.New("study not found")
 	}
 	return s.studyName, nil
 }
