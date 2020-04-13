@@ -74,7 +74,13 @@ func (s *Study) EnqueueTrial(internalParams map[string]float64) error {
 
 func (s *Study) popWaitingTrialID() (int, error) {
 	trials, err := s.Storage.GetAllTrials(s.ID)
-	if err != nil {
+	if err == ErrTrialsPartiallyDeleted {
+		// BlackHoleStorage ensures all deleted trials are finished.
+		// If RUNNING or WAITING trial is deleted, CreateNewTrial and
+		// CloneTrial returns 'ErrDeleteNonFinishedTrial'.
+		// So we can ignore 'ErrTrialsPartiallyDeleted' here.
+		err = nil
+	} else if err != nil {
 		return -1, err
 	}
 

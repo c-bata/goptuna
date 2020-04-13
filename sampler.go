@@ -43,7 +43,11 @@ func IntersectionSearchSpace(study *Study) (map[string]interface{}, error) {
 	var searchSpace map[string]interface{}
 
 	trials, err := study.GetTrials()
-	if err != nil {
+	if err == ErrTrialsPartiallyDeleted {
+		study.logger.Warn("Some trials are not used to calculate intersection of search spaces." +
+			" Please use `goptuna.StudyOptionDefineSearchSpace` option.")
+		err = nil
+	} else if err != nil {
 		return nil, err
 	}
 
