@@ -326,6 +326,7 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 	for step := range baseTrial.IntermediateValues {
 		err := tx.Create(&trialValueModel{
 			TrialValueReferTrial: trial.ID,
+			MetricID:             singleObjectiveMetricID,
 			Step:                 step,
 			Value:                baseTrial.IntermediateValues[step],
 		}).Error
@@ -440,7 +441,8 @@ func (s *Storage) SetTrialIntermediateValue(trialID int, step int, value float64
 	}
 
 	// If trial value is already exist, then do rollback.
-	result := tx.First(&trialValueModel{}, "trial_id = ? AND step = ?", trialID, step)
+	result := tx.First(&trialValueModel{}, "trial_id = ? AND metric_id = ? AND step = ?",
+		trialID, singleObjectiveMetricID, step)
 	if !(result.Error != nil && result.RecordNotFound()) {
 		tx.Rollback()
 		return err
@@ -450,6 +452,7 @@ func (s *Storage) SetTrialIntermediateValue(trialID int, step int, value float64
 	err = tx.Create(&trialValueModel{
 		TrialValueReferTrial: trialID,
 		Step:                 step,
+		MetricID:             singleObjectiveMetricID,
 		Value:                value,
 	}).Error
 	if err != nil {

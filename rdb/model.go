@@ -20,6 +20,10 @@ const (
 	trialStateWaiting  = "WAITING"
 )
 
+const (
+	singleObjectiveMetricID = 0
+)
+
 // https://gorm.io/docs/models.html
 
 type studyModel struct {
@@ -115,8 +119,9 @@ func (m trialParamModel) TableName() string {
 
 type trialValueModel struct {
 	ID                   int     `gorm:"column:trial_value_id;PRIMARY_KEY"`
-	TrialValueReferTrial int     `gorm:"column:trial_id;unique_index:idx_trial_value_step"`
-	Step                 int     `gorm:"column:step;unique_index:idx_trial_value_step"`
+	TrialValueReferTrial int     `gorm:"column:trial_id;unique_index:uq_trial_metrics_step"`
+	MetricID             int     `gorm:"column:metric_id;unique_index:uq_trial_metrics_step"`
+	Step                 int     `gorm:"column:step;unique_index:uq_trial_metrics_step"`
 	Value                float64 `gorm:"column:value"`
 }
 
