@@ -22,6 +22,7 @@ const (
 
 const (
 	singleObjectiveMetricID = 0
+	finalValueStep          = -1
 )
 
 // https://gorm.io/docs/models.html
@@ -64,10 +65,11 @@ func (m studySystemAttributeModel) TableName() string {
 }
 
 type trialModel struct {
-	ID               int        `gorm:"column:trial_id;PRIMARY_KEY"`
-	Number           int        `gorm:"column:number"`
-	TrialReferStudy  int        `gorm:"column:study_id"`
-	State            string     `gorm:"column:state;NOT NULL"`
+	ID              int    `gorm:"column:trial_id;PRIMARY_KEY"`
+	Number          int    `gorm:"column:number"`
+	TrialReferStudy int    `gorm:"column:study_id"`
+	State           string `gorm:"column:state;NOT NULL"`
+	// Deprecated
 	Value            float64    `gorm:"column:value"`
 	DatetimeStart    *time.Time `gorm:"column:datetime_start"`
 	DatetimeComplete *time.Time `gorm:"column:datetime_complete"`

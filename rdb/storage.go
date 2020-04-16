@@ -151,6 +151,7 @@ func (s *Storage) GetAllStudySummaries() ([]goptuna.StudySummary, error) {
 				if best == nil {
 					best = &study.Trials[i]
 				}
+				// TODO(c-bata): remove the use of study.Trials[i].Value
 				if study.Direction == directionMaximize {
 					if best.Value < study.Trials[i].Value {
 						best = &study.Trials[i]
@@ -267,7 +268,6 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 	trial := &trialModel{
 		TrialReferStudy:  studyID,
 		State:            tempState,
-		Value:            baseTrial.Value,
 		DatetimeStart:    datetimeStart,
 		DatetimeComplete: datetimeComplete,
 	}
@@ -320,6 +320,18 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 			tx.Rollback()
 			return -1, err
 		}
+	}
+
+	// value
+	err := tx.Create(&trialValueModel{
+		TrialValueReferTrial: trial.ID,
+		MetricID:             singleObjectiveMetricID,
+		Step:                 finalValueStep,
+		Value:                baseTrial.Value,
+	}).Error
+	if err != nil {
+		tx.Rollback()
+		return -1, err
 	}
 
 	// intermediate values
@@ -410,6 +422,10 @@ func (s *Storage) SetTrialValue(trialID int, value float64) error {
 	return tx.Commit().Error
 }
 
+func (s *Storage) SetTrialMultiObjectiveValue(trialID int, values []float64) error {
+	panic("implement me")
+}
+
 // SetTrialIntermediateValue sets the intermediate value of trial.
 // While sets the intermediate value, trial.value is also updated.
 func (s *Storage) SetTrialIntermediateValue(trialID int, step int, value float64) error {
@@ -460,6 +476,10 @@ func (s *Storage) SetTrialIntermediateValue(trialID int, step int, value float64
 		return err
 	}
 	return tx.Commit().Error
+}
+
+func (s *Storage) SetTrialMultiObjectiveIntermediateValues(trialID int, step int, values []float64) error {
+	panic("implement me")
 }
 
 // SetTrialParam sets the sampled parameters of trial.
@@ -651,6 +671,7 @@ func (s *Storage) GetBestTrial(studyID int) (goptuna.FrozenTrial, error) {
 		if best == nil {
 			best = &study.Trials[i]
 		}
+		// TODO(c-bata): remove the use of study.Trials[i].Value
 		if study.Direction == directionMaximize {
 			if best.Value < study.Trials[i].Value {
 				best = &study.Trials[i]

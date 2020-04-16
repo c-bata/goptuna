@@ -53,9 +53,14 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 		datetimeComplete = *trial.DatetimeComplete
 	}
 
+	var value float64
 	intermediateValue := make(map[int]float64, len(trial.TrialValues))
 	for i := range trial.TrialValues {
-		intermediateValue[trial.TrialValues[i].Step] = trial.TrialValues[i].Value
+		if trial.TrialValues[i].Step == finalValueStep {
+			value = trial.TrialValues[i].Value
+		} else {
+			intermediateValue[trial.TrialValues[i].Step] = trial.TrialValues[i].Value
+		}
 	}
 
 	return goptuna.FrozenTrial{
@@ -63,7 +68,7 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 		StudyID:            trial.TrialReferStudy,
 		Number:             trial.Number,
 		State:              state,
-		Value:              trial.Value,
+		Value:              value,
 		IntermediateValues: intermediateValue,
 		DatetimeStart:      datetimeStart,
 		DatetimeComplete:   datetimeComplete,
