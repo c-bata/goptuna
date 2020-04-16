@@ -8,7 +8,3 @@ venv/
 *.o
 *.sqlite3
 *.db
-cma_solver
-tpe_solver
-rosenbrock_problem
-himmelblau_problem

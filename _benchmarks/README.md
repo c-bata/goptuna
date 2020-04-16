@@ -10,20 +10,33 @@ If you want to run on your local machines, please execute following after instal
 
 ```console
 $ mkdir -p tmp
-$ ./_benchmarks/run_rosenbrock.sh ./tmp/kurobako.json
+$ ./_benchmark/runner.sh rosenbrock ./tmp/kurobako.json
 $ cat ./tmp/kurobako.json | kurobako plot curve --errorbar -o ./tmp
 ```
 
 `kurobako plot curve` requires gnuplot. If you want to run on Docker container, please execute following:
 
 ```
-$ docker build -t cmaes ./_benchmarks
-$ ./benchmark/himmelblau_runner.sh ./tmp/kurobako.json
+$ docker build -t kurobako ./_benchmarks
+$ ./_benchmarks/runner.sh -h
+runner.sh is an entrypoint to run benchmarkers.
+Usage:
+    $ runner.sh <problem> <json-path>
+Problem:
+    rosenbrock     : https://www.sfu.ca/~ssurjano/rosen.html
+    himmelblau     : https://en.wikipedia.org/wiki/Himmelblau%27s_function
+    ackley         : Ackley function in https://github.com/sigopt/evalset
+Options:
+    --help, -h         print this
+Example:
+    $ runner.sh rosenbrock ./tmp/kurobako.json
+    $ cat ./tmp/kurobako.json | kurobako plot curve --errorbar -o ./tmp
+$ ./_benchmark/runner.sh rosenbrock ./tmp/kurobako.json
 $ docker run -it --rm -v $PWD/tmp:/volume cmaes
 ```
 
 If you got something error, please investigate using:
 
 ```
-$ docker run -it --rm -v $PWD/tmp:/volume --entrypoint sh cmaes
+$ docker run -it --rm -v $PWD/tmp:/volume --entrypoint sh kurobako
 ```
