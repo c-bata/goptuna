@@ -8,7 +8,7 @@ Distributed hyperparameter optimization framework, inspired by [Optuna](https://
 This library is particularly designed for machine learning, but everything will be able to optimize if you can define the objective function
 (e.g. Optimizing the number of goroutines of your server and the memory buffer size of the caching systems).
 
-Goptuna currently supports following algorithms:
+**Supported algorithms:**
 
 * Random search
 * TPE: Tree-structured Parzen Estimators [1]
@@ -16,6 +16,10 @@ Goptuna currently supports following algorithms:
 * GP-BO: Gaussian Process based Bayesian Optimization using [goptuna-bayesopt](https://github.com/c-bata/goptuna-bayesopt) [3]
 * Median Stopping Rule [4]
 * ASHA: Asynchronous Successive Halving Algorithm (Optuna flavored version) [5,6,7]
+
+**Projects using Goptuna:**
+
+* [Kubeflow/Katib: Kubernetes-based system for hyperparameter tuning and neural architecture search.](https://github.com/kubeflow/katib)
 
 ## Installation
 
