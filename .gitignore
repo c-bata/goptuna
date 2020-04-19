@@ -8,3 +8,4 @@ venv/
 *.o
 *.sqlite3
 *.db
+*.bin

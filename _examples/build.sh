@@ -16,3 +16,4 @@ go build -o ${BIN_DIR}/trialnotify ${DIR}/trialnotify/main.go
 go build -o ${BIN_DIR}/signalhandling ${DIR}/signalhandling/main.go
 go build -o ${BIN_DIR}/simple_rdb ${DIR}/simple_rdb/main.go
 go build -o ${BIN_DIR}/simple_tpe ${DIR}/simple_tpe/main.go
+go build -o ${BIN_DIR}/gorgonia_iris ${DIR}/gorgonia_iris/main.go
