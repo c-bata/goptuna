@@ -1,21 +1,64 @@
 package main
 
 import (
-	"encoding/gob"
+	"flag"
 	"fmt"
 	"log"
 	"math"
 	"os"
 
+	"github.com/c-bata/goptuna"
+	"github.com/c-bata/goptuna/rdb"
+	"github.com/c-bata/goptuna/tpe"
 	"github.com/go-gota/gota/dataframe"
 	"github.com/go-gota/gota/series"
+	"github.com/jinzhu/gorm"
 	"gonum.org/v1/gonum/mat"
 	"gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
+
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
-// https://www.kaggle.com/amarpandey/implementing-linear-regression-on-iris-dataset/notebook
+var (
+	dataset string
+)
+
+func init() {
+	flag.StringVar(&dataset, "dataset", "iris.csv", "File path to iris dataset")
+	flag.Parse()
+}
+
 func main() {
+	db, err := gorm.Open("sqlite3", "db.sqlite3")
+	if err != nil {
+		log.Fatal("failed to open db:", err)
+	}
+	rdb.RunAutoMigrate(db)
+	storage := rdb.NewStorage(db)
+
+	study, err := goptuna.CreateStudy(
+		"gorgonia-iris",
+		goptuna.StudyOptionStorage(storage),
+		goptuna.StudyOptionSampler(tpe.NewSampler()),
+		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMaximize),
+	)
+	if err != nil {
+		log.Fatal("failed to create study: ", err)
+	}
+	err = study.Optimize(objective, 50)
+	if err != nil {
+		log.Fatal("failed to create study: ", err)
+	}
+
+	v, _ := study.GetBestValue()
+	params, _ := study.GetBestParams()
+	log.Printf("Best evaluation=%f (learning_rate=%f)",
+		v, params["learning_rate"].(float64))
+}
+
+// https://www.kaggle.com/amarpandey/implementing-linear-regression-on-iris-dataset/notebook
+func objective(trial goptuna.Trial) (float64, error) {
 	g := gorgonia.NewGraph()
 	x, y := getXYMat()
 	xT := tensor.FromMat64(mat.DenseCopyOf(x))
@@ -33,54 +76,55 @@ func main() {
 		gorgonia.WithShape(xT.Shape()[1]),
 		gorgonia.WithInit(gorgonia.Gaussian(0, 1)))
 
-	pred := must(gorgonia.Mul(X, theta))
+	pred, err := gorgonia.Mul(X, theta)
+	if err != nil {
+		return 0, err
+	}
 
 	// Gorgonia might delete values from nodes so we are going to save it
 	// and print it out later
 	var predicted gorgonia.Value
 	gorgonia.Read(pred, &predicted)
 
-	squaredError := must(gorgonia.Square(must(gorgonia.Sub(pred, Y))))
-	cost := must(gorgonia.Mean(squaredError))
+	predError, err := gorgonia.Sub(pred, Y)
+	if err != nil {
+		return 0, err
+	}
+	squaredError, err := gorgonia.Square(predError)
+	if err != nil {
+		return 0, err
+	}
+	cost, err := gorgonia.Mean(squaredError)
+	if err != nil {
+		return 0, err
+	}
 
 	if _, err := gorgonia.Grad(cost, theta); err != nil {
-		log.Fatalf("Failed to backpropagate: %v", err)
+		return 0, err
 	}
 
 	machine := gorgonia.NewTapeMachine(g, gorgonia.BindDualValues(theta))
 	defer machine.Close()
 
 	model := []gorgonia.ValueGrad{theta}
-	solver := gorgonia.NewVanillaSolver(gorgonia.WithLearnRate(0.001))
+	learnRate, _ := trial.SuggestLogFloat("learning_rate", 1e-5, 1e-1)
+	solver := gorgonia.NewVanillaSolver(gorgonia.WithLearnRate(learnRate))
 
-	fa := mat.Formatted(getThetaNormal(x, y), mat.Prefix("   "), mat.Squeeze())
-
-	fmt.Printf("ϴ: %v\n", fa)
 	iter := 10000
-	var err error
-	for i := 0; i < iter; i++ {
+	var acc float64
+	for i := 1; i <= iter; i++ {
 		if err = machine.RunAll(); err != nil {
 			fmt.Printf("Error during iteration: %v: %v\n", i, err)
-			break
+			return 0, err
 		}
 
 		if err = solver.Step(model); err != nil {
-			log.Fatal(err)
+			return 0, err
 		}
-		fmt.Printf("theta: %2.2f  Iter: %v Cost: %2.3f Accuracy: %2.2f \r",
-			theta.Value(),
-			i,
-			cost.Value(),
-			accuracy(predicted.Data().([]float64), Y.Value().Data().([]float64)))
-
+		acc = accuracy(predicted.Data().([]float64), Y.Value().Data().([]float64))
 		machine.Reset() // Reset is necessary in a loop like this
 	}
-	fmt.Println("")
-	err = save(theta.Value())
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	return acc, nil
 }
 
 func accuracy(prediction, y []float64) float64 {
@@ -94,7 +138,7 @@ func accuracy(prediction, y []float64) float64 {
 }
 
 func getXYMat() (*matrix, *matrix) {
-	f, err := os.Open("iris.csv")
+	f, err := os.Open(dataset)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -118,24 +162,7 @@ func getXYMat() (*matrix, *matrix) {
 	yDF := df.Select("species").Capply(toValue)
 	numRows, _ := xDF.Dims()
 	xDF = xDF.Mutate(series.New(one(numRows), series.Float, "bias"))
-	fmt.Println(xDF.Describe())
-	fmt.Println(yDF.Describe())
-
 	return &matrix{xDF}, &matrix{yDF}
-}
-
-func getThetaNormal(x, y *matrix) *mat.Dense {
-	xt := mat.DenseCopyOf(x).T()
-	var xtx mat.Dense
-	xtx.Mul(xt, x)
-	var invxtx mat.Dense
-	invxtx.Inverse(&xtx)
-	var xty mat.Dense
-	xty.Mul(xt, y)
-	var output mat.Dense
-	output.Mul(&invxtx, &xty)
-
-	return &output
 }
 
 type matrix struct {
@@ -150,31 +177,10 @@ func (m matrix) T() mat.Matrix {
 	return mat.Transpose{Matrix: m}
 }
 
-func must(n *gorgonia.Node, err error) *gorgonia.Node {
-	if err != nil {
-		panic(err)
-	}
-	return n
-}
-
 func one(size int) []float64 {
 	one := make([]float64, size)
 	for i := 0; i < size; i++ {
 		one[i] = 1.0
 	}
 	return one
-}
-
-func save(value gorgonia.Value) error {
-	f, err := os.Create("theta.bin")
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	enc := gob.NewEncoder(f)
-	err = enc.Encode(value)
-	if err != nil {
-		return err
-	}
-	return nil
 }
