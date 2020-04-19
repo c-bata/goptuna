@@ -5,7 +5,7 @@ See [Introduction to Kurobako: A Benchmark Tool for Hyperparameter Optimization 
 
 ## How to run benchmark scripts
 
-GitHub Actions continuously run the benchmark scripts and comment on your pull request.
+GitHub Actions continuously run the benchmark scripts and comment on your pull request using [github-actions-kurobako](https://github.com/c-bata/github-actions-kurobako).
 If you want to run on your local machines, please execute following after installed kurobako.
 
 ```console
@@ -17,7 +17,7 @@ $ cat ./tmp/kurobako.json | kurobako plot curve --errorbar -o ./tmp
 `kurobako plot curve` requires gnuplot. If you want to run on Docker container, please execute following:
 
 ```
-$ docker build -t kurobako ./_benchmarks
+$ docker pull sile/kurobako
 $ ./_benchmarks/runner.sh -h
 runner.sh is an entrypoint to run benchmarkers.
 Usage:
@@ -32,11 +32,11 @@ Example:
     $ runner.sh rosenbrock ./tmp/kurobako.json
     $ cat ./tmp/kurobako.json | kurobako plot curve --errorbar -o ./tmp
 $ ./_benchmark/runner.sh rosenbrock ./tmp/kurobako.json
-$ docker run -it --rm -v $PWD/tmp:/volume cmaes
+$ cat ./tmp/kurobako.json | docker run -v $PWD/tmp/images/:/images/ --rm -i sile/kurobako plot curve
 ```
 
 If you got something error, please investigate using:
 
 ```
-$ docker run -it --rm -v $PWD/tmp:/volume --entrypoint sh kurobako
+$ docker run -it --rm -v $PWD/tmp:/volume --entrypoint sh sile/kurobako
 ```
