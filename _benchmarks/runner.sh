@@ -32,14 +32,14 @@ go build -o ${BINDIR}/rosenbrock_problem ${DIR}/rosenbrock_problem/main.go
 RANDOM_SOLVER=$($KUROBAKO solver random)
 CMA_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver cmaes)
 TPE_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver tpe)
-#OPTUNA_CMA_SOLVER=$($KUROBAKO solver command python ${DIR}/optuna_solver/cmaes.py)
-#OPTUNA_TPE_SOLVER=$($KUROBAKO solver command python ${DIR}/optuna_solver/tpe.py)
+OPTUNA_CMA_SOLVER=$($KUROBAKO solver command python ${DIR}/optuna_solver.py cmaes)
+OPTUNA_TPE_SOLVER=$($KUROBAKO solver command python ${DIR}/optuna_solver.py tpe)
 
 case "$1" in
     himmelblau)
         PROBLEM=$($KUROBAKO problem command ${BINDIR}/himmelblau_problem)
         $KUROBAKO studies \
-          --solvers $RANDOM_SOLVER $CMA_SOLVER \
+          --solvers $RANDOM_SOLVER $CMA_SOLVER $OPTUNA_CMA_SOLVER \
           --problems $PROBLEM \
           --repeats 8 --budget 300 \
           | $KUROBAKO run --parallelism 1 > $2
@@ -47,7 +47,7 @@ case "$1" in
     rosenbrock)
         PROBLEM=$($KUROBAKO problem command ${BINDIR}/rosenbrock_problem)
         $KUROBAKO studies \
-          --solvers $RANDOM_SOLVER $CMA_SOLVER \
+          --solvers $RANDOM_SOLVER $CMA_SOLVER $OPTUNA_CMA_SOLVER \
           --problems $PROBLEM \
           --repeats 8 --budget 300 \
           | $KUROBAKO run --parallelism 1 > $2
@@ -55,7 +55,7 @@ case "$1" in
     ackley)
         PROBLEM=$($KUROBAKO problem sigopt --dim 5 ackley)
         $KUROBAKO studies \
-          --solvers $RANDOM_SOLVER $TPE_SOLVER \
+          --solvers $RANDOM_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
           --problems $PROBLEM \
           --repeats 10 --budget 100 \
           | $KUROBAKO run --parallelism 4 > $2
