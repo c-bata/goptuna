@@ -127,7 +127,7 @@ func TestOptunaPruner_RungCheck(t *testing.T) {
 			Study: study,
 			ID:    trialID,
 		}
-		err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 7, 0.1 * float64(i+1))
+		err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 7, 0.1*float64(i+1))
 		if err != nil {
 			t.Errorf("should be err=nil, but got %s", err)
 		}
