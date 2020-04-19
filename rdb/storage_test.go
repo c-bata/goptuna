@@ -262,6 +262,12 @@ func TestStorage_TrialUserAttrs(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("want %#v, but got %#v", want, got)
 	}
+
+	err = storage.SetTrialUserAttr(trialID, "key", "value")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
+	}
 }
 
 func TestStorage_TrialSystemAttrs(t *testing.T) {
@@ -297,6 +303,12 @@ func TestStorage_TrialSystemAttrs(t *testing.T) {
 
 	if v, ok := got["key"]; !ok || v != "value" {
 		t.Errorf("want %#v, but got %v %v", "value", ok, got)
+	}
+
+	err = storage.SetTrialSystemAttr(trialID, "key", "value")
+	if err != nil {
+		t.Errorf("error: %v != nil", err)
+		return
 	}
 }
 

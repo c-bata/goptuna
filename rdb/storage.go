@@ -62,20 +62,28 @@ func (s *Storage) SetStudyDirection(studyID int, direction goptuna.StudyDirectio
 
 // SetStudyUserAttr to store the value for the user.
 func (s *Storage) SetStudyUserAttr(studyID int, key string, value string) error {
-	return s.db.Create(&studyUserAttributeModel{
+	var result studyUserAttributeModel
+	return s.db.Where(&studyUserAttributeModel{
+		UserAttributeReferStudy: studyID,
+		Key:                     key,
+	}).Assign(&studyUserAttributeModel{
 		UserAttributeReferStudy: studyID,
 		Key:                     key,
 		ValueJSON:               encodeAttrValue(value),
-	}).Error
+	}).FirstOrCreate(&result).Error
 }
 
 // SetStudySystemAttr to store the value for the system.
 func (s *Storage) SetStudySystemAttr(studyID int, key string, value string) error {
-	return s.db.Create(&studySystemAttributeModel{
+	var result studySystemAttributeModel
+	return s.db.Where(&studySystemAttributeModel{
+		SystemAttributeReferStudy: studyID,
+		Key:                       key,
+	}).Assign(&studySystemAttributeModel{
 		SystemAttributeReferStudy: studyID,
 		Key:                       key,
 		ValueJSON:                 encodeAttrValue(value),
-	}).Error
+	}).FirstOrCreate(&result).Error
 }
 
 // GetStudyIDFromName return the study id from study name.
@@ -550,20 +558,28 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 
 // SetTrialUserAttr to store the value for the user.
 func (s *Storage) SetTrialUserAttr(trialID int, key string, value string) error {
-	return s.db.Create(&trialUserAttributeModel{
+	var result trialUserAttributeModel
+	return s.db.Where(&trialUserAttributeModel{
+		UserAttributeReferTrial: trialID,
+		Key:                     key,
+	}).Assign(&trialUserAttributeModel{
 		UserAttributeReferTrial: trialID,
 		Key:                     key,
 		ValueJSON:               encodeAttrValue(value),
-	}).Error
+	}).FirstOrCreate(&result).Error
 }
 
 // SetTrialSystemAttr to store the value for the system.
 func (s *Storage) SetTrialSystemAttr(trialID int, key string, value string) error {
-	return s.db.Create(&trialSystemAttributeModel{
+	var result trialSystemAttributeModel
+	return s.db.Where(&trialSystemAttributeModel{
+		SystemAttributeReferTrial: trialID,
+		Key:                       key,
+	}).Assign(&trialSystemAttributeModel{
 		SystemAttributeReferTrial: trialID,
 		Key:                       key,
 		ValueJSON:                 encodeAttrValue(value),
-	}).Error
+	}).FirstOrCreate(&result).Error
 }
 
 // GetTrialNumberFromID returns the trial's number.
