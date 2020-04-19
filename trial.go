@@ -189,28 +189,35 @@ func (t *Trial) suggest(name string, distribution interface{}) (float64, error) 
 	return v, err
 }
 
-// Report an intermediate value of an objective function
-func (t *Trial) Report(value float64, step int) error {
-	if step < 0 {
-		return errors.New("step should be larger equal than 0")
-	}
-	return t.Study.Storage.SetTrialIntermediateValue(t.ID, step, value)
-}
-
 // ShouldPrune judges whether the trial should be pruned.
 // This method calls prune method of the pruner, which judges whether
 // the trial should be pruned at the given step.
-func (t *Trial) ShouldPrune(value float64) (bool, error) {
+// If it should be pruned, this method return ErrTrialPruned.
+func (t *Trial) ShouldPrune(step int, value float64) error {
 	if t.Study.Pruner == nil {
 		t.Study.logger.Warn("Although it's not registered pruner, but you calls ShouldPrune method")
-		return false, nil
+		return nil
+	}
+
+	if step < 0 {
+		return errors.New("step should be larger equal than 0")
+	}
+
+	if err := t.Study.Storage.SetTrialIntermediateValue(t.ID, step, value); err != nil {
+		return err
 	}
 
 	trial, err := t.Study.Storage.GetTrial(t.ID)
 	if err != nil {
-		return false, err
+		return err
 	}
-	return t.Study.Pruner.Prune(t.Study, trial)
+
+	if shouldPrune, err := t.Study.Pruner.Prune(t.Study, trial); err != nil {
+		return err
+	} else if shouldPrune {
+		return ErrTrialPruned
+	}
+	return nil
 }
 
 // Number return trial's number which is consecutive and unique in a study.
