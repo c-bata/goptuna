@@ -53,8 +53,11 @@ func main() {
 
 	v, _ := study.GetBestValue()
 	params, _ := study.GetBestParams()
-	log.Printf("Best evaluation=%f (learning_rate=%f)",
-		v, params["learning_rate"].(float64))
+	log.Printf("Best evaluation=%f", v)
+	log.Printf("Solver: %s", params["solver"].(string))
+	if params["solver"].(string) == "Vanilla" {
+		log.Printf("Learning rate (vanilla): %f", params["vanilla_learning_rate"].(float64))
+	}
 }
 
 // https://www.kaggle.com/amarpandey/implementing-linear-regression-on-iris-dataset/notebook
@@ -106,9 +109,15 @@ func objective(trial goptuna.Trial) (float64, error) {
 	machine := gorgonia.NewTapeMachine(g, gorgonia.BindDualValues(theta))
 	defer machine.Close()
 
+	var solver gorgonia.Solver
+	solverName, _ := trial.SuggestCategorical("solver", []string{"Adam", "Vanilla"})
+	if solverName == "Adam" {
+		solver = gorgonia.NewAdamSolver()
+	} else if solverName == "Vanilla" {
+		learnRate, _ := trial.SuggestLogFloat("vanilla_learning_rate", 1e-5, 1e-1)
+		solver = gorgonia.NewVanillaSolver(gorgonia.WithLearnRate(learnRate))
+	}
 	model := []gorgonia.ValueGrad{theta}
-	learnRate, _ := trial.SuggestLogFloat("learning_rate", 1e-5, 1e-1)
-	solver := gorgonia.NewVanillaSolver(gorgonia.WithLearnRate(learnRate))
 
 	iter := 10000
 	var acc float64
