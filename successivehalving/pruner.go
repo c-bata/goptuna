@@ -73,7 +73,7 @@ func (p *Pruner) Prune(study *goptuna.Study, trial goptuna.FrozenTrial) (bool, e
 
 		err = study.Storage.SetTrialSystemAttr(
 			trial.ID, completedRungKey(rung),
-			fmt.Sprintf("%f", value))
+			strconv.FormatFloat(value, 'f', -1, 64))
 		if err != nil {
 			return false, err
 		}
@@ -90,16 +90,17 @@ func (p *Pruner) Prune(study *goptuna.Study, trial goptuna.FrozenTrial) (bool, e
 }
 
 func (p *Pruner) isPromotable(rung int, value float64, allTrials []goptuna.FrozenTrial, direction goptuna.StudyDirection) (bool, error) {
-	competingValues := make([]float64, 0, len(allTrials))
+	competingValues := make([]float64, 0, len(allTrials) + 1)
 	for i := range allTrials {
-		value, err := getValueAtRung(allTrials[i], rung)
+		v, err := getValueAtRung(allTrials[i], rung)
 		if err == errRungNotFound {
 			continue
 		} else if err != nil {
 			return false, err
 		}
-		competingValues = append(competingValues, value)
+		competingValues = append(competingValues, v)
 	}
+	competingValues = append(competingValues, value)
 	sort.Float64s(competingValues)
 
 	promotableIdx := (len(competingValues) / p.ReductionFactor) - 1
