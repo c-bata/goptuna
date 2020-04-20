@@ -11,7 +11,7 @@ GODOC ?= GO111MODULE=on godoc
 .DEFAULT_GOAL := help
 
 PKGS := $(shell go list ./...)
-SOURCES := $(shell find . -name "*.go" -not -name '*_test.go')
+SOURCES := $(shell find . -name "*.go")
 ENV := GO111MODULE=on
 
 .PHONY: setup
@@ -24,7 +24,7 @@ setup:  ## Setup for required tools.
 
 .PHONY: fmt
 fmt: $(SOURCES) ## Formatting source codes.
-	@$(GO) goimports -w $^
+	@$(GOIMPORTS) -w $^
 
 .PHONY: lint
 lint: ## Run golint and go vet.
