@@ -90,7 +90,7 @@ func (p *Pruner) Prune(study *goptuna.Study, trial goptuna.FrozenTrial) (bool, e
 }
 
 func (p *Pruner) isPromotable(rung int, value float64, allTrials []goptuna.FrozenTrial, direction goptuna.StudyDirection) (bool, error) {
-	competingValues := make([]float64, 0, len(allTrials) + 1)
+	competingValues := make([]float64, 0, len(allTrials)+1)
 	for i := range allTrials {
 		v, err := getValueAtRung(allTrials[i], rung)
 		if err == errRungNotFound {
