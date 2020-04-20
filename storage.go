@@ -30,11 +30,13 @@ type Storage interface {
 	// Basic trial manipulation
 	CreateNewTrial(studyID int) (int, error)
 	CloneTrial(studyID int, baseTrial FrozenTrial) (int, error)
+	// Deprecated: This will be removed at v1.0.0. Please use SetTrialValueAndState().
 	SetTrialValue(trialID int, value float64) error
 	SetTrialIntermediateValue(trialID int, step int, value float64) error
 	SetTrialParam(trialID int, paramName string, paramValueInternal float64,
 		distribution interface{}) error
 	SetTrialState(trialID int, state TrialState) error
+	SetTrialValueAndState(trialID int, value float64, state TrialState) error
 	SetTrialUserAttr(trialID int, key string, value string) error
 	SetTrialSystemAttr(trialID int, key string, value string) error
 	// Basic trial access
@@ -410,6 +412,27 @@ func (s *InMemoryStorage) SetTrialState(trialID int, state TrialState) error {
 	if trial.State.IsFinished() {
 		return ErrTrialCannotBeUpdated
 	}
+	trial.State = state
+	if trial.State.IsFinished() {
+		trial.DatetimeComplete = time.Now()
+	}
+	s.trials[trialID] = trial
+	return nil
+}
+
+// SetTrialValueAndState sets the evaluation value and state of trial at the same time.
+func (s *InMemoryStorage) SetTrialValueAndState(trialID int, value float64, state TrialState) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if !s.validateTrialID(trialID) {
+		return ErrInvalidTrialID
+	}
+	trial := s.trials[trialID]
+	if trial.State.IsFinished() {
+		return ErrTrialCannotBeUpdated
+	}
+	trial.Value = value
 	trial.State = state
 	if trial.State.IsFinished() {
 		trial.DatetimeComplete = time.Now()

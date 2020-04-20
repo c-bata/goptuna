@@ -372,6 +372,29 @@ func (s *BlackHoleStorage) SetTrialState(trialID int, state TrialState) error {
 	return nil
 }
 
+// SetTrialValueAndState sets the evaluation value and state of trial at the same time.
+func (s *BlackHoleStorage) SetTrialValueAndState(trialID int, value float64, state TrialState) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if err := s.checkTrialID(trialID); err != nil {
+		return err
+	}
+	idx := s.getTrialIndex(trialID)
+	trial := s.trials[idx]
+	if trial.State.IsFinished() {
+		return ErrTrialCannotBeUpdated
+	}
+	trial.Value = value
+	trial.State = state
+	if trial.State.IsFinished() {
+		trial.DatetimeComplete = time.Now()
+		s.updateBestTrial(trial)
+	}
+	s.trials[idx] = trial
+	return nil
+}
+
 // SetTrialUserAttr to store the value for the user.
 func (s *BlackHoleStorage) SetTrialUserAttr(trialID int, key string, value string) error {
 	s.mu.Lock()

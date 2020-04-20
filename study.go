@@ -236,39 +236,21 @@ func (s *Study) runTrial(objective FuncObjective) (int, error) {
 			fmt.Sprintf("evaluation=%f", evaluation))
 	}
 
-	if state == TrialStateComplete {
-		// The trial.value of pruned trials are already set at trial.Report().
-		err = s.Storage.SetTrialValue(trialID, evaluation)
-		if err != nil {
-			s.logger.Error("Failed to set trial value",
-				fmt.Sprintf("trialID=%d", trialID),
-				fmt.Sprintf("state=%s", state.String()),
-				fmt.Sprintf("evaluation=%f", evaluation),
-				fmt.Sprintf("err=%s", err))
-			return trialID, err
-		}
-	} else if state == TrialStatePruned {
+	if state == TrialStatePruned {
 		// Register the last intermediate value if present as the value of the trial.
 		trial, err := s.Storage.GetTrial(trialID)
 		if err != nil {
 			return -1, err
 		}
 		if lastStep, exists := trial.GetLatestStep(); exists {
-			err = s.Storage.SetTrialValue(trialID, trial.IntermediateValues[lastStep])
-			s.logger.Error("Failed to set trial value",
-				fmt.Sprintf("trialID=%d", trialID),
-				fmt.Sprintf("state=%s", state.String()),
-				fmt.Sprintf("evaluation=%f", evaluation),
-				fmt.Sprintf("err=%s", err))
-			if err != nil {
-				return -1, err
-			}
+			evaluation = trial.IntermediateValues[lastStep]
 		}
 	}
 
-	err = s.Storage.SetTrialState(trialID, state)
+	// It is ensured that state is already finished.
+	err = s.Storage.SetTrialValueAndState(trialID, evaluation, state)
 	if err != nil {
-		s.logger.Error("Failed to set trial state",
+		s.logger.Error("Failed to set trial value",
 			fmt.Sprintf("trialID=%d", trialID),
 			fmt.Sprintf("state=%s", state.String()),
 			fmt.Sprintf("evaluation=%f", evaluation),

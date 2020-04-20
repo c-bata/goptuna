@@ -1,6 +1,7 @@
 package rdb
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -552,6 +553,41 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 			tx.Rollback()
 			return err
 		}
+	}
+	return tx.Commit().Error
+}
+
+// SetTrialValueAndState sets the evaluation value and state of trial at the same time.
+func (s *Storage) SetTrialValueAndState(trialID int, value float64, state goptuna.TrialState) error {
+	if !state.IsFinished() {
+		return errors.New("SetTrialValueAndState only supports finished state")
+	}
+
+	tx := s.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	// skip to check previous state because it set `state`.
+	xr, err := toStateInternalRepresentation(state)
+	if err != nil {
+		return err
+	}
+
+	completedAt := time.Now()
+	err = tx.Model(&trialModel{}).
+		Where("trial_id = ?", trialID).
+		Update("value", value).
+		Update("state", xr).
+		Update("datetime_complete", completedAt).Error
+	if err != nil {
+		tx.Rollback()
+		return err
 	}
 	return tx.Commit().Error
 }
