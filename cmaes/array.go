@@ -4,7 +4,6 @@ import (
 	"math"
 
 	"gonum.org/v1/gonum/floats"
-
 	"gonum.org/v1/gonum/mat"
 )
 

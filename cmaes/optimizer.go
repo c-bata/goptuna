@@ -274,6 +274,23 @@ func (o *Optimizer) Tell(solutions []*Solution) error {
 		return solutions[i].Value < solutions[j].Value
 	})
 
+	if o.b == nil || o.d == nil {
+		var eigsym mat.EigenSym
+		ok := eigsym.Factorize(o.c, true)
+		if !ok {
+			return errors.New("symmetric eigendecomposition failed")
+		}
+
+		var b mat.Dense
+		eigsym.VectorsTo(&b)
+		d := make([]float64, o.dim)
+		eigsym.Values(d) // d^2
+		floatsSqrtTo(d)  // d
+
+		o.d = d
+		o.b = &b
+	}
+
 	yk := mat.NewDense(o.popsize, o.dim, nil)
 	for i := 0; i < o.popsize; i++ {
 		xi := solutions[i].Params           // ~ N(m, σ^2 C)
