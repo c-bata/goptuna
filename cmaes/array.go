@@ -3,7 +3,6 @@ package cmaes
 import (
 	"math"
 
-	"gonum.org/v1/gonum/floats"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -54,10 +53,4 @@ func vecapply(vec *mat.VecDense, conv func(int, float64) float64) *mat.VecDense 
 		x.SetVec(i, conv(i, vec.AtVec(i)))
 	}
 	return x
-}
-
-func initMinC(dim int) *mat.DiagDense {
-	x := make([]float64, dim)
-	floats.AddConst(epsilon, x)
-	return mat.NewDiagDense(dim, x)
 }

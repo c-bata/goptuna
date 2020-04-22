@@ -376,7 +376,10 @@ func (o *Optimizer) Tell(solutions []*Solution) error {
 	o.c.AddSym(o.c, rankMu)
 
 	// Avoid eigendecomposition error by arithmetic overflow
-	o.c.AddSym(o.c, initMinC(o.dim))
+	// This ensures that C has positive definite properties.
+	minC := make([]float64, o.dim)
+	floats.AddConst(epsilon, minC)
+	o.c.AddSym(o.c, mat.NewDiagDense(o.dim, minC))
 	return nil
 }
 
