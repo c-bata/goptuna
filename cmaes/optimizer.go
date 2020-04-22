@@ -310,6 +310,12 @@ func (o *Optimizer) Tell(solutions []*Solution) error {
 	meandiff := mat.NewVecDense(o.dim, nil)
 	meandiff.CopyVec(yw)
 	meandiff.ScaleVec(o.cm*o.sigma, meandiff)
+
+	// Add 'epsilon' to avoid zero deviation error at eq.46
+	minmeandiff := make([]float64, o.dim)
+	floats.AddConst(epsilon, minmeandiff)
+	meandiff.AddVec(meandiff, mat.NewVecDense(o.dim, minmeandiff))
+
 	o.mean.AddVec(o.mean, meandiff)
 
 	// Step-size control
@@ -348,7 +354,7 @@ func (o *Optimizer) Tell(solutions []*Solution) error {
 			return 1.0
 		}
 		c2xinorm := mat.Norm(c2yk.ColView(i), 2)
-		return float64(o.dim) / (math.Pow(c2xinorm, 2) + epsilon)
+		return float64(o.dim) / math.Pow(c2xinorm, 2)
 	}))
 
 	deltaHSigma := (1 - hSigma) * o.cc * (2 - o.cc)
