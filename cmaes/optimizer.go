@@ -10,6 +10,10 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
+const (
+	epsilon = 1e-8
+)
+
 type Solution struct {
 	// Params is a parameter transformed to N(m, σ^2 C) from Z.
 	Params []float64
@@ -327,7 +331,7 @@ func (o *Optimizer) Tell(solutions []*Solution) error {
 			return 1.0
 		}
 		c2xinorm := mat.Norm(c2yk.ColView(i), 2)
-		return float64(o.dim) / math.Pow(c2xinorm, 2)
+		return float64(o.dim) / (math.Pow(c2xinorm, 2) + epsilon)
 	}))
 
 	deltaHSigma := (1 - hSigma) * o.cc * (2 - o.cc)

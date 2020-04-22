@@ -3,10 +3,10 @@ package cmaes
 import (
 	"math"
 
+	"gonum.org/v1/gonum/floats"
+
 	"gonum.org/v1/gonum/mat"
 )
-
-const minC = 1e-16
 
 func initC(dim int) *mat.SymDense {
 	c := mat.NewSymDense(dim, nil)
@@ -57,10 +57,8 @@ func vecapply(vec *mat.VecDense, conv func(int, float64) float64) *mat.VecDense 
 	return x
 }
 
-func initMinC(dim int) *mat.SymDense {
-	x := make([]float64, dim*dim)
-	for i := 0; i < dim*dim; i++ {
-		x[i] = minC
-	}
-	return mat.NewSymDense(dim, x)
+func initMinC(dim int) *mat.DiagDense {
+	x := make([]float64, dim)
+	floats.AddConst(epsilon, x)
+	return mat.NewDiagDense(dim, x)
 }
