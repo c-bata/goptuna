@@ -22,6 +22,8 @@ type Optimizer struct {
 	mean  *mat.VecDense
 	sigma float64
 	c     *mat.SymDense
+	b     *mat.Dense
+	d     []float64
 
 	dim     int
 	mu      int
@@ -129,6 +131,8 @@ func NewOptimizer(mean []float64, sigma float64, opts ...OptimizerOption) (*Opti
 		mean:          mat.NewVecDense(dim, mean),
 		sigma:         sigma,
 		c:             initC(dim),
+		b:             nil,
+		d:             nil,
 		dim:           dim,
 		popsize:       popsize,
 		mu:            mu,
@@ -224,18 +228,22 @@ func (o *Optimizer) repairInfeasibleParams(values *mat.VecDense) error {
 }
 
 func (o *Optimizer) sampleSolution() (*mat.VecDense, error) {
-	// TODO(o-bata): Cache B and D
-	var eigsym mat.EigenSym
-	ok := eigsym.Factorize(o.c, true)
-	if !ok {
-		return nil, errors.New("symmetric eigendecomposition failed")
-	}
+	if o.b == nil || o.d == nil {
+		var eigsym mat.EigenSym
+		ok := eigsym.Factorize(o.c, true)
+		if !ok {
+			return nil, errors.New("symmetric eigendecomposition failed")
+		}
 
-	var b mat.Dense
-	eigsym.VectorsTo(&b)
-	d := make([]float64, o.dim)
-	eigsym.Values(d) // d^2
-	floatsSqrtTo(d)  // d
+		var b mat.Dense
+		eigsym.VectorsTo(&b)
+		d := make([]float64, o.dim)
+		eigsym.Values(d) // d^2
+		floatsSqrtTo(d)  // d
+
+		o.d = d
+		o.b = &b
+	}
 
 	z := make([]float64, o.dim)
 	for i := 0; i < o.dim; i++ {
@@ -243,8 +251,7 @@ func (o *Optimizer) sampleSolution() (*mat.VecDense, error) {
 	}
 
 	var bd mat.Dense
-	bd.Mul(&b, mat.NewDiagDense(o.dim, d))
-
+	bd.Mul(o.b, mat.NewDiagDense(o.dim, o.d))
 	values := mat.NewVecDense(o.dim, z) // ~ N(0, I)
 	values.MulVec(&bd, values)          // ~ N(0, C)
 	values.ScaleVec(o.sigma, values)    // ~ N(0, σ^2 C)
@@ -262,18 +269,6 @@ func (o *Optimizer) Tell(solutions []*Solution) error {
 	sort.Slice(solutions, func(i, j int) bool {
 		return solutions[i].Value < solutions[j].Value
 	})
-
-	var eigsym mat.EigenSym
-	ok := eigsym.Factorize(o.c, true)
-	if !ok {
-		return errors.New("symmetric eigendecomposition failed")
-	}
-
-	var b mat.Dense
-	eigsym.VectorsTo(&b)
-	d := make([]float64, o.dim)
-	eigsym.Values(d) // d^2
-	floatsSqrtTo(d)  // d
 
 	yk := mat.NewDense(o.popsize, o.dim, nil)
 	for i := 0; i < o.popsize; i++ {
@@ -297,9 +292,9 @@ func (o *Optimizer) Tell(solutions []*Solution) error {
 	o.mean.AddVec(o.mean, meandiff)
 
 	// Step-size control
-	dinv := mat.NewDiagDense(o.dim, arrinv(d))
+	dinv := mat.NewDiagDense(o.dim, arrinv(o.d))
 	c2 := mat.NewDense(o.dim, o.dim, nil)
-	c2.Product(&b, dinv, b.T()) // C^(-1/2) = B D^(-1) B^T
+	c2.Product(o.b, dinv, o.b.T()) // C^(-1/2) = B D^(-1) B^T
 
 	c2yw := mat.NewDense(o.dim, 1, nil)
 	c2yw.Product(c2, yw)
