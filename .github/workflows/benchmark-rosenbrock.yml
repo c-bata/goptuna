@@ -69,13 +69,18 @@ jobs:
           name: kurobako-report
           path: ./kurobako-report.md
 
-      - name: curl
+      - name: Get ACTIONS_RUNTIME_URL env variable
+        uses: konradpabjan/Get-Actions-Env-Variable-From-Node-Context@master
+        with:
+          EnvName: ACTIONS_RUNTIME_URL
+        id: get_runtime_url
+      - name: Upload artifacts using uploadArtifact()
         run: |
-          curl ${ACTIONS_RUNTIME_URL}_apis/pipelines/workflows/${GITHUB_RUN_ID}/artifacts?api-version=6.0-preview
+          export ACTIONS_RUNTIME_URL="${{ steps.get_runtime_url.outputs.EnvValue }}"
 
-      - name: Append artifacts URL
-        run: |
-          echo "${ACTIONS_RUNTIME_URL}_apis/pipelines/workflows/${GITHUB_RUN_ID}/artifacts?api-version=6.0-preview"
+      - run: echo "${ACTIONS_RUNTIME_URL}_apis/pipelines/workflows/${GITHUB_RUN_ID}/artifacts?api-version=6.0-preview"
+
+      - run: curl ${ACTIONS_RUNTIME_URL}_apis/pipelines/workflows/${GITHUB_RUN_ID}/artifacts?api-version=6.0-preview
 
       - name: Comment to Pull Request
         uses: c-bata/github-actions-kurobako@v2
