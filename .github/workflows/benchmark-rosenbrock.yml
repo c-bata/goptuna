@@ -74,6 +74,11 @@ jobs:
         with:
           EnvName: ACTIONS_RUNTIME_URL
         id: get_runtime_url
+
+      - name: Upload artifacts using uploadArtifact()
+        run: |
+          echo "${{ steps.get_runtime_url.outputs.EnvValue }}"
+
       - name: Upload artifacts using uploadArtifact()
         run: |
           export ACTIONS_RUNTIME_URL="${{ steps.get_runtime_url.outputs.EnvValue }}"
