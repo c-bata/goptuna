@@ -57,7 +57,29 @@ func NewOptimizer(mean []float64, sigma float64, opts ...OptimizerOption) (*Opti
 		return nil, errors.New("sigma should be non-zero positive number")
 	}
 	dim := len(mean)
+
+	cma := &Optimizer{
+		mean:          mat.NewVecDense(dim, mean),
+		sigma:         sigma,
+		c:             initC(dim),
+		b:             nil,
+		d:             nil,
+		dim:           dim,
+		pSigma:        mat.NewVecDense(dim, make([]float64, dim)),
+		pc:            mat.NewVecDense(dim, make([]float64, dim)),
+		bounds:        nil,
+		maxReSampling: 100,
+		rng:           rand.New(rand.NewSource(0)),
+		g:             0,
+	}
+	for _, opt := range opts {
+		opt(cma)
+	}
+
 	popsize := 4 + int(math.Floor(3*math.Log(float64(dim))))
+	if cma.popsize != 0 {
+		popsize = cma.popsize
+	}
 	mu := popsize / 2
 
 	sumWeightsPrimeBeforeMu := 0.
@@ -131,35 +153,17 @@ func NewOptimizer(mean []float64, sigma float64, opts ...OptimizerOption) (*Opti
 
 	chiN := math.Sqrt(float64(dim)) * (1.0 - (1.0 / (4.0 * float64(dim))) + 1.0/(21.0*(math.Pow(float64(dim), 2))))
 
-	cma := &Optimizer{
-		mean:          mat.NewVecDense(dim, mean),
-		sigma:         sigma,
-		c:             initC(dim),
-		b:             nil,
-		d:             nil,
-		dim:           dim,
-		popsize:       popsize,
-		mu:            mu,
-		muEff:         muEff,
-		cc:            cc,
-		c1:            c1,
-		cmu:           cmu,
-		cSigma:        cSigma,
-		dSigma:        dSigma,
-		cm:            cm,
-		chiN:          chiN,
-		pSigma:        mat.NewVecDense(dim, make([]float64, dim)),
-		pc:            mat.NewVecDense(dim, make([]float64, dim)),
-		weights:       mat.NewVecDense(popsize, weights),
-		bounds:        nil,
-		maxReSampling: 100,
-		rng:           rand.New(rand.NewSource(0)),
-		g:             0,
-	}
-
-	for _, opt := range opts {
-		opt(cma)
-	}
+	cma.popsize = popsize
+	cma.mu = mu
+	cma.muEff = muEff
+	cma.cc = cc
+	cma.c1 = c1
+	cma.cmu = cmu
+	cma.cSigma = cSigma
+	cma.dSigma = dSigma
+	cma.cm = cm
+	cma.chiN = chiN
+	cma.weights = mat.NewVecDense(popsize, weights)
 	return cma, nil
 }
 
@@ -418,5 +422,12 @@ func OptimizerOptionBounds(bounds *mat.Dense) OptimizerOption {
 			panic("invalid dimensions")
 		}
 		cma.bounds = bounds
+	}
+}
+
+// OptimizerOptionPopulationSize sets population size.
+func OptimizerOptionPopulationSize(n int) OptimizerOption {
+	return func(cma *Optimizer) {
+		cma.popsize = n
 	}
 }
