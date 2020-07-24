@@ -12,18 +12,19 @@ func objective(x1, x2 float64) float64 {
 }
 
 func main() {
+	seed := int64(0)
 	mean := []float64{1, 2}
 	sigma0 := 1.3
 	optimizer, err := cmaes.NewOptimizer(
 		mean, sigma0,
-		cmaes.OptimizerOptionSeed(0),
+		cmaes.OptimizerOptionSeed(seed),
 	)
 	if err != nil {
 		panic(err)
 	}
 
 	solutions := make([]*cmaes.Solution, optimizer.PopulationSize())
-	for {
+	for generation := 0; generation < 150; generation++ {
 		for i := 0; i < optimizer.PopulationSize(); i++ {
 			x, err := optimizer.Ask()
 			if err != nil {
@@ -36,7 +37,7 @@ func main() {
 				Value:  v,
 			}
 			fmt.Printf("generation %d: %f (x1=%f, x2=%f)\n",
-				optimizer.Generation(), v, x1, x2)
+				generation, v, x1, x2)
 		}
 
 		err = optimizer.Tell(solutions)
@@ -45,8 +46,18 @@ func main() {
 		}
 
 		if optimizer.ShouldStop() {
-			fmt.Println("stop")
-			return
+			seed += 1
+			popsize := optimizer.PopulationSize() * 2
+			optimizer, err = cmaes.NewOptimizer(
+				mean, sigma0,
+				cmaes.OptimizerOptionSeed(seed),
+				cmaes.OptimizerOptionPopulationSize(popsize),
+			)
+			if err != nil {
+				panic(fmt.Errorf("failed to restart CMA-ES with popsize=%d", popsize))
+			}
+			solutions = make([]*cmaes.Solution, optimizer.PopulationSize())
+			fmt.Printf("Restart CMA-ES with popsize=%d\n", popsize)
 		}
 	}
 }

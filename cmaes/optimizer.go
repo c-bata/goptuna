@@ -47,6 +47,14 @@ type Optimizer struct {
 	bounds        mat.Matrix
 	maxReSampling int
 
+	// termination criteria
+	tolX            float64
+	tolXUp          float64
+	tolFun          float64
+	tolConditionCov float64
+	funHistTerm     int
+	funHistValues   []float64
+
 	rng *rand.Rand
 	g   int
 }
@@ -59,18 +67,22 @@ func NewOptimizer(mean []float64, sigma float64, opts ...OptimizerOption) (*Opti
 	dim := len(mean)
 
 	cma := &Optimizer{
-		mean:          mat.NewVecDense(dim, mean),
-		sigma:         sigma,
-		c:             initC(dim),
-		b:             nil,
-		d:             nil,
-		dim:           dim,
-		pSigma:        mat.NewVecDense(dim, make([]float64, dim)),
-		pc:            mat.NewVecDense(dim, make([]float64, dim)),
-		bounds:        nil,
-		maxReSampling: 100,
-		rng:           rand.New(rand.NewSource(0)),
-		g:             0,
+		mean:            mat.NewVecDense(dim, mean),
+		sigma:           sigma,
+		c:               initC(dim),
+		b:               nil,
+		d:               nil,
+		dim:             dim,
+		pSigma:          mat.NewVecDense(dim, make([]float64, dim)),
+		pc:              mat.NewVecDense(dim, make([]float64, dim)),
+		bounds:          nil,
+		maxReSampling:   100,
+		tolX:            1e-12 * sigma,
+		tolXUp:          1e4,
+		tolFun:          1e-12,
+		tolConditionCov: 1e14,
+		rng:             rand.New(rand.NewSource(0)),
+		g:               0,
 	}
 	for _, opt := range opts {
 		opt(cma)
@@ -164,6 +176,15 @@ func NewOptimizer(mean []float64, sigma float64, opts ...OptimizerOption) (*Opti
 	cma.cm = cm
 	cma.chiN = chiN
 	cma.weights = mat.NewVecDense(popsize, weights)
+
+	// termination criteria
+	cma.funHistTerm = 10 + int(math.Ceil(30*float64(dim)/float64(popsize)))
+	cma.funHistValues = make([]float64, 2*cma.funHistTerm)
+
+	// cache b and d
+	if err := cma.eigendecomposition(); err != nil {
+		return nil, err
+	}
 	return cma, nil
 }
 
@@ -179,20 +200,14 @@ func (o *Optimizer) PopulationSize() int {
 
 // Ask a next parameter.
 func (o *Optimizer) Ask() ([]float64, error) {
-	x, err := o.sampleSolution()
-	if err != nil {
-		return nil, err
-	}
+	x := o.sampleSolution()
 	for i := 0; i < o.maxReSampling; i++ {
 		if o.isFeasible(x) {
 			return x.RawVector().Data, nil
 		}
-		x, err = o.sampleSolution()
-		if err != nil {
-			return nil, err
-		}
+		x = o.sampleSolution()
 	}
-	err = o.repairInfeasibleParams(x)
+	err := o.repairInfeasibleParams(x)
 	if err != nil {
 		return nil, err
 	}
@@ -235,22 +250,9 @@ func (o *Optimizer) repairInfeasibleParams(values *mat.VecDense) error {
 	return nil
 }
 
-func (o *Optimizer) sampleSolution() (*mat.VecDense, error) {
+func (o *Optimizer) sampleSolution() *mat.VecDense {
 	if o.b == nil || o.d == nil {
-		var eigsym mat.EigenSym
-		ok := eigsym.Factorize(o.c, true)
-		if !ok {
-			return nil, errors.New("symmetric eigendecomposition failed")
-		}
-
-		var b mat.Dense
-		eigsym.VectorsTo(&b)
-		d := make([]float64, o.dim)
-		eigsym.Values(d) // d^2
-		floatsSqrtTo(d)  // d
-
-		o.d = d
-		o.b = &b
+		panic("B and D should be cached after each Tell() call.")
 	}
 
 	z := make([]float64, o.dim)
@@ -264,7 +266,25 @@ func (o *Optimizer) sampleSolution() (*mat.VecDense, error) {
 	values.MulVec(&bd, values)          // ~ N(0, C)
 	values.ScaleVec(o.sigma, values)    // ~ N(0, σ^2 C)
 	values.AddVec(values, o.mean)       // ~ N(m, σ^2 C)
-	return values, nil
+	return values
+}
+
+func (o *Optimizer) eigendecomposition() error {
+	var eigsym mat.EigenSym
+	ok := eigsym.Factorize(o.c, true)
+	if !ok {
+		return errors.New("symmetric eigendecomposition failed")
+	}
+
+	var b mat.Dense
+	eigsym.VectorsTo(&b)
+	d := make([]float64, o.dim)
+	eigsym.Values(d) // d^2
+	floatsSqrtTo(d)  // d
+
+	o.d = d
+	o.b = &b
+	return nil
 }
 
 // Tell evaluation values.
@@ -277,23 +297,6 @@ func (o *Optimizer) Tell(solutions []*Solution) error {
 	sort.Slice(solutions, func(i, j int) bool {
 		return solutions[i].Value < solutions[j].Value
 	})
-
-	if o.b == nil || o.d == nil {
-		var eigsym mat.EigenSym
-		ok := eigsym.Factorize(o.c, true)
-		if !ok {
-			return errors.New("symmetric eigendecomposition failed")
-		}
-
-		var b mat.Dense
-		eigsym.VectorsTo(&b)
-		d := make([]float64, o.dim)
-		eigsym.Values(d) // d^2
-		floatsSqrtTo(d)  // d
-
-		o.d = d
-		o.b = &b
-	}
 
 	yk := mat.NewDense(o.popsize, o.dim, nil)
 	for i := 0; i < o.popsize; i++ {
@@ -390,7 +393,57 @@ func (o *Optimizer) Tell(solutions []*Solution) error {
 	minC := make([]float64, o.dim)
 	floats.AddConst(epsilon, minC)
 	o.c.AddSym(o.c, mat.NewDiagDense(o.dim, minC))
-	return nil
+
+	// Stores 'best' and 'worst' values of the last 'funHistTerm' generations.
+	funHistIdx := 2 * (o.g % o.funHistTerm)
+	o.funHistValues[funHistIdx] = solutions[0].Value
+	o.funHistValues[funHistIdx+1] = solutions[len(solutions)-1].Value
+
+	// update B and D cache
+	return o.eigendecomposition()
+}
+
+// ShouldStop returns true when CMA-ES converged to local minimum
+// or detecting divergent behavior.
+func (o *Optimizer) ShouldStop() bool {
+	if o.b == nil || o.d == nil {
+		panic("B and D should be cached after each Tell() call.")
+	}
+
+	// Stop if the range of function values of the recent generation is below tolfun.
+	if o.g > o.funHistTerm && floats.Max(o.funHistValues)-floats.Min(o.funHistValues) < o.tolFun {
+		return true
+	}
+
+	// Stop if the std of the normal distribution is smaller than tolx
+	// in all coordinates and pc is smaller than tolx in all components.
+	stop := true
+	for i := 0; i < o.dim; i++ {
+		if o.sigma*o.c.At(i, i) > o.tolX {
+			stop = false
+			break
+		}
+		if o.sigma*o.pc.AtVec(i) > o.tolX {
+			stop = false
+			break
+		}
+	}
+	if stop {
+		return true
+	}
+
+	// Stop if detecting divergent behavior.
+	if o.sigma*floats.Max(o.d) > o.tolXUp {
+		return true
+	}
+
+	// Stop if the condition number of the covariance matrix exceeds 1e14.
+	condition := floats.Max(o.d) / floats.Min(o.d)
+	if condition > o.tolConditionCov {
+		return true
+	}
+
+	return false
 }
 
 // OptimizerOption is a type of the function to customizing CMA-ES.
