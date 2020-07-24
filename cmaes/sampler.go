@@ -23,6 +23,8 @@ type Sampler struct {
 	optimizerOptions []OptimizerOption
 	optimizer        *Optimizer
 	optimizerID      string
+	restartStrategy  string
+	incPopSize       int
 }
 
 // SampleRelative samples multiple dimensional parameters in a given search space.
@@ -109,6 +111,15 @@ func (s *Sampler) SampleRelative(
 			if err != nil {
 				return nil, err
 			}
+
+			if s.restartStrategy == restartStrategyIOP && s.optimizer.ShouldStop() {
+				popsize := s.optimizer.PopulationSize() * s.incPopSize
+				s.optimizer, err = s.initOptimizer(searchSpace, orderedKeys,
+					OptimizerOptionPopulationSize(popsize))
+				if err != nil {
+					return nil, err
+				}
+			}
 			break
 		}
 	}
@@ -137,6 +148,7 @@ func (s *Sampler) SampleRelative(
 func (s *Sampler) initOptimizer(
 	searchSpace map[string]interface{},
 	orderedKeys []string,
+	additionalOpts ...OptimizerOption,
 ) (*Optimizer, error) {
 	x0, sigma0, err := initialParam(searchSpace)
 	if err != nil {
@@ -159,10 +171,13 @@ func (s *Sampler) initOptimizer(
 	}
 	bounds := getSearchSpaceBounds(searchSpace, orderedKeys)
 
-	options := make([]OptimizerOption, 0, 2+len(s.optimizerOptions))
+	options := make([]OptimizerOption, 0, 2+len(s.optimizerOptions)+len(additionalOpts))
 	options = append(options, OptimizerOptionBounds(bounds))
 	options = append(options, OptimizerOptionSeed(s.rng.Int63()))
 	for _, opt := range s.optimizerOptions {
+		options = append(options, opt)
+	}
+	for _, opt := range additionalOpts {
 		options = append(options, opt)
 	}
 	return NewOptimizer(mean, sigma0, options...)

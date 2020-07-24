@@ -30,6 +30,15 @@ func cmaSampler(seed int64) (*goptuna.Study, error) {
 		goptuna.StudyOptionRelativeSampler(rs))
 }
 
+func ipopCmaSampler(seed int64) (*goptuna.Study, error) {
+	s := goptuna.NewRandomSearchSampler(goptuna.RandomSearchSamplerOptionSeed(seed))
+	rs := cmaes.NewSampler(cmaes.SamplerOptionSeed(seed),
+		cmaes.SamplerOptionIPop(2))
+	return goptuna.CreateStudy("example-study",
+		goptuna.StudyOptionSampler(s),
+		goptuna.StudyOptionRelativeSampler(rs))
+}
+
 func main() {
 	if len(os.Args) != 2 {
 		panic("please specify sampler algorithm")
@@ -40,6 +49,8 @@ func main() {
 		factory = solver.NewGoptunaSolverFactory("Goptuna (Random search)", randomSampler)
 	} else if sampler == "cmaes" {
 		factory = solver.NewGoptunaSolverFactory("Goptuna (CMA-ES)", cmaSampler)
+	} else if sampler == "ipop-cmaes" {
+		factory = solver.NewGoptunaSolverFactory("Goptuna (IPOP-CMA-ES)", ipopCmaSampler)
 	} else if sampler == "tpe" {
 		factory = solver.NewGoptunaSolverFactory("Goptuna (TPE)", tpeSampler)
 	} else {
