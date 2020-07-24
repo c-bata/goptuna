@@ -55,6 +55,11 @@ jobs:
       - name: Upload an image to google cloud storage
         run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/rosenbrock-${{ github.sha }}.png
 
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Upload an image to github actions artifact
+          path: ${{ steps.kurobako-plot.outputs.image-path }}
+
       - name: Generate kurobako markdown report
         run: |
           cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
