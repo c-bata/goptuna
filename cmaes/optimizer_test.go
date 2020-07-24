@@ -2,6 +2,7 @@ package cmaes
 
 import (
 	"math"
+	"math/rand"
 	"testing"
 
 	"gonum.org/v1/gonum/floats"
@@ -237,5 +238,70 @@ func TestOptimizer_RepairInfeasibleParams(t *testing.T) {
 				t.Errorf("should be %v, but got %v", tt.value.RawVector().Data, tt.repaired.RawVector().Data)
 			}
 		})
+	}
+}
+
+func TestOptimizer_ShouldStop_FunValHist(t *testing.T) {
+	optimizer, err := NewOptimizer(
+		[]float64{0, 0}, 1.3,
+	)
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+		return
+	}
+	popsize := optimizer.PopulationSize()
+	rng := rand.New(rand.NewSource(0))
+
+	for i := 0; i < optimizer.funHistTerm+1; i++ {
+		if optimizer.ShouldStop() {
+			t.Error("ShouldStop() should be false, but got true")
+			return
+		}
+
+		solutions := make([]*Solution, popsize)
+		for j := 0; j < popsize; j++ {
+			solutions[j] = &Solution{
+				Params: []float64{rng.NormFloat64(), rng.NormFloat64()},
+				Value:  0.01,
+			}
+		}
+		err = optimizer.Tell(solutions)
+		if err != nil {
+			t.Errorf("should be nil, but got %s", err)
+			return
+		}
+	}
+	if !optimizer.ShouldStop() {
+		t.Error("ShouldStop() should be true, but got false")
+		return
+	}
+}
+
+func TestOptimizer_ShouldStop_DivergentBehavior(t *testing.T) {
+	optimizer, err := NewOptimizer(
+		[]float64{0, 0}, 1e-4,
+	)
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+		return
+	}
+	popsize := optimizer.PopulationSize()
+	rng := rand.New(rand.NewSource(0))
+
+	solutions := make([]*Solution, popsize)
+	for i := 0; i < popsize; i++ {
+		solutions[i] = &Solution{
+			Params: []float64{100 * rng.NormFloat64(), 100 * rng.NormFloat64()},
+			Value:  0.01,
+		}
+	}
+	err = optimizer.Tell(solutions)
+	if err != nil {
+		t.Errorf("should be nil, but got %s", err)
+		return
+	}
+	if !optimizer.ShouldStop() {
+		t.Error("ShouldStop() should be true, but got false")
+		return
 	}
 }
