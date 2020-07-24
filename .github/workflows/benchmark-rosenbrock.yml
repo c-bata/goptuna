@@ -14,6 +14,15 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@master
 
+      - name: Get ACTIONS_RUNTIME_URL env variable
+        uses: konradpabjan/Get-Actions-Env-Variable-From-Node-Context@master
+        with:
+          EnvName: ACTIONS_RUNTIME_URL
+        id: get_runtime_url
+
+      - run: echo ${{ steps.get_runtime_url.outputs.EnvValue }}_apis/pipelines/workflows/${GITHUB_RUN_ID}/artifacts?api-version=6.0-preview
+      - run: curl ${{ steps.get_runtime_url.outputs.EnvValue }}_apis/pipelines/workflows/${GITHUB_RUN_ID}/artifacts?api-version=6.0-preview
+
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
         with:
@@ -68,14 +77,6 @@ jobs:
         with:
           name: kurobako-report
           path: ./kurobako-report.md
-
-      - name: Get ACTIONS_RUNTIME_URL env variable
-        uses: konradpabjan/Get-Actions-Env-Variable-From-Node-Context@master
-        with:
-          EnvName: ACTIONS_RUNTIME_URL
-        id: get_runtime_url
-
-      - run: curl ${{ steps.get_runtime_url.outputs.EnvValue }}_apis/pipelines/workflows/${GITHUB_RUN_ID}/artifacts?api-version=6.0-preview
 
       - name: Comment to Pull Request
         uses: c-bata/github-actions-kurobako@v2
