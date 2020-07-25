@@ -59,7 +59,7 @@ type Sampler struct {
 	gamma                 FuncGamma
 	params                ParzenEstimatorParams
 	rng                   *rand.Rand
-	randomSampler         *goptuna.RandomSearchSampler
+	randomSampler         *goptuna.RandomSampler
 	mu                    sync.Mutex
 }
 
@@ -77,7 +77,7 @@ func NewSampler(opts ...SamplerOption) *Sampler {
 			Weights:           DefaultWeights,
 		},
 		rng:           rand.New(rand.NewSource(0)),
-		randomSampler: goptuna.NewRandomSearchSampler(),
+		randomSampler: goptuna.NewRandomSampler(),
 	}
 
 	for _, opt := range opts {

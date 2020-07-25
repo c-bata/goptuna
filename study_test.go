@@ -10,8 +10,8 @@ import (
 )
 
 func ExampleStudy_Optimize() {
-	sampler := goptuna.NewRandomSearchSampler(
-		goptuna.RandomSearchSamplerOptionSeed(0),
+	sampler := goptuna.NewRandomSampler(
+		goptuna.RandomSamplerOptionSeed(0),
 	)
 	study, _ := goptuna.CreateStudy(
 		"example",
@@ -44,7 +44,7 @@ func TestStudy_SystemAttrs(t *testing.T) {
 	study, _ := goptuna.CreateStudy(
 		"example",
 		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
-		goptuna.StudyOptionSampler(goptuna.NewRandomSearchSampler()),
+		goptuna.StudyOptionSampler(goptuna.NewRandomSampler()),
 	)
 
 	err := study.SetSystemAttr("hello", "world")
@@ -134,7 +134,7 @@ func TestStudy_UserAttrs(t *testing.T) {
 	study, _ := goptuna.CreateStudy(
 		"example",
 		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
-		goptuna.StudyOptionSampler(goptuna.NewRandomSearchSampler()),
+		goptuna.StudyOptionSampler(goptuna.NewRandomSampler()),
 	)
 
 	err := study.SetUserAttr("hello", "world")
@@ -163,7 +163,7 @@ func TestStudy_AppendTrial(t *testing.T) {
 	study, err := goptuna.CreateStudy(
 		"example",
 		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
-		goptuna.StudyOptionSampler(goptuna.NewRandomSearchSampler()),
+		goptuna.StudyOptionSampler(goptuna.NewRandomSampler()),
 	)
 	if err != nil {
 		t.Errorf("err: %v != nil", err)

@@ -12,7 +12,7 @@ import (
 	"github.com/c-bata/goptuna/internal/testutil"
 )
 
-func TestRandomSearchSamplerOptionSeed(t *testing.T) {
+func TestRandomSamplerOptionSeed(t *testing.T) {
 	tests := []struct {
 		name         string
 		distribution interface{}
@@ -34,9 +34,9 @@ func TestRandomSearchSamplerOptionSeed(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sampler1 := goptuna.NewRandomSearchSampler()
-			sampler2 := goptuna.NewRandomSearchSampler(goptuna.RandomSearchSamplerOptionSeed(2))
-			sampler3 := goptuna.NewRandomSearchSampler(goptuna.RandomSearchSamplerOptionSeed(2))
+			sampler1 := goptuna.NewRandomSampler()
+			sampler2 := goptuna.NewRandomSampler(goptuna.RandomSamplerOptionSeed(2))
+			sampler3 := goptuna.NewRandomSampler(goptuna.RandomSamplerOptionSeed(2))
 
 			s1, err := sampler1.Sample(nil, goptuna.FrozenTrial{}, "foo", tt.distribution)
 			if err != nil {
@@ -60,8 +60,8 @@ func TestRandomSearchSamplerOptionSeed(t *testing.T) {
 	}
 }
 
-func TestRandomSearchSampler_SampleLogUniform(t *testing.T) {
-	sampler := goptuna.NewRandomSearchSampler()
+func TestRandomSampler_SampleLogUniform(t *testing.T) {
+	sampler := goptuna.NewRandomSampler()
 	study, err := goptuna.CreateStudy("", goptuna.StudyOptionSampler(sampler))
 	if err != nil {
 		t.Errorf("should not be err, but got %s", err)
@@ -112,8 +112,8 @@ func TestRandomSearchSampler_SampleLogUniform(t *testing.T) {
 	}
 }
 
-func TestRandomSearchSampler_SampleDiscreteUniform(t *testing.T) {
-	sampler := goptuna.NewRandomSearchSampler()
+func TestRandomSampler_SampleDiscreteUniform(t *testing.T) {
+	sampler := goptuna.NewRandomSampler()
 	study, err := goptuna.CreateStudy("", goptuna.StudyOptionSampler(sampler))
 	if err != nil {
 		t.Errorf("should not be err, but got %s", err)
@@ -183,7 +183,7 @@ func (s *queueRelativeSampler) SampleRelative(
 }
 
 func TestRelativeSampler(t *testing.T) {
-	sampler := goptuna.NewRandomSearchSampler()
+	sampler := goptuna.NewRandomSampler()
 	relativeSampler := &queueRelativeSampler{
 		params: []map[string]float64{
 			{
@@ -247,7 +247,7 @@ func TestRelativeSampler(t *testing.T) {
 }
 
 func TestRelativeSampler_UnsupportedSearchSpace(t *testing.T) {
-	sampler := goptuna.NewRandomSearchSampler()
+	sampler := goptuna.NewRandomSampler()
 	relativeSampler := &queueRelativeSampler{
 		params: []map[string]float64{
 			nil,
