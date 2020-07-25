@@ -8,7 +8,7 @@ import (
 // Logger is the interface for logging messages.
 // If you want to log nothing, please set Logger as nil.
 // If you want to print more verbose logs,
-// it might StudyOptionSetTrialNotifyChannel option are useful.
+// it might StudyOptionTrialNotifyChannel option are useful.
 type Logger interface {
 	Debug(msg string, fields ...interface{})
 	Info(msg string, fields ...interface{})

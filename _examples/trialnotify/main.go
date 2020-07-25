@@ -22,7 +22,7 @@ func main() {
 		"goptuna-example",
 		goptuna.StudyOptionSampler(tpe.NewSampler()),
 		goptuna.StudyOptionIgnoreError(true),
-		goptuna.StudyOptionSetTrialNotifyChannel(trialchan),
+		goptuna.StudyOptionTrialNotifyChannel(trialchan),
 	)
 
 	var wg sync.WaitGroup

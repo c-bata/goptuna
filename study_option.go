@@ -64,8 +64,8 @@ func StudyOptionIgnoreError(ignore bool) StudyOption {
 	}
 }
 
-// StudyOptionSetTrialNotifyChannel to subscribe the finished trials.
-func StudyOptionSetTrialNotifyChannel(notify chan FrozenTrial) StudyOption {
+// StudyOptionTrialNotifyChannel to subscribe the finished trials.
+func StudyOptionTrialNotifyChannel(notify chan FrozenTrial) StudyOption {
 	return func(s *Study) error {
 		s.trialNotification = notify
 		return nil
@@ -96,3 +96,6 @@ var StudyOptionSetLogger = StudyOptionLogger
 // StudyOptionSetDirection change the direction of optimize
 // Deprecated: please use StudyOptionDirection instead.
 var StudyOptionSetDirection = StudyOptionDirection
+
+// StudyOptionSetTrialNotifyChannel to subscribe the finished trials.
+var StudyOptionSetTrialNotifyChannel = StudyOptionTrialNotifyChannel
