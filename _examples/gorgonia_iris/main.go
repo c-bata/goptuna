@@ -41,7 +41,7 @@ func main() {
 		"gorgonia-iris",
 		goptuna.StudyOptionStorage(storage),
 		goptuna.StudyOptionSampler(tpe.NewSampler()),
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMaximize),
+		goptuna.StudyOptionDirection(goptuna.StudyDirectionMaximize),
 	)
 	if err != nil {
 		log.Fatal("failed to create study: ", err)

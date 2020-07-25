@@ -214,7 +214,7 @@ func TestSampler_SampleDiscreteUniform(t *testing.T) {
 func TestGetObservationPairs_MINIMIZE(t *testing.T) {
 	study, err := goptuna.CreateStudy(
 		"", goptuna.StudyOptionIgnoreError(true),
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize))
+		goptuna.StudyOptionDirection(goptuna.StudyDirectionMinimize))
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
 		return
@@ -262,7 +262,7 @@ func TestGetObservationPairs_MAXIMIZE(t *testing.T) {
 	study, err := goptuna.CreateStudy(
 		"",
 		goptuna.StudyOptionIgnoreError(true),
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMaximize))
+		goptuna.StudyOptionDirection(goptuna.StudyDirectionMaximize))
 	if err != nil {
 		t.Errorf("should be nil, but got %s", err)
 		return

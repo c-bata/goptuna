@@ -44,7 +44,7 @@ func main() {
 	study, err := goptuna.CreateStudy(
 		"goptuna-example",
 		goptuna.StudyOptionStorage(rdb.NewStorage(db)),
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
+		goptuna.StudyOptionDirection(goptuna.StudyDirectionMinimize),
 	)
 	if err != nil {
 		log.Fatal("failed to create a study:", err)

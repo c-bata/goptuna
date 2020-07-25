@@ -3,8 +3,8 @@ package goptuna
 // StudyOption to pass the custom option
 type StudyOption func(study *Study) error
 
-// StudyOptionSetDirection change the direction of optimize
-func StudyOptionSetDirection(direction StudyDirection) StudyOption {
+// StudyOptionDirection change the direction of optimize
+func StudyOptionDirection(direction StudyDirection) StudyOption {
 	return func(s *Study) error {
 		s.direction = direction
 		return nil
@@ -92,3 +92,7 @@ func StudyOptionDefineSearchSpace(space map[string]interface{}) StudyOption {
 // StudyOptionSetLogger sets Logger.
 // Deprecated: please use StudyOptionLogger instead.
 var StudyOptionSetLogger = StudyOptionLogger
+
+// StudyOptionSetDirection change the direction of optimize
+// Deprecated: please use StudyOptionDirection instead.
+var StudyOptionSetDirection = StudyOptionDirection
