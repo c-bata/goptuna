@@ -170,3 +170,21 @@ func (s *RandomSampler) Sample(
 		return 0.0, errors.New("undefined distribution")
 	}
 }
+
+// RandomSearchSampler for random search
+// Deprecated: this is renamed to RandomSampler.
+type RandomSearchSampler RandomSampler
+
+// RandomSearchSamplerOption is a type of function to set change the option.
+// Deprecated: this is renamed to RandomSamplerOption.
+type RandomSearchSamplerOption RandomSamplerOption
+
+var (
+	// RandomSearchSamplerOptionSeed sets seed number.
+	// Deprecated: this is renamed to RandomSamplerOptionSeed.
+	RandomSearchSamplerOptionSeed = RandomSamplerOptionSeed
+
+	// NewRandomSearchSampler implements random search algorithm.
+	// Deprecated: this is renamed to NewRandomSampler.
+	NewRandomSearchSampler = NewRandomSampler
+)
