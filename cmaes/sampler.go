@@ -14,6 +14,13 @@ import (
 
 var _ goptuna.RelativeSampler = &Sampler{}
 
+type popType string
+
+const (
+	popTypeSmall = popType("small")
+	popTypeLarge = popType("large")
+)
+
 // Sampler returns the next search points by using CMA-ES.
 type Sampler struct {
 	x0               map[string]float64
@@ -23,9 +30,14 @@ type Sampler struct {
 	optimizerOptions []OptimizerOption
 	optimizer        *Optimizer
 	optimizerID      string
-	restartStrategy  string
-	incPopSize       int
-	nRestarts        int
+	// Variables related to IPOP-CMA-ES and BIPOP-CMA-ES
+	restartStrategy string
+	incPopSize      int
+	nRestarts       int // A small restart doesn't count in the nRestarts in BI-POP
+	nSmallEval      int
+	nLargeEval      int
+	popsize0        int
+	poptype         popType
 }
 
 // SampleRelative samples multiple dimensional parameters in a given search space.
@@ -113,9 +125,37 @@ func (s *Sampler) SampleRelative(
 				return nil, err
 			}
 
-			if s.restartStrategy == restartStrategyIOP && s.optimizer.ShouldStop() {
+			if s.restartStrategy == restartStrategyIPOP && s.optimizer.ShouldStop() {
 				s.nRestarts++
 				popsize := s.optimizer.PopulationSize() * s.incPopSize
+				s.optimizer, err = s.initOptimizer(searchSpace, orderedKeys,
+					OptimizerOptionPopulationSize(popsize))
+				if err != nil {
+					return nil, err
+				}
+			} else if s.restartStrategy == restartStrategyBIPOP && s.optimizer.ShouldStop() {
+				if s.popsize0 == 0 {
+					s.popsize0 = s.optimizer.PopulationSize()
+				}
+
+				nEval := s.optimizer.PopulationSize() * s.optimizer.Generation()
+				if s.poptype == popTypeSmall {
+					s.nSmallEval += nEval
+				} else { // large
+					s.nLargeEval += nEval
+				}
+
+				var popsize int
+				if s.nSmallEval < s.nLargeEval {
+					s.poptype = popTypeSmall
+					popsizeMultiplier := math.Pow(float64(s.incPopSize), float64(s.nRestarts))
+					r := math.Pow(s.rng.Float64(), 2)
+					popsize = int(math.Floor(float64(s.popsize0) * math.Pow(popsizeMultiplier, r)))
+				} else {
+					s.poptype = popTypeLarge
+					s.nRestarts += 1
+					popsize = s.popsize0 * int(math.Pow(float64(s.incPopSize), float64(s.nRestarts)))
+				}
 				s.optimizer, err = s.initOptimizer(searchSpace, orderedKeys,
 					OptimizerOptionPopulationSize(popsize))
 				if err != nil {
@@ -190,6 +230,12 @@ func NewSampler(opts ...SamplerOption) *Sampler {
 	sampler := &Sampler{
 		rng:            rand.New(rand.NewSource(0)),
 		nStartUpTrials: 0,
+
+		// Initial run is with "normal" population size; it is
+		// the large population before first doubling, but its
+		// budget accounting is the same as in case of small
+		// population.
+		poptype: popTypeSmall,
 	}
 
 	for _, opt := range opts {

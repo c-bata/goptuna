@@ -5,7 +5,8 @@ import (
 )
 
 const (
-	restartStrategyIOP = "ipop"
+	restartStrategyIPOP  = "ipop"
+	restartStrategyBIPOP = "bipop"
 )
 
 // SamplerOption is a type of the function to customizing CMA-ES sampler.
@@ -51,7 +52,17 @@ func SamplerOptionNStartupTrials(nStartupTrials int) SamplerOption {
 // From the experiments in the IPOP-CMA-ES, it reveal similar performance for factors between 2 and 3.
 func SamplerOptionIPop(incPopSize int) SamplerOption {
 	return func(sampler *Sampler) {
-		sampler.restartStrategy = restartStrategyIOP
+		sampler.restartStrategy = restartStrategyIPOP
+		sampler.incPopSize = incPopSize
+	}
+}
+
+// SamplerOptionBIPop enables restart CMA-ES with two interlaced restart strategies,
+// one with an increasing population size and one with varying small population size.
+// The argument is multiplier of population size before each restart and basically you should choose 2.
+func SamplerOptionBIPop(incPopSize int) SamplerOption {
+	return func(sampler *Sampler) {
+		sampler.restartStrategy = restartStrategyBIPOP
 		sampler.incPopSize = incPopSize
 	}
 }
