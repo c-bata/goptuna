@@ -35,6 +35,7 @@ go build -o ${BINDIR}/rosenbrock_problem ${DIR}/rosenbrock_problem/main.go
 RANDOM_SOLVER=$($KUROBAKO solver random)
 CMA_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver cmaes)
 IPOP_CMA_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver ipop-cmaes)
+BIPOP_CMA_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver bipop-cmaes)
 TPE_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver tpe)
 OPTUNA_CMA_SOLVER=$($KUROBAKO solver command python ${DIR}/optuna_solver.py cmaes)
 OPTUNA_TPE_SOLVER=$($KUROBAKO solver command python ${DIR}/optuna_solver.py tpe)
@@ -43,7 +44,8 @@ case "$1" in
     himmelblau)
         PROBLEM=$($KUROBAKO problem command ${BINDIR}/himmelblau_problem)
         $KUROBAKO studies \
-          --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $OPTUNA_CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
+          --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $BIPOP_CMA_SOLVER \
+          $OPTUNA_CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
           --problems $PROBLEM \
           --seed 1 --repeats 5 --budget 100 \
           | $KUROBAKO run --parallelism 1 > $2
@@ -51,7 +53,8 @@ case "$1" in
     rosenbrock)
         PROBLEM=$($KUROBAKO problem command ${BINDIR}/rosenbrock_problem)
         $KUROBAKO studies \
-          --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $OPTUNA_CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
+          --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $BIPOP_CMA_SOLVER \
+          $OPTUNA_CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
           --problems $PROBLEM \
           --seed 1 --repeats 5 --budget 100 \
           | $KUROBAKO run --parallelism 1 > $2
@@ -59,7 +62,8 @@ case "$1" in
     ackley)
         PROBLEM=$($KUROBAKO problem sigopt --dim 10 ackley)
         $KUROBAKO studies \
-          --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
+          --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $BIPOP_CMA_SOLVER \
+          $TPE_SOLVER $OPTUNA_TPE_SOLVER \
           --problems $PROBLEM \
           --seed 1 --repeats 5 --budget 1000 \
           | $KUROBAKO run --parallelism 5 > $2
@@ -67,7 +71,8 @@ case "$1" in
     weierstrass)
         PROBLEM=$($KUROBAKO problem sigopt --dim 10 weierstrass)
         $KUROBAKO studies \
-          --solvers $RANDOM_SOLVER $IPOP_CMA_SOLVER $CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
+          --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $BIPOP_CMA_SOLVER \
+          $TPE_SOLVER $OPTUNA_TPE_SOLVER \
           --problems $PROBLEM \
           --seed 1 --repeats 5 --budget 1000 \
           | $KUROBAKO run --parallelism 5 > $2
@@ -75,7 +80,8 @@ case "$1" in
     schwefel20)
         PROBLEM=$($KUROBAKO problem sigopt --dim 2 schwefel20)
         $KUROBAKO studies \
-          --solvers $RANDOM_SOLVER $IPOP_CMA_SOLVER $CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
+          --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $BIPOP_CMA_SOLVER \
+          $TPE_SOLVER $OPTUNA_TPE_SOLVER \
           --problems $PROBLEM \
           --seed 1 --repeats 10 --budget 100 \
           | $KUROBAKO run --parallelism 5 > $2
@@ -83,7 +89,8 @@ case "$1" in
     schwefel36)
         PROBLEM=$($KUROBAKO problem sigopt --dim 2 schwefel36)
         $KUROBAKO studies \
-          --solvers $RANDOM_SOLVER $IPOP_CMA_SOLVER $CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
+          --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $BIPOP_CMA_SOLVER \
+          $TPE_SOLVER $OPTUNA_TPE_SOLVER \
           --problems $PROBLEM \
           --seed 1 --repeats 10 --budget 100 \
           | $KUROBAKO run --parallelism 5 > $2
