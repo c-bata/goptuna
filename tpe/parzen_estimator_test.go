@@ -8,159 +8,141 @@ import (
 )
 
 func TestNewParzenEstimatorShapeCheck(t *testing.T) {
-	type args struct {
-		mus    []float64
-		low    float64
-		high   float64
-		params tpe.ParzenEstimatorParams
-	}
 	tests := []struct {
-		name string
-		args args
+		name            string
+		mus             []float64
+		params          tpe.ParzenEstimatorParams
+		expectedWeights []float64
+		expectedMus     []float64
+		expectedSigmas  []float64
 	}{
 		{
 			name: "buildEstimator shape check 1",
-			args: args{
-				mus:  []float64{},
-				low:  -1.0,
-				high: 1.0,
-				params: tpe.ParzenEstimatorParams{
-					ConsiderPrior:     true,
-					ConsiderMagicClip: true,
-					ConsiderEndpoints: true,
-					Weights:           tpe.DefaultWeights,
-					PriorWeight:       1.0,
-				},
+			mus:  []float64{},
+			params: tpe.ParzenEstimatorParams{
+				ConsiderPrior:     true,
+				ConsiderMagicClip: true,
+				ConsiderEndpoints: true,
+				Weights:           tpe.DefaultWeights,
+				PriorWeight:       1.0,
 			},
+			expectedWeights: []float64{},
+			expectedMus:     []float64{},
+			expectedSigmas:  []float64{},
 		},
 		{
 			name: "buildEstimator shape check 1-1",
-			args: args{
-				mus:  []float64{},
-				low:  -1.0,
-				high: 1.0,
-				params: tpe.ParzenEstimatorParams{
-					ConsiderPrior:     false,
-					ConsiderMagicClip: true,
-					ConsiderEndpoints: true,
-					Weights:           tpe.DefaultWeights,
-					PriorWeight:       1.0,
-				},
+			mus:  []float64{},
+			params: tpe.ParzenEstimatorParams{
+				ConsiderPrior:     false,
+				ConsiderMagicClip: true,
+				ConsiderEndpoints: true,
+				Weights:           tpe.DefaultWeights,
+				PriorWeight:       1.0,
 			},
+			expectedWeights: []float64{1.0},
+			expectedMus:     []float64{0.0},
+			expectedSigmas:  []float64{2.0},
 		},
 		{
 			name: "buildEstimator shape check 1-2",
-			args: args{
-				mus:  []float64{},
-				low:  -1.0,
-				high: 1.0,
-				params: tpe.ParzenEstimatorParams{
-					ConsiderPrior:     true,
-					ConsiderMagicClip: false,
-					ConsiderEndpoints: true,
-					Weights:           tpe.DefaultWeights,
-					PriorWeight:       1.0,
-				},
+			mus:  []float64{},
+			params: tpe.ParzenEstimatorParams{
+				ConsiderPrior:     true,
+				ConsiderMagicClip: false,
+				ConsiderEndpoints: true,
+				Weights:           tpe.DefaultWeights,
+				PriorWeight:       1.0,
 			},
+			expectedWeights: []float64{0.5, 0.5},
+			expectedMus:     []float64{0.0, 0.4},
+			expectedSigmas:  []float64{2.0, 0.6},
 		},
 		{
 			name: "buildEstimator shape check 1-3",
-			args: args{
-				mus:  []float64{},
-				low:  -1.0,
-				high: 1.0,
-				params: tpe.ParzenEstimatorParams{
-					ConsiderPrior:     true,
-					ConsiderMagicClip: true,
-					ConsiderEndpoints: false,
-					Weights:           tpe.DefaultWeights,
-					PriorWeight:       1.0,
-				},
+			mus:  []float64{},
+			params: tpe.ParzenEstimatorParams{
+				ConsiderPrior:     true,
+				ConsiderMagicClip: true,
+				ConsiderEndpoints: false,
+				Weights:           tpe.DefaultWeights,
+				PriorWeight:       1.0,
 			},
 		},
 		{
 			name: "buildEstimator shape check 2",
-			args: args{
-				mus:  []float64{0.4},
-				low:  -1.0,
-				high: 1.0,
-				params: tpe.ParzenEstimatorParams{
-					ConsiderPrior:     true,
-					ConsiderMagicClip: true,
-					ConsiderEndpoints: true,
-					Weights:           tpe.DefaultWeights,
-					PriorWeight:       1.0,
-				},
+			mus:  []float64{0.4},
+			params: tpe.ParzenEstimatorParams{
+				ConsiderPrior:     true,
+				ConsiderMagicClip: true,
+				ConsiderEndpoints: true,
+				Weights:           tpe.DefaultWeights,
+				PriorWeight:       1.0,
 			},
 		},
 		{
 			name: "buildEstimator shape check 2-1",
-			args: args{
-				mus:  []float64{0.4},
-				low:  -1.0,
-				high: 1.0,
-				params: tpe.ParzenEstimatorParams{
-					ConsiderPrior:     false,
-					ConsiderMagicClip: true,
-					ConsiderEndpoints: true,
-					Weights:           tpe.DefaultWeights,
-					PriorWeight:       1.0,
-				},
+			mus:  []float64{0.4},
+			params: tpe.ParzenEstimatorParams{
+				ConsiderPrior:     false,
+				ConsiderMagicClip: true,
+				ConsiderEndpoints: true,
+				Weights:           tpe.DefaultWeights,
+				PriorWeight:       1.0,
 			},
 		},
 		{
 			name: "buildEstimator shape check 2-2",
-			args: args{
-				mus:  []float64{0.4},
-				low:  -1.0,
-				high: 1.0,
-				params: tpe.ParzenEstimatorParams{
-					ConsiderPrior:     true,
-					ConsiderMagicClip: false,
-					ConsiderEndpoints: true,
-					Weights:           tpe.DefaultWeights,
-					PriorWeight:       1.0,
-				},
+			mus:  []float64{0.4},
+			params: tpe.ParzenEstimatorParams{
+				ConsiderPrior:     true,
+				ConsiderMagicClip: false,
+				ConsiderEndpoints: true,
+				Weights:           tpe.DefaultWeights,
+				PriorWeight:       1.0,
 			},
 		},
 		{
 			name: "buildEstimator shape check 2-3",
-			args: args{
-				mus:  []float64{0.4},
-				low:  -1.0,
-				high: 1.0,
-				params: tpe.ParzenEstimatorParams{
-					ConsiderPrior:     true,
-					ConsiderMagicClip: true,
-					ConsiderEndpoints: false,
-					Weights:           tpe.DefaultWeights,
-					PriorWeight:       1.0,
-				},
+			mus:  []float64{0.4},
+			params: tpe.ParzenEstimatorParams{
+				ConsiderPrior:     true,
+				ConsiderMagicClip: true,
+				ConsiderEndpoints: false,
+				Weights:           tpe.DefaultWeights,
+				PriorWeight:       1.0,
 			},
 		},
 		{
 			name: "buildEstimator shape check 3",
-			args: args{
-				mus:  []float64{-0.4, 0.4},
-				low:  -1.0,
-				high: 1.0,
-				params: tpe.ParzenEstimatorParams{
-					ConsiderPrior:     true,
-					ConsiderMagicClip: true,
-					ConsiderEndpoints: true,
-					Weights:           tpe.DefaultWeights,
-					PriorWeight:       1.0,
-				},
+			mus:  []float64{-0.4, 0.4},
+			params: tpe.ParzenEstimatorParams{
+				ConsiderPrior:     true,
+				ConsiderMagicClip: true,
+				ConsiderEndpoints: true,
+				Weights:           tpe.DefaultWeights,
+				PriorWeight:       1.0,
+			},
+		},
+		{
+			name: "buildEstimator shape check 4",
+			mus:  []float64{-0.4, 0.4},
+			params: tpe.ParzenEstimatorParams{
+				ConsiderPrior:     true,
+				ConsiderMagicClip: false,
+				ConsiderEndpoints: false,
+				Weights:           tpe.DefaultWeights,
+				PriorWeight:       1.0,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			estimator := tpe.NewParzenEstimator(tt.args.mus, tt.args.low, tt.args.high, tt.args.params)
+			estimator := tpe.NewParzenEstimator(tt.mus, -1.0, 1.0, tt.params)
 
 			actual := len(estimator.Weights)
-			expected := len(tt.args.mus)
-			if tt.args.params.ConsiderPrior {
+			expected := len(tt.mus)
+			if tt.params.ConsiderPrior {
 				expected++
 			}
 			if actual != expected {
