@@ -15,6 +15,9 @@ Problem:
     rosenbrock     : https://www.sfu.ca/~ssurjano/rosen.html
     himmelblau     : https://en.wikipedia.org/wiki/Himmelblau%27s_function
     ackley         : Ackley function in https://github.com/sigopt/evalset
+    weierstrass    : Weierstrass function in https://github.com/sigopt/evalset
+    schwefel20     : Schwefel20 function in https://github.com/sigopt/evalset
+    schwefel36     : Schwefel36 function in https://github.com/sigopt/evalset
 Options:
     --help, -h         print this
 Example:
@@ -40,26 +43,50 @@ case "$1" in
     himmelblau)
         PROBLEM=$($KUROBAKO problem command ${BINDIR}/himmelblau_problem)
         $KUROBAKO studies \
-          --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $OPTUNA_CMA_SOLVER \
+          --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $OPTUNA_CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
           --problems $PROBLEM \
-          --seed 1 --repeats 8 --budget 300 \
+          --seed 1 --repeats 5 --budget 100 \
           | $KUROBAKO run --parallelism 1 > $2
         ;;
     rosenbrock)
         PROBLEM=$($KUROBAKO problem command ${BINDIR}/rosenbrock_problem)
         $KUROBAKO studies \
-          --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $OPTUNA_CMA_SOLVER \
+          --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $OPTUNA_CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
           --problems $PROBLEM \
-          --seed 1 --repeats 8 --budget 300 \
+          --seed 1 --repeats 5 --budget 100 \
           | $KUROBAKO run --parallelism 1 > $2
         ;;
     ackley)
-        PROBLEM=$($KUROBAKO problem sigopt --dim 20 ackley)
+        PROBLEM=$($KUROBAKO problem sigopt --dim 10 ackley)
+        $KUROBAKO studies \
+          --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
+          --problems $PROBLEM \
+          --seed 1 --repeats 5 --budget 1000 \
+          | $KUROBAKO run --parallelism 5 > $2
+        ;;
+    weierstrass)
+        PROBLEM=$($KUROBAKO problem sigopt --dim 10 weierstrass)
+        $KUROBAKO studies \
+          --solvers $RANDOM_SOLVER $IPOP_CMA_SOLVER $CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
+          --problems $PROBLEM \
+          --seed 1 --repeats 5 --budget 1000 \
+          | $KUROBAKO run --parallelism 5 > $2
+        ;;
+    schwefel20)
+        PROBLEM=$($KUROBAKO problem sigopt --dim 2 schwefel20)
         $KUROBAKO studies \
           --solvers $RANDOM_SOLVER $IPOP_CMA_SOLVER $CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
           --problems $PROBLEM \
           --seed 1 --repeats 10 --budget 100 \
-          | $KUROBAKO run --parallelism 4 > $2
+          | $KUROBAKO run --parallelism 5 > $2
+        ;;
+    schwefel36)
+        PROBLEM=$($KUROBAKO problem sigopt --dim 2 schwefel36)
+        $KUROBAKO studies \
+          --solvers $RANDOM_SOLVER $IPOP_CMA_SOLVER $CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
+          --problems $PROBLEM \
+          --seed 1 --repeats 10 --budget 100 \
+          | $KUROBAKO run --parallelism 5 > $2
         ;;
     help|--help|-h)
         usage
