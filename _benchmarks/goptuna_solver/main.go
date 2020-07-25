@@ -11,7 +11,7 @@ import (
 )
 
 func randomSampler(seed int64) (*goptuna.Study, error) {
-	s := goptuna.NewRandomSearchSampler(goptuna.RandomSearchSamplerOptionSeed(seed))
+	s := goptuna.NewRandomSampler(goptuna.RandomSamplerOptionSeed(seed))
 	return goptuna.CreateStudy("example-study",
 		goptuna.StudyOptionSampler(s))
 }
@@ -23,7 +23,7 @@ func tpeSampler(seed int64) (*goptuna.Study, error) {
 }
 
 func cmaSampler(seed int64) (*goptuna.Study, error) {
-	s := goptuna.NewRandomSearchSampler(goptuna.RandomSearchSamplerOptionSeed(seed))
+	s := goptuna.NewRandomSampler(goptuna.RandomSamplerOptionSeed(seed))
 	rs := cmaes.NewSampler(cmaes.SamplerOptionSeed(seed))
 	return goptuna.CreateStudy("example-study",
 		goptuna.StudyOptionSampler(s),
@@ -31,7 +31,7 @@ func cmaSampler(seed int64) (*goptuna.Study, error) {
 }
 
 func ipopCmaSampler(seed int64) (*goptuna.Study, error) {
-	s := goptuna.NewRandomSearchSampler(goptuna.RandomSearchSamplerOptionSeed(seed))
+	s := goptuna.NewRandomSampler(goptuna.RandomSamplerOptionSeed(seed))
 	rs := cmaes.NewSampler(cmaes.SamplerOptionSeed(seed),
 		cmaes.SamplerOptionIPop(2))
 	return goptuna.CreateStudy("example-study",
@@ -40,7 +40,7 @@ func ipopCmaSampler(seed int64) (*goptuna.Study, error) {
 }
 
 func bipopCmaSampler(seed int64) (*goptuna.Study, error) {
-	s := goptuna.NewRandomSearchSampler(goptuna.RandomSearchSamplerOptionSeed(seed))
+	s := goptuna.NewRandomSampler(goptuna.RandomSamplerOptionSeed(seed))
 	rs := cmaes.NewSampler(cmaes.SamplerOptionSeed(seed),
 		cmaes.SamplerOptionBIPop(2))
 	return goptuna.CreateStudy("example-study",

@@ -373,7 +373,7 @@ func CreateStudy(
 	opts ...StudyOption,
 ) (*Study, error) {
 	storage := NewInMemoryStorage()
-	sampler := NewRandomSearchSampler()
+	sampler := NewRandomSampler()
 	study := &Study{
 		ID:              0,
 		Storage:         storage,
@@ -420,7 +420,7 @@ func LoadStudy(
 	opts ...StudyOption,
 ) (*Study, error) {
 	storage := NewInMemoryStorage()
-	sampler := NewRandomSearchSampler()
+	sampler := NewRandomSampler()
 	study := &Study{
 		ID:              0,
 		Storage:         storage,

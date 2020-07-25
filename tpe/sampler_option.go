@@ -11,8 +11,8 @@ type SamplerOption func(sampler *Sampler)
 
 // SamplerOptionSeed sets seed number.
 func SamplerOptionSeed(seed int64) SamplerOption {
-	randomSampler := goptuna.NewRandomSearchSampler(
-		goptuna.RandomSearchSamplerOptionSeed(seed))
+	randomSampler := goptuna.NewRandomSampler(
+		goptuna.RandomSamplerOptionSeed(seed))
 
 	return func(sampler *Sampler) {
 		sampler.rng = rand.New(rand.NewSource(seed))

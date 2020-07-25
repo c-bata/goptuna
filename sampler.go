@@ -86,27 +86,27 @@ func IntersectionSearchSpace(study *Study) (map[string]interface{}, error) {
 	return searchSpace, nil
 }
 
-var _ Sampler = &RandomSearchSampler{}
+var _ Sampler = &RandomSampler{}
 
-// RandomSearchSampler for random search
-type RandomSearchSampler struct {
+// RandomSampler for random search
+type RandomSampler struct {
 	rng *rand.Rand
 	mu  sync.Mutex
 }
 
-// RandomSearchSamplerOption is a type of function to set change the option.
-type RandomSearchSamplerOption func(sampler *RandomSearchSampler)
+// RandomSamplerOption is a type of function to set change the option.
+type RandomSamplerOption func(sampler *RandomSampler)
 
-// RandomSearchSamplerOptionSeed sets seed number.
-func RandomSearchSamplerOptionSeed(seed int64) RandomSearchSamplerOption {
-	return func(sampler *RandomSearchSampler) {
+// RandomSamplerOptionSeed sets seed number.
+func RandomSamplerOptionSeed(seed int64) RandomSamplerOption {
+	return func(sampler *RandomSampler) {
 		sampler.rng = rand.New(rand.NewSource(seed))
 	}
 }
 
-// NewRandomSearchSampler implements random search algorithm.
-func NewRandomSearchSampler(opts ...RandomSearchSamplerOption) *RandomSearchSampler {
-	s := &RandomSearchSampler{
+// NewRandomSampler implements random search algorithm.
+func NewRandomSampler(opts ...RandomSamplerOption) *RandomSampler {
+	s := &RandomSampler{
 		rng: rand.New(rand.NewSource(0)),
 	}
 	for _, opt := range opts {
@@ -116,7 +116,7 @@ func NewRandomSearchSampler(opts ...RandomSearchSamplerOption) *RandomSearchSamp
 }
 
 // Sample a parameter for a given distribution.
-func (s *RandomSearchSampler) Sample(
+func (s *RandomSampler) Sample(
 	study *Study,
 	trial FrozenTrial,
 	paramName string,
@@ -170,3 +170,21 @@ func (s *RandomSearchSampler) Sample(
 		return 0.0, errors.New("undefined distribution")
 	}
 }
+
+// RandomSearchSampler for random search
+// Deprecated: this is renamed to RandomSampler.
+type RandomSearchSampler RandomSampler
+
+// RandomSearchSamplerOption is a type of function to set change the option.
+// Deprecated: this is renamed to RandomSamplerOption.
+type RandomSearchSamplerOption RandomSamplerOption
+
+var (
+	// RandomSearchSamplerOptionSeed sets seed number.
+	// Deprecated: this is renamed to RandomSamplerOptionSeed.
+	RandomSearchSamplerOptionSeed = RandomSamplerOptionSeed
+
+	// NewRandomSearchSampler implements random search algorithm.
+	// Deprecated: this is renamed to NewRandomSampler.
+	NewRandomSearchSampler = NewRandomSampler
+)

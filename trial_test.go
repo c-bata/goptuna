@@ -134,8 +134,8 @@ func TestTrial_Suggest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sampler := goptuna.NewRandomSearchSampler(
-				goptuna.RandomSearchSamplerOptionSeed(0),
+			sampler := goptuna.NewRandomSampler(
+				goptuna.RandomSamplerOptionSeed(0),
 			)
 			study, err := goptuna.CreateStudy(tt.name,
 				goptuna.StudyOptionIgnoreError(false),
@@ -155,7 +155,7 @@ func TestTrial_UserAttrs(t *testing.T) {
 		"example",
 		goptuna.StudyOptionStorage(goptuna.NewInMemoryStorage()),
 		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
-		goptuna.StudyOptionSampler(goptuna.NewRandomSearchSampler()),
+		goptuna.StudyOptionSampler(goptuna.NewRandomSampler()),
 	)
 	trialID, err := study.Storage.CreateNewTrial(study.ID)
 	if err != nil {
@@ -194,7 +194,7 @@ func TestTrial_SystemAttrs(t *testing.T) {
 		"example",
 		goptuna.StudyOptionStorage(goptuna.NewInMemoryStorage()),
 		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
-		goptuna.StudyOptionSampler(goptuna.NewRandomSearchSampler()),
+		goptuna.StudyOptionSampler(goptuna.NewRandomSampler()),
 	)
 	trialID, err := study.Storage.CreateNewTrial(study.ID)
 	if err != nil {
