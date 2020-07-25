@@ -33,7 +33,7 @@ func TestOptunaPruner_IntermediateValues(t *testing.T) {
 				MinEarlyStoppingRate: 0,
 			}
 			study, err := goptuna.CreateStudy("optuna-pruner",
-				goptuna.StudyOptionSetDirection(tt.direction),
+				goptuna.StudyOptionDirection(tt.direction),
 				goptuna.StudyOptionPruner(pruner))
 			if err != nil {
 				t.Errorf("should be err=nil, but got %s", err)

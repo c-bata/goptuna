@@ -43,7 +43,7 @@ func ExampleStudy_Optimize() {
 func TestStudy_SystemAttrs(t *testing.T) {
 	study, _ := goptuna.CreateStudy(
 		"example",
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
+		goptuna.StudyOptionDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionSampler(goptuna.NewRandomSampler()),
 	)
 
@@ -133,7 +133,7 @@ func TestStudy_EnqueueTrial_WithUnfixedParameter(t *testing.T) {
 func TestStudy_UserAttrs(t *testing.T) {
 	study, _ := goptuna.CreateStudy(
 		"example",
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
+		goptuna.StudyOptionDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionSampler(goptuna.NewRandomSampler()),
 	)
 
@@ -162,7 +162,7 @@ func TestStudy_UserAttrs(t *testing.T) {
 func TestStudy_AppendTrial(t *testing.T) {
 	study, err := goptuna.CreateStudy(
 		"example",
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
+		goptuna.StudyOptionDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionSampler(goptuna.NewRandomSampler()),
 	)
 	if err != nil {

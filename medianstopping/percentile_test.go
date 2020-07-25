@@ -158,7 +158,7 @@ func TestPercentilePruner_Prune(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			study, err := goptuna.CreateStudy("", goptuna.StudyOptionSetDirection(tt.direction))
+			study, err := goptuna.CreateStudy("", goptuna.StudyOptionDirection(tt.direction))
 			if err != nil {
 				t.Errorf("should be err=nil, but got %s", err)
 				return

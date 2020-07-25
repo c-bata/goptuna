@@ -3,8 +3,8 @@ package goptuna
 // StudyOption to pass the custom option
 type StudyOption func(study *Study) error
 
-// StudyOptionSetDirection change the direction of optimize
-func StudyOptionSetDirection(direction StudyDirection) StudyOption {
+// StudyOptionDirection change the direction of optimize
+func StudyOptionDirection(direction StudyDirection) StudyOption {
 	return func(s *Study) error {
 		s.direction = direction
 		return nil
@@ -64,8 +64,8 @@ func StudyOptionIgnoreError(ignore bool) StudyOption {
 	}
 }
 
-// StudyOptionSetTrialNotifyChannel to subscribe the finished trials.
-func StudyOptionSetTrialNotifyChannel(notify chan FrozenTrial) StudyOption {
+// StudyOptionTrialNotifyChannel to subscribe the finished trials.
+func StudyOptionTrialNotifyChannel(notify chan FrozenTrial) StudyOption {
 	return func(s *Study) error {
 		s.trialNotification = notify
 		return nil
@@ -92,3 +92,10 @@ func StudyOptionDefineSearchSpace(space map[string]interface{}) StudyOption {
 // StudyOptionSetLogger sets Logger.
 // Deprecated: please use StudyOptionLogger instead.
 var StudyOptionSetLogger = StudyOptionLogger
+
+// StudyOptionSetDirection change the direction of optimize
+// Deprecated: please use StudyOptionDirection instead.
+var StudyOptionSetDirection = StudyOptionDirection
+
+// StudyOptionSetTrialNotifyChannel to subscribe the finished trials.
+var StudyOptionSetTrialNotifyChannel = StudyOptionTrialNotifyChannel

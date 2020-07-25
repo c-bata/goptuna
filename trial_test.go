@@ -154,7 +154,7 @@ func TestTrial_UserAttrs(t *testing.T) {
 	study, _ := goptuna.CreateStudy(
 		"example",
 		goptuna.StudyOptionStorage(goptuna.NewInMemoryStorage()),
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
+		goptuna.StudyOptionDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionSampler(goptuna.NewRandomSampler()),
 	)
 	trialID, err := study.Storage.CreateNewTrial(study.ID)
@@ -193,7 +193,7 @@ func TestTrial_SystemAttrs(t *testing.T) {
 	study, _ := goptuna.CreateStudy(
 		"example",
 		goptuna.StudyOptionStorage(goptuna.NewInMemoryStorage()),
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
+		goptuna.StudyOptionDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionSampler(goptuna.NewRandomSampler()),
 	)
 	trialID, err := study.Storage.CreateNewTrial(study.ID)

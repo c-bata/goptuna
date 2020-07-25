@@ -40,7 +40,7 @@ func main() {
 		"rdb",
 		goptuna.StudyOptionStorage(storage),
 		goptuna.StudyOptionSampler(tpe.NewSampler()),
-		goptuna.StudyOptionSetDirection(goptuna.StudyDirectionMinimize),
+		goptuna.StudyOptionDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionLoadIfExists(true),
 	)
 	if err != nil {
