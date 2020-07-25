@@ -77,7 +77,7 @@ func main() {
 		}
 
 		if optimizer.ShouldStop() {
-			seed += 1
+			seed++
 			nEvaluations := optimizer.PopulationSize() * optimizer.Generation()
 			if poptype == popTypeSmall {
 				smallEvaluations += nEvaluations
@@ -93,7 +93,7 @@ func main() {
 				popsize = int(math.Floor(float64(popsize0) * math.Pow(popsizeMultiplier, r)))
 			} else {
 				poptype = popTypeLarge
-				nRestarts += 1
+				nRestarts++
 				popsize = popsize0 * int(math.Pow(float64(incPopSize), float64(nRestarts)))
 			}
 

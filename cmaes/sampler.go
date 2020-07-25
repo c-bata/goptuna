@@ -125,37 +125,8 @@ func (s *Sampler) SampleRelative(
 				return nil, err
 			}
 
-			if s.restartStrategy == restartStrategyIPOP && s.optimizer.ShouldStop() {
-				s.nRestarts++
-				popsize := s.optimizer.PopulationSize() * s.incPopSize
-				s.optimizer, err = s.initOptimizer(searchSpace, orderedKeys,
-					OptimizerOptionPopulationSize(popsize))
-				if err != nil {
-					return nil, err
-				}
-			} else if s.restartStrategy == restartStrategyBIPOP && s.optimizer.ShouldStop() {
-				if s.popsize0 == 0 {
-					s.popsize0 = s.optimizer.PopulationSize()
-				}
-
-				nEval := s.optimizer.PopulationSize() * s.optimizer.Generation()
-				if s.poptype == popTypeSmall {
-					s.nSmallEval += nEval
-				} else { // large
-					s.nLargeEval += nEval
-				}
-
-				var popsize int
-				if s.nSmallEval < s.nLargeEval {
-					s.poptype = popTypeSmall
-					popsizeMultiplier := math.Pow(float64(s.incPopSize), float64(s.nRestarts))
-					r := math.Pow(s.rng.Float64(), 2)
-					popsize = int(math.Floor(float64(s.popsize0) * math.Pow(popsizeMultiplier, r)))
-				} else {
-					s.poptype = popTypeLarge
-					s.nRestarts += 1
-					popsize = s.popsize0 * int(math.Pow(float64(s.incPopSize), float64(s.nRestarts)))
-				}
+			if s.optimizer.ShouldStop() && s.restartStrategy != "" {
+				popsize := s.nextPopsize()
 				s.optimizer, err = s.initOptimizer(searchSpace, orderedKeys,
 					OptimizerOptionPopulationSize(popsize))
 				if err != nil {
@@ -185,6 +156,37 @@ func (s *Sampler) SampleRelative(
 		params[orderedKeys[i]] = toGoptunaInternalParam(searchSpace[orderedKeys[i]], param)
 	}
 	return params, nil
+}
+
+func (s *Sampler) nextPopsize() (popsize int) {
+	if s.restartStrategy == restartStrategyIPOP {
+		// I-POP-CMA-ES
+		s.nRestarts++
+		return s.optimizer.PopulationSize() * s.incPopSize
+	}
+
+	// BI-POP-CMA-ES
+	if s.popsize0 == 0 {
+		s.popsize0 = s.optimizer.PopulationSize()
+	}
+
+	nEval := s.optimizer.PopulationSize() * s.optimizer.Generation()
+	if s.poptype == popTypeSmall {
+		s.nSmallEval += nEval
+	} else { // large
+		s.nLargeEval += nEval
+	}
+
+	if s.nSmallEval < s.nLargeEval {
+		s.poptype = popTypeSmall
+		popsizeMultiplier := math.Pow(float64(s.incPopSize), float64(s.nRestarts))
+		r := math.Pow(s.rng.Float64(), 2)
+		return int(math.Floor(float64(s.popsize0) * math.Pow(popsizeMultiplier, r)))
+	}
+
+	s.poptype = popTypeLarge
+	s.nRestarts++
+	return s.popsize0 * int(math.Pow(float64(s.incPopSize), float64(s.nRestarts)))
 }
 
 func (s *Sampler) initOptimizer(
