@@ -42,7 +42,7 @@ case "$1" in
         $KUROBAKO studies \
           --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $OPTUNA_CMA_SOLVER \
           --problems $PROBLEM \
-          --repeats 8 --budget 300 \
+          --seed 1 --repeats 8 --budget 300 \
           | $KUROBAKO run --parallelism 1 > $2
         ;;
     rosenbrock)
@@ -50,7 +50,7 @@ case "$1" in
         $KUROBAKO studies \
           --solvers $RANDOM_SOLVER $CMA_SOLVER $IPOP_CMA_SOLVER $OPTUNA_CMA_SOLVER \
           --problems $PROBLEM \
-          --repeats 8 --budget 300 \
+          --seed 1 --repeats 8 --budget 300 \
           | $KUROBAKO run --parallelism 1 > $2
         ;;
     ackley)
@@ -58,7 +58,7 @@ case "$1" in
         $KUROBAKO studies \
           --solvers $RANDOM_SOLVER $IPOP_CMA_SOLVER $CMA_SOLVER $TPE_SOLVER $OPTUNA_TPE_SOLVER \
           --problems $PROBLEM \
-          --repeats 10 --budget 100 \
+          --seed 1 --repeats 10 --budget 100 \
           | $KUROBAKO run --parallelism 4 > $2
         ;;
     help|--help|-h)
