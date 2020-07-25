@@ -25,6 +25,7 @@ type Sampler struct {
 	optimizerID      string
 	restartStrategy  string
 	incPopSize       int
+	nRestarts        int
 }
 
 // SampleRelative samples multiple dimensional parameters in a given search space.
@@ -113,6 +114,7 @@ func (s *Sampler) SampleRelative(
 			}
 
 			if s.restartStrategy == restartStrategyIOP && s.optimizer.ShouldStop() {
+				s.nRestarts += 1
 				popsize := s.optimizer.PopulationSize() * s.incPopSize
 				s.optimizer, err = s.initOptimizer(searchSpace, orderedKeys,
 					OptimizerOptionPopulationSize(popsize))
@@ -150,7 +152,7 @@ func (s *Sampler) initOptimizer(
 	orderedKeys []string,
 	additionalOpts ...OptimizerOption,
 ) (*Optimizer, error) {
-	x0, sigma0, err := initialParam(searchSpace)
+	x0, sigma0, err := s.initialParam(searchSpace)
 	if err != nil {
 		return nil, err
 	}
@@ -231,27 +233,48 @@ func toGoptunaInternalParam(distribution interface{}, cmaParam float64) float64 
 	return cmaParam
 }
 
-func initialParam(searchSpace map[string]interface{}) (map[string]float64, float64, error) {
+func (s *Sampler) initialParam(searchSpace map[string]interface{}) (map[string]float64, float64, error) {
 	x0 := make(map[string]float64, len(searchSpace))
 	sigma0 := make([]float64, 0, len(searchSpace))
+
 	for name := range searchSpace {
 		switch d := searchSpace[name].(type) {
 		case goptuna.UniformDistribution:
-			x0[name] = (d.High + d.Low) / 2
+			if s.nRestarts > 0 {
+				x0[name] = d.Low + s.rng.Float64()*(d.High-d.Low)
+			} else {
+				x0[name] = (d.High + d.Low) / 2
+			}
 			sigma0 = append(sigma0, (d.High-d.Low)/6)
 		case goptuna.DiscreteUniformDistribution:
-			x0[name] = (d.High + d.Low) / 2
+			if s.nRestarts > 0 {
+				x0[name] = d.Low + s.rng.Float64()*(d.High-d.Low)
+			} else {
+				x0[name] = (d.High + d.Low) / 2
+			}
 			sigma0 = append(sigma0, (d.High-d.Low)/6)
 		case goptuna.LogUniformDistribution:
 			high := math.Log(d.High)
 			low := math.Log(d.Low)
-			x0[name] = (high + low) / 2
+			if s.nRestarts > 0 {
+				x0[name] = low + s.rng.Float64()*(high-low)
+			} else {
+				x0[name] = (high + low) / 2
+			}
 			sigma0 = append(sigma0, (high-low)/6)
 		case goptuna.IntUniformDistribution:
-			x0[name] = float64(d.High+d.Low) / 2
+			if s.nRestarts > 0 {
+				x0[name] = float64(d.Low + s.rng.Intn(d.High-d.Low))
+			} else {
+				x0[name] = float64(d.High+d.Low) / 2
+			}
 			sigma0 = append(sigma0, float64(d.High-d.Low)/6)
 		case goptuna.StepIntUniformDistribution:
-			x0[name] = float64(d.High+d.Low) / 2
+			if s.nRestarts > 0 {
+				x0[name] = float64(d.Low + s.rng.Intn(d.High-d.Low))
+			} else {
+				x0[name] = float64(d.High+d.Low) / 2
+			}
 			sigma0 = append(sigma0, float64(d.High-d.Low)/6)
 		default:
 			return nil, 0, goptuna.ErrUnknownDistribution
