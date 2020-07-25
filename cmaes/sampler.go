@@ -114,7 +114,7 @@ func (s *Sampler) SampleRelative(
 			}
 
 			if s.restartStrategy == restartStrategyIOP && s.optimizer.ShouldStop() {
-				s.nRestarts += 1
+				s.nRestarts++
 				popsize := s.optimizer.PopulationSize() * s.incPopSize
 				s.optimizer, err = s.initOptimizer(searchSpace, orderedKeys,
 					OptimizerOptionPopulationSize(popsize))
