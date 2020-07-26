@@ -50,7 +50,7 @@ jobs:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
-          if [ ! $GCP_PROJECT_ID='' ] && [ ! $GCP_SA_KEY='' ] ; then
+          if [ ! -z $GCP_PROJECT_ID ] && [ ! -z $GCP_SA_KEY ]; then
               echo '::set-env name=HAS_SECRET::1'
           else
               echo '::set-env name=HAS_SECRET::0'

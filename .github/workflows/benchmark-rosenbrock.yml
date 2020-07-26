@@ -48,26 +48,26 @@ jobs:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
-          if [ ! $GCP_PROJECT_ID='' ] && [ ! $GCP_SA_KEY='' ] ; then
+          if [ ! -z $GCP_PROJECT_ID ] && [ ! -z $GCP_SA_KEY ]; then
               echo '::set-env name=HAS_SECRET::1'
           else
               echo '::set-env name=HAS_SECRET::0'
           fi
       - run: echo $HAS_SECRET
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        if: ${{ env.HAS_SECRET == '1' }}
+        if: ${{ env.HAS_SECRET == 1 }}
         with:
           version: '275.0.0'
           service_account_key: ${{ secrets.GCP_SA_KEY }}
       - run: gcloud info
-        if: ${{ env.HAS_SECRET == '1' }}
+        if: ${{ env.HAS_SECRET == 1 }}
       - run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
-        if: ${{ env.HAS_SECRET == '1' }}
+        if: ${{ env.HAS_SECRET == 1 }}
       - name: Upload an image to google cloud storage
         run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/rosenbrock-${{ github.sha }}.png
-        if: ${{ env.HAS_SECRET == '1' }}
+        if: ${{ env.HAS_SECRET == 1 }}
       - name: Comment to a pull request
-        if: ${{ env.HAS_SECRET == '1' }}
+        if: ${{ env.HAS_SECRET == 1 }}
         uses: c-bata/github-actions-kurobako@v2
         with:
           report-md-path: './kurobako-report.md'
