@@ -32,7 +32,7 @@ jobs:
           chmod +x kurobako
           ./kurobako -h
 
-      - name: Run sigopt/evalset/Rastrigin Benchmark
+      - name: Run Rastrigin Benchmark
         env:
           KUROBAKO: ./kurobako
           DIM: 2
@@ -75,7 +75,7 @@ jobs:
         with:
           report-md-path: './kurobako-report.md'
           public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/rastrigin-${{ github.sha }}.png
-          title: 'Benchmark result of sigopt/evalset/Rastrigin problem'
+          title: 'Benchmark result of Rastrigin problem'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

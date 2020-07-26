@@ -58,7 +58,7 @@ case "$1" in
         ;;
     rastrigin)
         # "kurobako problem sigopt --dim 8 rastrigin" only accepts 8-dim.
-        PROBLEM=$($KUROBAKO problem command ${BIDIR}/himmelblau_problem $DIM)
+        PROBLEM=$($KUROBAKO problem command ${BIDIR}/rastrigin_problem $DIM)
         ;;
     weierstrass)
         PROBLEM=$($KUROBAKO problem sigopt --dim $DIM weierstrass)
