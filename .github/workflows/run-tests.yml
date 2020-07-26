@@ -1,8 +1,9 @@
 name: Run tests and lint checks
 on:
   pull_request:
-    branches:
-    - master
+    paths:
+      - '.github/workflows/run-tests.yml'
+      - '**.go'
 jobs:
   lint:
     name: Lint checking on Ubuntu
