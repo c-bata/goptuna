@@ -5,6 +5,7 @@ on:
     - '.github/workflows/benchmark-rosenbrock.yml'
     - '_benchmarks/runner.sh'
     - 'cmaes/**.go'
+    - 'tpe/**.go'
 jobs:
   benchmarks-rosenbrock:
     name: Run kurobako benchmark
@@ -78,6 +79,7 @@ jobs:
 
       - run: cp ${{ steps.kurobako-plot.outputs.image-path }} rosenbrock.png
       - run: mv ./kurobako-report.md ./kurobako-report-rosenbrock.md
+      - run: mv ./kurobako-report.json ./kurobako-report-rosenbrock.json
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
@@ -86,3 +88,7 @@ jobs:
         with:
           name: kurobako-report
           path: kurobako-report-rosenbrock.md
+      - uses: actions/upload-artifact@v2
+        with:
+          name: kurobako-report
+          path: kurobako-report-rosenbrock.json
