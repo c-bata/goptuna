@@ -1,8 +1,9 @@
 name: Run examples
 on:
   pull_request:
-    branches:
-    - master
+    paths:
+      - '.github/workflows/run-examples.yml'
+      - '**.go'
 jobs:
   examples:
     name: Run goptuna examples on ${{ matrix.os }}
