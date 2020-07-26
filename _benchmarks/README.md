@@ -25,10 +25,11 @@ Usage:
 Problem:
     rosenbrock     : https://www.sfu.ca/~ssurjano/rosen.html
     himmelblau     : https://en.wikipedia.org/wiki/Himmelblau%27s_function
-    ackley         : Ackley function in https://github.com/sigopt/evalset
+    ackley         : https://www.sfu.ca/~ssurjano/ackley.html
+    rastrigin      : https://www.sfu.ca/~ssurjano/rastr.html
     weierstrass    : Weierstrass function in https://github.com/sigopt/evalset
-    schwefel20     : Schwefel20 function in https://github.com/sigopt/evalset
-    schwefel36     : Schwefel36 function in https://github.com/sigopt/evalset
+    schwefel20     : https://www.sfu.ca/~ssurjano/schwef.html
+    schwefel36     : https://www.sfu.ca/~ssurjano/schwef.html
 Options:
     --help, -h         print this
 Example:
