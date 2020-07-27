@@ -9,6 +9,7 @@ REPEATS=${REPEATS:-5}
 BUDGET=${BUDGET:-300}
 SEED=${BUDGET:-1}
 DIM=${DIM:-2}
+SOLVERS=${SOLVERS:-all}
 
 usage() {
     cat <<EOF
@@ -79,16 +80,41 @@ case "$1" in
         exit 1
         ;;
 esac
-
-$KUROBAKO studies \
-  --solvers \
-    $RANDOM_SOLVER \
-    $CMA_SOLVER \
-    $IPOP_CMA_SOLVER \
-    $BIPOP_CMA_SOLVER \
-    $TPE_SOLVER \
-    $OPTUNA_CMA_SOLVER \
-    $OPTUNA_TPE_SOLVER \
-  --problems $PROBLEM \
-  --seed $SEED --repeats $REPEATS --budget $BUDGET \
-  | $KUROBAKO run --parallelism 1 > $2
+case $SOLVERS in
+    all)
+        $KUROBAKO studies \
+          --solvers \
+            $RANDOM_SOLVER \
+            $CMA_SOLVER \
+            $IPOP_CMA_SOLVER \
+            $BIPOP_CMA_SOLVER \
+            $TPE_SOLVER \
+            $OPTUNA_CMA_SOLVER \
+            $OPTUNA_TPE_SOLVER \
+          --problems $PROBLEM \
+          --seed $SEED --repeats $REPEATS --budget $BUDGET \
+          | $KUROBAKO run --parallelism 7 > $2
+        ;;
+    cmaes)
+        $KUROBAKO studies \
+          --solvers \
+            $RANDOM_SOLVER \
+            $CMA_SOLVER \
+            $IPOP_CMA_SOLVER \
+            $BIPOP_CMA_SOLVER \
+            $OPTUNA_CMA_SOLVER \
+          --problems $PROBLEM \
+          --seed $SEED --repeats $REPEATS --budget $BUDGET \
+          | $KUROBAKO run --parallelism 5 > $2
+        ;;
+    tpe)
+        $KUROBAKO studies \
+          --solvers \
+            $RANDOM_SOLVER \
+            $TPE_SOLVER \
+            $OPTUNA_TPE_SOLVER \
+          --problems $PROBLEM \
+          --seed $SEED --repeats $REPEATS --budget $BUDGET \
+          | $KUROBAKO run --parallelism 3 > $2
+        ;;
+esac
