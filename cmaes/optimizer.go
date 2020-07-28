@@ -391,7 +391,11 @@ func (o *Optimizer) Tell(solutions []*Solution) error {
 	// Avoid eigendecomposition error by arithmetic overflow
 	// This ensures that C has positive definite properties.
 	minC := make([]float64, o.dim)
-	floats.AddConst(epsilon, minC)
+	for i := 0; i < o.dim; i++ {
+		if o.c.At(i, i) <= 0 {
+			minC[i] = epsilon
+		}
+	}
 	o.c.AddSym(o.c, mat.NewDiagDense(o.dim, minC))
 
 	// Stores 'best' and 'worst' values of the last 'funHistTerm' generations.
