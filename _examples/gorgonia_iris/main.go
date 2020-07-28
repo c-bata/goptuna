@@ -38,7 +38,9 @@ func main() {
 	rdb.RunAutoMigrate(db)
 	storage := rdb.NewStorage(db)
 
-	pruner, _ := successivehalving.NewPruner()
+	pruner, _ := successivehalving.NewPruner(
+		successivehalving.OptionSetMinResource(100),
+		successivehalving.OptionSetReductionFactor(3))
 	study, err := goptuna.CreateStudy(
 		"gorgonia-iris",
 		goptuna.StudyOptionStorage(storage),
@@ -49,7 +51,7 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to create study: ", err)
 	}
-	err = study.Optimize(objective, 50)
+	err = study.Optimize(objective, 200)
 	if err != nil {
 		log.Fatal("failed to optimize: ", err)
 	}
@@ -136,7 +138,7 @@ func objective(trial goptuna.Trial) (float64, error) {
 		acc = accuracy(predicted.Data().([]float64), Y.Value().Data().([]float64))
 
 		if err := trial.ShouldPrune(i, acc); err != nil {
-			return 0, err
+			return acc, err
 		}
 		machine.Reset() // Reset is necessary in a loop like this
 	}
