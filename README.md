@@ -19,6 +19,12 @@ This library is particularly designed for machine learning, but everything will 
 * Median Stopping Rule [7]
 * ASHA: Asynchronous Successive Halving Algorithm (Optuna flavored version) [1,8,9]
 
+**Other key features:**
+
+| Easy to use | Rich visualization support |
+| ----------- | -------------------------- |
+| <img width="980" alt="Easy to use" src="https://user-images.githubusercontent.com/5564044/88718235-a2fe6980-d15c-11ea-8a55-a86114153685.png"> |<img width="980" alt="Rich visualization" src="https://user-images.githubusercontent.com/5564044/88718696-20c27500-d15d-11ea-86ac-30faaca120af.png"> |
+
 **Projects using Goptuna:**
 
 * [Kubeflow/Katib: Kubernetes-based system for hyperparameter tuning and neural architecture search.](https://github.com/kubeflow/katib)
