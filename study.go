@@ -255,12 +255,12 @@ func (s *Study) runTrial(objective FuncObjective) (int, error) {
 		}
 		if lastStep, exists := trial.GetLatestStep(); exists {
 			err = s.Storage.SetTrialValue(trialID, trial.IntermediateValues[lastStep])
-			s.logger.Error("Failed to set trial value",
-				fmt.Sprintf("trialID=%d", trialID),
-				fmt.Sprintf("state=%s", state.String()),
-				fmt.Sprintf("evaluation=%f", evaluation),
-				fmt.Sprintf("err=%s", err))
 			if err != nil {
+				s.logger.Error("Failed to set trial value",
+					fmt.Sprintf("trialID=%d", trialID),
+					fmt.Sprintf("state=%s", state.String()),
+					fmt.Sprintf("evaluation=%f", evaluation),
+					fmt.Sprintf("err=%s", err))
 				return -1, err
 			}
 		}

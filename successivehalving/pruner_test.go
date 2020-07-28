@@ -48,7 +48,7 @@ func TestOptunaPruner_IntermediateValues(t *testing.T) {
 				Study: study,
 				ID:    trialID,
 			}
-			err = trial.Report(1, 1)
+			err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 1, 1)
 			if err != nil {
 				t.Errorf("should be err=nil, but got %s", err)
 			}
@@ -86,7 +86,7 @@ func TestOptunaPruner_IntermediateValues(t *testing.T) {
 			}
 
 			// A pruner is activated if a trial has an intermediate value.
-			err = trial.Report(tt.intermediateValue, 1)
+			err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 1, tt.intermediateValue)
 			if err != nil {
 				t.Errorf("should be err=nil, but got %s", err)
 			}
@@ -127,7 +127,7 @@ func TestOptunaPruner_RungCheck(t *testing.T) {
 			Study: study,
 			ID:    trialID,
 		}
-		err = trial.Report(0.1*float64(i+1), 7)
+		err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 7, 0.1*float64(i+1))
 		if err != nil {
 			t.Errorf("should be err=nil, but got %s", err)
 		}
@@ -159,7 +159,7 @@ func TestOptunaPruner_RungCheck(t *testing.T) {
 		Study: study,
 		ID:    trialID,
 	}
-	err = trial.Report(0.75, 7)
+	err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 7, 0.75)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -187,7 +187,7 @@ func TestOptunaPruner_RungCheck(t *testing.T) {
 		Study: study,
 		ID:    trialID,
 	}
-	err = trial.Report(0.25, 7)
+	err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 7, 0.25)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -215,7 +215,7 @@ func TestOptunaPruner_RungCheck(t *testing.T) {
 		Study: study,
 		ID:    trialID,
 	}
-	err = trial.Report(0.05, 7)
+	err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 7, 0.05)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -256,7 +256,7 @@ func TestOptunaPruner_FirstTrialIsNotPruned(t *testing.T) {
 		ID:    trialID,
 	}
 	for i := 0; i < 10; i++ {
-		err = trial.Report(1, i)
+		err = trial.Study.Storage.SetTrialIntermediateValue(trialID, i, 1)
 		if err != nil {
 			t.Errorf("should be err=nil, but got %s", err)
 		}
@@ -331,7 +331,7 @@ func TestOptunaPruner_MinResource(t *testing.T) {
 		Study: study,
 		ID:    trialID,
 	}
-	err = trial.Report(1, 1)
+	err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 1, 1)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -368,7 +368,7 @@ func TestOptunaPruner_MinResource(t *testing.T) {
 		Study: study,
 		ID:    trialID,
 	}
-	err = trial.Report(1, 1)
+	err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 1, 1)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -387,7 +387,7 @@ func TestOptunaPruner_MinResource(t *testing.T) {
 		t.Errorf("completed_rung_0 should not be exist")
 	}
 
-	err = trial.Report(1, 2)
+	err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 2, 1)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -438,7 +438,7 @@ func TestOptunaPruner_ReductionFactor(t *testing.T) {
 		Study: study,
 		ID:    trialID,
 	}
-	err = trial.Report(1, 1)
+	err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 1, 1)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -474,7 +474,7 @@ func TestOptunaPruner_ReductionFactor(t *testing.T) {
 		Study: study,
 		ID:    trialID,
 	}
-	err = trial.Report(1, 1)
+	err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 1, 1)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -496,7 +496,7 @@ func TestOptunaPruner_ReductionFactor(t *testing.T) {
 		t.Errorf("completed_rung_1 should not be exist")
 	}
 
-	err = trial.Report(1, 2)
+	err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 2, 1)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -515,7 +515,7 @@ func TestOptunaPruner_ReductionFactor(t *testing.T) {
 		t.Errorf("completed_rung_1 should not be exist")
 	}
 
-	err = trial.Report(1, 3)
+	err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 3, 1)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -566,7 +566,7 @@ func TestOptunaPruner_MinEarlyStoppingRate(t *testing.T) {
 		Study: study,
 		ID:    trialID,
 	}
-	err = trial.Report(1, 1)
+	err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 1, 1)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -599,7 +599,7 @@ func TestOptunaPruner_MinEarlyStoppingRate(t *testing.T) {
 		Study: study,
 		ID:    trialID,
 	}
-	err = trial.Report(1, 1)
+	err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 1, 1)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -621,7 +621,7 @@ func TestOptunaPruner_MinEarlyStoppingRate(t *testing.T) {
 		t.Errorf("completed_rung_1 should not be exist")
 	}
 
-	err = trial.Report(1, 2)
+	err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 2, 1)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}

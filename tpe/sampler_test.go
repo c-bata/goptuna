@@ -225,8 +225,8 @@ func TestGetObservationPairs_MINIMIZE(t *testing.T) {
 		if number == 0 {
 			return float64(x), nil
 		} else if number == 1 {
-			_ = trial.Report(1, 4)
-			_ = trial.Report(2, 7)
+			trial.Study.Storage.SetTrialIntermediateValue(trial.ID, 4, 1)
+			trial.Study.Storage.SetTrialIntermediateValue(trial.ID, 7, 2)
 			return 0.0, goptuna.ErrTrialPruned
 		} else if number == 2 {
 			return 0.0, goptuna.ErrTrialPruned
@@ -273,8 +273,8 @@ func TestGetObservationPairs_MAXIMIZE(t *testing.T) {
 		if number == 0 {
 			return float64(x), nil
 		} else if number == 1 {
-			_ = trial.Report(1, 4)
-			_ = trial.Report(2, 7)
+			trial.Study.Storage.SetTrialIntermediateValue(trial.ID, 4, 1)
+			trial.Study.Storage.SetTrialIntermediateValue(trial.ID, 7, 2)
 			return 0.0, goptuna.ErrTrialPruned
 		} else if number == 2 {
 			return 0.0, goptuna.ErrTrialPruned

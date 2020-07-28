@@ -12,7 +12,7 @@ func OptionSetMinResource(minResource int) Option {
 }
 
 // OptionSetReductionFactor to set the reduction factor.
-func OptionSetReductioinFactor(reductionFactor int) Option {
+func OptionSetReductionFactor(reductionFactor int) Option {
 	return func(p *Pruner) error {
 		p.ReductionFactor = reductionFactor
 		return nil

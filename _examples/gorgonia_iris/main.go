@@ -9,6 +9,7 @@ import (
 
 	"github.com/c-bata/goptuna"
 	"github.com/c-bata/goptuna/rdb"
+	"github.com/c-bata/goptuna/successivehalving"
 	"github.com/c-bata/goptuna/tpe"
 	"github.com/go-gota/gota/dataframe"
 	"github.com/go-gota/gota/series"
@@ -37,18 +38,22 @@ func main() {
 	rdb.RunAutoMigrate(db)
 	storage := rdb.NewStorage(db)
 
+	pruner, _ := successivehalving.NewPruner(
+		successivehalving.OptionSetMinResource(100),
+		successivehalving.OptionSetReductionFactor(3))
 	study, err := goptuna.CreateStudy(
 		"gorgonia-iris",
 		goptuna.StudyOptionStorage(storage),
 		goptuna.StudyOptionSampler(tpe.NewSampler()),
+		goptuna.StudyOptionPruner(pruner),
 		goptuna.StudyOptionDirection(goptuna.StudyDirectionMaximize),
 	)
 	if err != nil {
 		log.Fatal("failed to create study: ", err)
 	}
-	err = study.Optimize(objective, 50)
+	err = study.Optimize(objective, 200)
 	if err != nil {
-		log.Fatal("failed to create study: ", err)
+		log.Fatal("failed to optimize: ", err)
 	}
 
 	v, _ := study.GetBestValue()
@@ -131,6 +136,10 @@ func objective(trial goptuna.Trial) (float64, error) {
 			return 0, err
 		}
 		acc = accuracy(predicted.Data().([]float64), Y.Value().Data().([]float64))
+
+		if err := trial.ShouldPrune(i, acc); err != nil {
+			return acc, err
+		}
 		machine.Reset() // Reset is necessary in a loop like this
 	}
 	return acc, nil

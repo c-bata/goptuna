@@ -22,7 +22,7 @@ func TestPercentilePruner_PruneWithOneTrial(t *testing.T) {
 		Study: study,
 		ID:    trialID,
 	}
-	err = trial.Report(1, 1)
+	err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 1, 1)
 	if err != nil {
 		t.Errorf("should be err=nil, but got %s", err)
 	}
@@ -173,7 +173,7 @@ func TestPercentilePruner_Prune(t *testing.T) {
 					Study: study,
 					ID:    trialID,
 				}
-				err = trial.Report(v, 1)
+				err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 1, v)
 				if err != nil {
 					t.Errorf("should be err=nil, but got %s", err)
 					return
@@ -213,7 +213,7 @@ func TestPercentilePruner_Prune(t *testing.T) {
 			}
 
 			// A pruner is activated if a trial has an intermediate value.
-			err = trial.Report(tt.latestValue, 1)
+			err = trial.Study.Storage.SetTrialIntermediateValue(trialID, 1, tt.latestValue)
 			if err != nil {
 				t.Errorf("should be err=nil, but got %s", err)
 				return
