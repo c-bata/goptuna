@@ -2,13 +2,12 @@ name: Run kurobako benchmark
 on:
   pull_request:
     paths:
-    - '.github/workflows/benchmark-ackley.yml'
+    - '.github/workflows/benchmark-rastrigin.yml'
     - '_benchmarks/runner.sh'
-    - 'internal/**.go'
-    - 'tpe/**.go'
     - 'cmaes/**.go'
+    - 'tpe/**.go'
 jobs:
-  benchmarks-ackley:
+  benchmarks-rastrigin:
     name: Run kurobako benchmark
     runs-on: ubuntu-latest
 
@@ -33,10 +32,13 @@ jobs:
           chmod +x kurobako
           ./kurobako -h
 
-      - name: Run sigopt/evalset/Ackley Benchmark
+      - name: Run Rastrigin Benchmark
         env:
           KUROBAKO: ./kurobako
-        run: ./_benchmarks/runner.sh ackley ./kurobako-report.json
+          DIM: 2
+          REPEATS: 10
+          BUDGET: 2500
+        run: ./_benchmarks/runner.sh rastrigin ./kurobako-report.json
       - name: Plot kurobako result
         uses: c-bata/github-actions-kurobako/plot@v1
         id: kurobako-plot
@@ -66,24 +68,29 @@ jobs:
         if: ${{ env.HAS_SECRET == 1 }}
       - name: Upload an image to google cloud storage
         if: ${{ env.HAS_SECRET == 1 }}
-        run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/ackley-${{ github.sha }}.png
+        run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/rastrigin-${{ github.sha }}.png
       - name: Comment to Pull Request
         if: ${{ env.HAS_SECRET == 1 }}
         uses: c-bata/github-actions-kurobako@v2
         with:
           report-md-path: './kurobako-report.md'
-          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/ackley-${{ github.sha }}.png
-          title: 'Benchmark result of sigopt/evalset/Ackley problem'
+          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/rastrigin-${{ github.sha }}.png
+          title: 'Benchmark result of Rastrigin problem'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: cp ${{ steps.kurobako-plot.outputs.image-path }} ackley.png
-      - run: mv ./kurobako-report.md ./kurobako-report-ackley.md
+      - run: cp ${{ steps.kurobako-plot.outputs.image-path }} rastrigin.png
+      - run: mv ./kurobako-report.md ./kurobako-report-rastrigin.md
+      - run: mv ./kurobako-report.json ./kurobako-report-rastrigin.json
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
-          path: ackley.png
+          path: rastrigin.png
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
-          path: kurobako-report-ackley.md
+          path: kurobako-report-rastrigin.md
+      - uses: actions/upload-artifact@v2
+        with:
+          name: kurobako-report
+          path: kurobako-report-rastrigin.json
