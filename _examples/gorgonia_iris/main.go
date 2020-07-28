@@ -39,7 +39,6 @@ func main() {
 	storage := rdb.NewStorage(db)
 
 	pruner, _ := successivehalving.NewPruner(
-		successivehalving.OptionSetMinResource(100),
 		successivehalving.OptionSetReductionFactor(3))
 	study, err := goptuna.CreateStudy(
 		"gorgonia-iris",
@@ -136,11 +135,13 @@ func objective(trial goptuna.Trial) (float64, error) {
 			return 0, err
 		}
 		acc = accuracy(predicted.Data().([]float64), Y.Value().Data().([]float64))
-
-		if err := trial.ShouldPrune(i, acc); err != nil {
-			return acc, err
-		}
 		machine.Reset() // Reset is necessary in a loop like this
+
+		if i%100 == 0 {
+			if err := trial.ShouldPrune(i, acc); err != nil {
+				return acc, err
+			}
+		}
 	}
 	return acc, nil
 }
