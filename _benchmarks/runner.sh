@@ -44,8 +44,8 @@ CMA_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver cmaes)
 IPOP_CMA_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver ipop-cmaes)
 BIPOP_CMA_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver bipop-cmaes)
 TPE_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver tpe)
-OPTUNA_CMA_SOLVER=$($KUROBAKO solver command python ${DIR}/optuna_solver.py cmaes)
-OPTUNA_TPE_SOLVER=$($KUROBAKO solver command python ${DIR}/optuna_solver.py tpe)
+OPTUNA_CMA_SOLVER=$($KUROBAKO solver --name Optuna-CMAES optuna --sampler CmaEsSampler)
+OPTUNA_TPE_SOLVER=$($KUROBAKO solver --name Optuna-TPE optuna --sampler CmaEsSampler)
 
 case "$1" in
     himmelblau)
@@ -116,5 +116,10 @@ case $SOLVERS in
           --problems $PROBLEM \
           --seed $SEED --repeats $REPEATS --budget $BUDGET \
           | $KUROBAKO run --parallelism 3 > $2
+        ;;
+    *)
+        echo "[Error] Invalid solver '${SOLVERS}'"
+        usage
+        exit 1
         ;;
 esac

@@ -43,8 +43,9 @@ jobs:
         env:
           KUROBAKO: ./kurobako
           DIM: 2
-          REPEATS: 10
+          REPEATS: 5
           BUDGET: 2500
+          SOLVERS: cmaes
         run: ./_benchmarks/runner.sh rastrigin ./kurobako-report.json
       - name: Plot kurobako result
         uses: c-bata/github-actions-kurobako/plot@v1

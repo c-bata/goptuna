@@ -42,8 +42,8 @@ jobs:
       - name: Run benchmarks of Rosenbrock function
         env:
           KUROBAKO: ./kurobako
-          REPEATS: 20
-          BUDGET: 100
+          REPEATS: 10
+          BUDGET: 50
         run: ./_benchmarks/runner.sh rosenbrock ./kurobako-report.json
       - name: Plot kurobako result
         uses: c-bata/github-actions-kurobako/plot@v1
