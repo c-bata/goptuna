@@ -10,7 +10,7 @@ This library is particularly designed for machine learning, but everything will 
 
 **Supported algorithms:**
 
-Goptuna supports following state-of-the-art algorithms.
+Goptuna supports varoius state-of-the-art algorithms.
 These algorithms are written in pure Go with a few dependencies and continuously benchmarked on GitHub Actions.
 
 * Random search
@@ -23,9 +23,9 @@ These algorithms are written in pure Go with a few dependencies and continuously
 
 **Key features:**
 
-| Easy to use | Optuna compatibility |
-| ----------- | -------------------- |
-| <img width="750" alt="easy-to-use" src="https://user-images.githubusercontent.com/5564044/88830312-c2eb6700-d208-11ea-982a-fd034116280a.png"> | <img width="750" alt="optuna-compatibility" src="https://user-images.githubusercontent.com/5564044/88843168-a3aa0500-d21b-11ea-8fc1-d1cdca890a3f.png"> |
+| State-of-the-art algorithms | Optuna compatibility |
+| --------------------------- | -------------------- |
+| <img width="750" alt="state-of-the-art-algorithms" src="https://user-images.githubusercontent.com/5564044/88852788-b7f4fe80-d229-11ea-8953-3089b155d4c0.png"> | <img width="750" alt="optuna-compatibility" src="https://user-images.githubusercontent.com/5564044/88843168-a3aa0500-d21b-11ea-8fc1-d1cdca890a3f.png"> |
 
 **Projects using Goptuna:**
 
@@ -45,8 +45,27 @@ $ go get -u github.com/c-bata/goptuna
 
 ## Usage
 
-Goptuna supports Define-By-Run style user API like Optuna.
-It makes the modularity high, and the user can dynamically construct the search spaces.
+
+<table><tr><td valign="top" width="50%">
+
+## 5 steps to use Goptuna.
+
+Goptuna supports Define-by-Run style API like Optuna.
+You can dynamically construct the search spaces.
+
+1. Define an objective function we want to minimize.
+1. Define the search space of the input values.
+1. Create study which manages optimization history.
+1. Execute objective function.
+1. Print the best evaluation value and the parameters.
+
+And I recommend you to use RDB storage backend for following purposes.
+
+* Continue from where we stopped in the previous optimizations.
+* Scale studies to tens or hundreds of workers that shares the same RDB storage.
+* Visualize optimization results or check hyperparameter importance on Jupyter notebook via Optuna utilities.
+
+</td><td valign="top" width="50%">
 
 ```go
 package main
@@ -59,14 +78,9 @@ import (
     "github.com/c-bata/goptuna/tpe"
 )
 
-// Define an objective function we want to minimize.
 func objective(trial goptuna.Trial) (float64, error) {
-    // Define a search space of the input values.
     x1, _ := trial.SuggestFloat("x1", -10, 10)
     x2, _ := trial.SuggestFloat("x2", -10, 10)
-
-    // Here is a two-dimensional quadratic function.
-    // F(x1, x2) = (x1 - 2)^2 + (x2 + 5)^2
     return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
 }
 
@@ -76,13 +90,9 @@ func main() {
         goptuna.StudyOptionSampler(tpe.NewSampler()),
     )
     if err != nil { ... }
-
-    // Run an objective function 100 times to find a global minimum.
     err = study.Optimize(objective, 100)
     if err != nil { ... }
 
-    // Print the best evaluation value and the parameters.
-    // Mathematically, argmin F(x1, x2) is (x1, x2) = (+2, -5).
     v, _ := study.GetBestValue()
     p, _ := study.GetBestParams()
     log.Printf("Best evaluation value=%f (x1=%f, x2=%f)",
@@ -90,44 +100,9 @@ func main() {
 }
 ```
 
-```console
-$ go run main.go
-...
-2019/08/18 00:54:51 Best evaluation=0.038327 (x1=2.181604, x2=-4.926880)
-```
+</td></tr></table>
 
 **Advanced usages**
-
-<details>
-
-<summary>Parallel optimization with multiple goroutine workers</summary>
-
-``Optimize`` method of ``goptuna.Study`` object is designed as the goroutine safe.
-So you can easily optimize your objective function using multiple goroutine workers.
-
-```go
-package main
-
-import ...
-
-func main() {
-    study, _ := goptuna.CreateStudy(...)
-
-    eg, ctx := errgroup.WithContext(context.Background())
-    study.WithContext(ctx)
-    for i := 0; i < 5; i++ {
-        eg.Go(func() error {
-            return study.Optimize(objective, 100)
-        })
-    }
-    if err := eg.Wait(); err != nil { ... }
-    ...
-}
-```
-
-[full source code](./_examples/concurrency/main.go)
-
-</details>
 
 <details>
 
