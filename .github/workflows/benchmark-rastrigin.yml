@@ -26,9 +26,16 @@ jobs:
       - run: python -V
       - run: pip install -U pip
       - run: pip install kurobako optuna cma
+      - name: Cache kurobako CLI
+        id: cache-kurobako
+        uses: actions/cache@v2
+        with:
+          path: ./kurobako
+          key: kurobako-0-2-0
       - name: Download kurobako CLI
+        if: steps.cache-kurobako.outputs.cache-hit != 'true'
         run: |
-          curl -L https://github.com/sile/kurobako/releases/download/0.1.10/kurobako-0.1.10.linux-amd64 -o kurobako
+          curl -L https://github.com/sile/kurobako/releases/download/0.2.0/kurobako-0.2.0.linux-amd64 -o kurobako
           chmod +x kurobako
           ./kurobako -h
 
@@ -36,8 +43,9 @@ jobs:
         env:
           KUROBAKO: ./kurobako
           DIM: 2
-          REPEATS: 10
+          REPEATS: 5
           BUDGET: 2500
+          SOLVERS: cmaes
         run: ./_benchmarks/runner.sh rastrigin ./kurobako-report.json
       - name: Plot kurobako result
         uses: c-bata/github-actions-kurobako/plot@v1

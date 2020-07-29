@@ -26,17 +26,24 @@ jobs:
       - run: python -V
       - run: pip install -U pip
       - run: pip install kurobako optuna cma
+      - name: Cache kurobako CLI
+        id: cache-kurobako
+        uses: actions/cache@v2
+        with:
+          path: ./kurobako
+          key: kurobako-0-2-0
       - name: Download kurobako CLI
+        if: steps.cache-kurobako.outputs.cache-hit != 'true'
         run: |
-          curl -L https://github.com/sile/kurobako/releases/download/0.1.10/kurobako-0.1.10.linux-amd64 -o kurobako
+          curl -L https://github.com/sile/kurobako/releases/download/0.2.0/kurobako-0.2.0.linux-amd64 -o kurobako
           chmod +x kurobako
           ./kurobako -h
 
       - name: Run benchmarks of Rosenbrock function
         env:
           KUROBAKO: ./kurobako
-          REPEATS: 20
-          BUDGET: 100
+          REPEATS: 10
+          BUDGET: 50
         run: ./_benchmarks/runner.sh rosenbrock ./kurobako-report.json
       - name: Plot kurobako result
         uses: c-bata/github-actions-kurobako/plot@v1
