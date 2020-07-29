@@ -44,8 +44,8 @@ CMA_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver cmaes)
 IPOP_CMA_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver ipop-cmaes)
 BIPOP_CMA_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver bipop-cmaes)
 TPE_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver tpe)
-OPTUNA_CMA_SOLVER=$($KUROBAKO solver --name Optuna-CMAES optuna --sampler CmaEsSampler)
-OPTUNA_TPE_SOLVER=$($KUROBAKO solver --name Optuna-TPE optuna --sampler CmaEsSampler)
+OPTUNA_CMA_SOLVER=$($KUROBAKO solver --name Optuna-CMAES optuna --loglevel error --sampler CmaEsSampler)
+OPTUNA_TPE_SOLVER=$($KUROBAKO solver --name Optuna-TPE optuna --loglevel error --sampler TPESampler)
 
 case "$1" in
     himmelblau)
