@@ -8,9 +8,15 @@ Distributed hyperparameter optimization framework, inspired by [Optuna](https://
 This library is particularly designed for machine learning, but everything will be able to optimize if you can define the objective function
 (e.g. Optimizing the number of goroutines of your server and the memory buffer size of the caching systems).
 
+**Key features:**
+
+| State-of-the-art algorithms | Optuna compatibility |
+| --------------------------- | -------------------- |
+| <img width="750" alt="state-of-the-art-algorithms" src="https://user-images.githubusercontent.com/5564044/88860180-2d66cc00-d236-11ea-9a2f-de731c54a870.png"> | <img width="750" alt="optuna-compatibility" src="https://user-images.githubusercontent.com/5564044/88843168-a3aa0500-d21b-11ea-8fc1-d1cdca890a3f.png"> |
+
 **Supported algorithms:**
 
-Goptuna supports varoius state-of-the-art algorithms.
+Goptuna supports various state-of-the-art algorithms.
 These algorithms are written in pure Go with a few dependencies and continuously benchmarked on GitHub Actions.
 
 * Random search
@@ -21,16 +27,10 @@ These algorithms are written in pure Go with a few dependencies and continuously
 * Median Stopping Rule [6]
 * ASHA: Asynchronous Successive Halving Algorithm (Optuna flavored version) [1,7,8]
 
-**Key features:**
-
-| State-of-the-art algorithms | Optuna compatibility |
-| --------------------------- | -------------------- |
-| <img width="750" alt="state-of-the-art-algorithms" src="https://user-images.githubusercontent.com/5564044/88852788-b7f4fe80-d229-11ea-8953-3089b155d4c0.png"> | <img width="750" alt="optuna-compatibility" src="https://user-images.githubusercontent.com/5564044/88843168-a3aa0500-d21b-11ea-8fc1-d1cdca890a3f.png"> |
-
 **Projects using Goptuna:**
 
 * [Kubeflow/Katib: Kubernetes-based system for hyperparameter tuning and neural architecture search.](https://github.com/kubeflow/katib)
-* [c-bata/goptuna-bayesopt: Goptuna integration for d4l3k/go-bayesopt, the library for Gaussian Process based bayesian optimization.](https://github.com/c-bata/goptuna-bayesopt) [9]
+* [c-bata/goptuna-bayesopt: Goptuna sampler for Gaussian Process based bayesian optimization using d4l3k/go-bayesopt.](https://github.com/c-bata/goptuna-bayesopt) [9]
 * [c-bata/goptuna-isucon9q: Applying bayesian optimization for the parameters of MySQL, Nginx and Go web applications.](https://github.com/c-bata/goptuna-isucon9q)
 * (If you have a project which uses Goptuna and want your own project to be listed here, please submit a GitHub issue.)
 
@@ -50,7 +50,7 @@ You can dynamically construct the search spaces.
 
 <table><tr><td valign="top" width="50%">
 
-5 steps to use Goptuna.
+### 5 steps to use Goptuna.
 
 1. Define an objective function which returns a value you want to minimize.
 1. Define the search space via Suggest APIs.
@@ -61,8 +61,8 @@ You can dynamically construct the search spaces.
 Furthermore, I recommend you to use RDB storage backend for following purposes.
 
 * Continue from where we stopped in the previous optimizations.
-* Scale studies to tens or hundreds of workers that shares the same RDB storage.
-* Visualize and/or analyze results on Jupyter notebook via Optuna utilities.
+* Scale studies to tens of workers that connecting to the same RDB storage.
+* Visualize parameters on Jupyter notebook using Optuna.
 
 </td><td valign="top" width="50%">
 
@@ -86,15 +86,15 @@ func objective(trial goptuna.Trial) (float64, error) {
 func main() {
     study, err := goptuna.CreateStudy(
         "goptuna-example",
-        goptuna.StudyOptionSampler(tpe.NewSampler()),
-    )
+        goptuna.StudyOptionSampler(tpe.NewSampler()))
     if err != nil { ... }
+
     err = study.Optimize(objective, 100)
     if err != nil { ... }
 
     v, _ := study.GetBestValue()
     p, _ := study.GetBestParams()
-    log.Printf("Best evaluation value=%f (x1=%f, x2=%f)",
+    log.Printf("Best value=%f (x1=%f, x2=%f)",
         v, p["x1"].(float64), p["x2"].(float64))
 }
 ```
