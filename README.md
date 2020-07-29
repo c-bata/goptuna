@@ -43,7 +43,7 @@ You can integrate Goptuna in wide variety of Go projects because of its portabil
 $ go get -u github.com/c-bata/goptuna
 ```
 
-## Goptuna is easy to use!
+## Usage
 
 Goptuna supports Define-by-Run style API like Optuna.
 You can dynamically construct the search spaces.
@@ -52,17 +52,17 @@ You can dynamically construct the search spaces.
 
 ## 5 steps to use Goptuna.
 
-1. Define an objective function we want to minimize.
-1. Define the search space of the input values.
-1. Create study which manages optimization history.
-1. Execute objective function.
-1. Print the best evaluation value and the parameters.
+1. Define an objective function which returns a value you want to minimize.
+1. Define the search space via Suggest APIs.
+1. Create a study which manages each experiment.
+1. Evaluate your objective function.
+1. Print the best evaluation parameters.
 
 And I recommend you to use RDB storage backend for following purposes.
 
 * Continue from where we stopped in the previous optimizations.
 * Scale studies to tens or hundreds of workers that shares the same RDB storage.
-* Visualize optimization results or check hyperparameter importance on Jupyter notebook via Optuna utilities.
+* Visualize and/or analyze results on Jupyter notebook via Optuna utilities.
 
 </td><td valign="top" width="50%">
 
