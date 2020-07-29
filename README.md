@@ -23,7 +23,7 @@ This library is particularly designed for machine learning, but everything will 
 
 | Easy to use | Rich visualization support |
 | ----------- | -------------------------- |
-| <img width="800" alt="Easy to use" src="https://user-images.githubusercontent.com/5564044/88718235-a2fe6980-d15c-11ea-8a55-a86114153685.png"> | <img width="800" alt="Rich visualization" src="https://user-images.githubusercontent.com/5564044/88719207-dc83a480-d15d-11ea-9425-e9e783a40f6d.png"> |
+| <img width="750" alt="easy-to-use" src="https://user-images.githubusercontent.com/5564044/88830312-c2eb6700-d208-11ea-982a-fd034116280a.png"> | <img width="750" alt="rich-visualization" src="https://user-images.githubusercontent.com/5564044/88830330-c7178480-d208-11ea-98ae-9908abc75ed8.png"> |
 
 **Projects using Goptuna:**
 
