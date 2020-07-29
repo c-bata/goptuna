@@ -10,24 +10,28 @@ This library is particularly designed for machine learning, but everything will 
 
 **Supported algorithms:**
 
+Goptuna supports following state-of-the-art algorithms.
+These algorithms are written in pure Go with a few dependencies and continuously benchmarked on GitHub Actions.
+
 * Random search
 * TPE: Tree-structured Parzen Estimators [2]
 * CMA-ES: Covariance Matrix Adaptation Evolution Strategy [3]
 * IPOP-CMA-ES: CMA-ES with increasing population size [4]
 * BIPOP-CMA-ES: BI-population CMA-ES [5]
-* GP-BO: Gaussian Process based Bayesian Optimization using [goptuna-bayesopt](https://github.com/c-bata/goptuna-bayesopt) [6]
-* Median Stopping Rule [7]
-* ASHA: Asynchronous Successive Halving Algorithm (Optuna flavored version) [1,8,9]
+* Median Stopping Rule [6]
+* ASHA: Asynchronous Successive Halving Algorithm (Optuna flavored version) [1,7,8]
 
 **Other key features:**
 
-| Easy to use | Rich visualization support |
-| ----------- | -------------------------- |
+| Easy to use | Optuna compatibility |
+| ----------- | -------------------- |
 | <img width="750" alt="easy-to-use" src="https://user-images.githubusercontent.com/5564044/88830312-c2eb6700-d208-11ea-982a-fd034116280a.png"> | <img width="750" alt="optuna-compatibility" src="https://user-images.githubusercontent.com/5564044/88843168-a3aa0500-d21b-11ea-8fc1-d1cdca890a3f.png"> |
 
 **Projects using Goptuna:**
 
 * [Kubeflow/Katib: Kubernetes-based system for hyperparameter tuning and neural architecture search.](https://github.com/kubeflow/katib)
+* (If you have a project which uses Goptuna and want your own project to be listed here, please submit a GitHub issue.)
+
 
 ## Installation
 
@@ -255,9 +259,8 @@ References:
 * [4] [Auger, A., Hansen, N.: A restart CMA evolution strategy with increasing population size. In: Proceedings of the 2005 IEEE Congress on Evolutionary Computation (CEC’2005), pp. 1769–1776 (2005a)](https://sci2s.ugr.es/sites/default/files/files/TematicWebSites/EAMHCO/contributionsCEC05/auger05ARCMA.pdf)
 * [5] [Hansen N. Benchmarking a BI-Population CMA-ES on the BBOB-2009 Function Testbed. In the workshop Proceedings of the Genetic and Evolutionary Computation Conference, GECCO, pages 2389–2395. ACM, 2009.](https://hal.inria.fr/inria-00382093/document)
 * [6] [Golovin, B. Sonik, S. Moitra, G. Kochanski, J. Karro, and D.Sculley. Google Vizier: A service for black-box optimization. In Knowledge Discovery and Data Mining (KDD), 2017.](http://www.kdd.org/kdd2017/papers/view/google-vizier-a-service-for-black-box-optimization)
-* [7] [J. Snoek, H. Larochelle, and R. Adams. Practical Bayesian optimization of machine learning algorithms. In Advances in Neural Information Processing Systems 25, pages 2960–2968, 2012.](https://arxiv.org/abs/1206.2944)
-* [8] [Kevin G. Jamieson and Ameet S. Talwalkar. Non-stochastic best arm identification and hyperparameter optimization. In AISTATS, 2016.](http://proceedings.mlr.press/v51/jamieson16.pdf)
-* [9] [Liam Li, Kevin Jamieson, Afshin Rostamizadeh, Ekaterina Gonina, Moritz Hardt, Benjamin Recht, and Ameet Talwalkar. Massively parallel hyperparameter tuning. arXiv preprint arXiv:1810.05934, 2018.](https://arxiv.org/abs/1810.05934)
+* [7] [Kevin G. Jamieson and Ameet S. Talwalkar. Non-stochastic best arm identification and hyperparameter optimization. In AISTATS, 2016.](http://proceedings.mlr.press/v51/jamieson16.pdf)
+* [8] [Liam Li, Kevin Jamieson, Afshin Rostamizadeh, Ekaterina Gonina, Moritz Hardt, Benjamin Recht, and Ameet Talwalkar. Massively parallel hyperparameter tuning. arXiv preprint arXiv:1810.05934, 2018.](https://arxiv.org/abs/1810.05934)
 
 Blog posts:
 
