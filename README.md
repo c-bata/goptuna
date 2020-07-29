@@ -43,15 +43,14 @@ You can integrate Goptuna in wide variety of Go projects because of its portabil
 $ go get -u github.com/c-bata/goptuna
 ```
 
-## Usage
+## Goptuna is easy to use!
 
+Goptuna supports Define-by-Run style API like Optuna.
+You can dynamically construct the search spaces.
 
 <table><tr><td valign="top" width="50%">
 
 ## 5 steps to use Goptuna.
-
-Goptuna supports Define-by-Run style API like Optuna.
-You can dynamically construct the search spaces.
 
 1. Define an objective function we want to minimize.
 1. Define the search space of the input values.
