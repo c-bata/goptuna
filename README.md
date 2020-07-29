@@ -50,7 +50,7 @@ You can dynamically construct the search spaces.
 
 <table><tr><td valign="top" width="50%">
 
-## 5 steps to use Goptuna.
+5 steps to use Goptuna.
 
 1. Define an objective function which returns a value you want to minimize.
 1. Define the search space via Suggest APIs.
@@ -58,7 +58,7 @@ You can dynamically construct the search spaces.
 1. Evaluate your objective function.
 1. Print the best evaluation parameters.
 
-And I recommend you to use RDB storage backend for following purposes.
+Furthermore, I recommend you to use RDB storage backend for following purposes.
 
 * Continue from where we stopped in the previous optimizations.
 * Scale studies to tens or hundreds of workers that shares the same RDB storage.
