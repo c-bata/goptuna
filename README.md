@@ -21,7 +21,7 @@ These algorithms are written in pure Go with a few dependencies and continuously
 * Median Stopping Rule [6]
 * ASHA: Asynchronous Successive Halving Algorithm (Optuna flavored version) [1,7,8]
 
-**Other key features:**
+**Key features:**
 
 | Easy to use | Optuna compatibility |
 | ----------- | -------------------- |
@@ -30,6 +30,8 @@ These algorithms are written in pure Go with a few dependencies and continuously
 **Projects using Goptuna:**
 
 * [Kubeflow/Katib: Kubernetes-based system for hyperparameter tuning and neural architecture search.](https://github.com/kubeflow/katib)
+* [c-bata/goptuna-bayesopt: Goptuna integration for d4l3k/go-bayesopt, the library for Gaussian Process based bayesian optimization.](https://github.com/c-bata/goptuna-bayesopt) [9]
+* [c-bata/goptuna-isucon9q: Applying bayesian optimization for the parameters of MySQL, Nginx and Go web applications.](https://github.com/c-bata/goptuna-isucon9q)
 * (If you have a project which uses Goptuna and want your own project to be listed here, please submit a GitHub issue.)
 
 
@@ -261,6 +263,7 @@ References:
 * [6] [Golovin, B. Sonik, S. Moitra, G. Kochanski, J. Karro, and D.Sculley. Google Vizier: A service for black-box optimization. In Knowledge Discovery and Data Mining (KDD), 2017.](http://www.kdd.org/kdd2017/papers/view/google-vizier-a-service-for-black-box-optimization)
 * [7] [Kevin G. Jamieson and Ameet S. Talwalkar. Non-stochastic best arm identification and hyperparameter optimization. In AISTATS, 2016.](http://proceedings.mlr.press/v51/jamieson16.pdf)
 * [8] [Liam Li, Kevin Jamieson, Afshin Rostamizadeh, Ekaterina Gonina, Moritz Hardt, Benjamin Recht, and Ameet Talwalkar. Massively parallel hyperparameter tuning. arXiv preprint arXiv:1810.05934, 2018.](https://arxiv.org/abs/1810.05934)
+* [9] [J. Snoek, H. Larochelle, and R. Adams. Practical Bayesian optimization of machine learning algorithms. In Advances in Neural Information Processing Systems 25, pages 2960–2968, 2012.](https://arxiv.org/abs/1206.2944)
 
 Blog posts:
 
