@@ -1,4 +1,4 @@
-name: Run kurobako benchmark (HPOBench Naval)
+name: Run HPOBench Naval
 on:
   pull_request:
     paths:

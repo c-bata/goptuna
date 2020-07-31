@@ -1,4 +1,4 @@
-name: Run kurobako benchmark (Rastrigin)
+name: Run Rastrigin benchmark
 on:
   pull_request:
     paths:

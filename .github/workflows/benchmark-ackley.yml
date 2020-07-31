@@ -1,4 +1,4 @@
-name: Run kurobako benchmark (Ackley)
+name: Run Ackley benchmark
 on:
   pull_request:
     paths:
