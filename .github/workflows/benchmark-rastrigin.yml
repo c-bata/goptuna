@@ -88,18 +88,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: cp ${{ steps.kurobako-plot.outputs.image-path }} rastrigin.png
-      - run: mv ./kurobako-report.md ./kurobako-report-rastrigin.md
       - run: mv ./kurobako-report.json ./kurobako-report-rastrigin.json
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
+          path: kurobako-report-rastrigin.json
+
+      - run: mv ${{ steps.kurobako-plot.outputs.image-path }} rastrigin.png
+        if: ${{ env.HAS_SECRET == 0 }}
+      - run: mv ./kurobako-report.md ./kurobako-report-rastrigin.md
+        if: ${{ env.HAS_SECRET == 0 }}
+      - uses: actions/upload-artifact@v2
+        if: ${{ env.HAS_SECRET == 0 }}
+        with:
+          name: kurobako-report
           path: rastrigin.png
       - uses: actions/upload-artifact@v2
+        if: ${{ env.HAS_SECRET == 0 }}
         with:
           name: kurobako-report
           path: kurobako-report-rastrigin.md
-      - uses: actions/upload-artifact@v2
-        with:
-          name: kurobako-report
-          path: kurobako-report-rastrigin.json
