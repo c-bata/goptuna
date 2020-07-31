@@ -98,18 +98,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: cp ${{ steps.kurobako-plot.outputs.image-path }} hpobench-naval.png
-      - run: mv ./kurobako-report.md ./kurobako-report-hpobench-naval.md
       - run: mv ./kurobako-report.json ./kurobako-report-hpobench-naval.json
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
+          path: kurobako-report-hpobench-naval.json
+
+      - run: mv ${{ steps.kurobako-plot.outputs.image-path }} hpobench-naval.png
+        if: ${{ env.HAS_SECRET == 0 }}
+      - run: mv ./kurobako-report.md ./kurobako-report-hpobench-naval.md
+        if: ${{ env.HAS_SECRET == 0 }}
+      - uses: actions/upload-artifact@v2
+        if: ${{ env.HAS_SECRET == 0 }}
+        with:
+          name: kurobako-report
           path: hpobench-naval.png
       - uses: actions/upload-artifact@v2
+        if: ${{ env.HAS_SECRET == 0 }}
         with:
           name: kurobako-report
           path: kurobako-report-hpobench-naval.md
-      - uses: actions/upload-artifact@v2
-        with:
-          name: kurobako-report
-          path: kurobako-report-hpobench-naval.json
