@@ -27,11 +27,11 @@ jobs:
       - run: pip install -U pip
       - run: pip install kurobako optuna cma
       - name: Cache kurobako CLI
-          id: cache-kurobako
-          uses: actions/cache@v2
-          with:
-            path: ./kurobako
-            key: kurobako-0-1-10
+        id: cache-kurobako
+        uses: actions/cache@v2
+        with:
+          path: ./kurobako
+          key: kurobako-0-1-10
       - name: Download kurobako CLI
         if: steps.cache-kurobako.outputs.cache-hit != 'true'
         run: |
