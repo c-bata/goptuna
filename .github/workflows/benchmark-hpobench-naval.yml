@@ -1,13 +1,13 @@
-name: Run Rastrigin benchmark
+name: Run HPOBench Naval
 on:
   pull_request:
     paths:
-    - '.github/workflows/benchmark-rastrigin.yml'
+    - '.github/workflows/benchmark-hpobench-naval.yml'
     - '_benchmarks/runner.sh'
     - 'cmaes/**.go'
     - 'tpe/**.go'
 jobs:
-  benchmarks-rastrigin:
+  benchmarks-hpobench-naval:
     name: Run kurobako benchmark
     runs-on: ubuntu-latest
 
@@ -38,21 +38,31 @@ jobs:
           curl -L https://github.com/sile/kurobako/releases/download/0.2.0/kurobako-0.2.0.linux-amd64 -o kurobako
           chmod +x kurobako
           ./kurobako -h
+      - name: Cache hpobench dataset
+        id: cache-hpobench-dataset
+        uses: actions/cache@v2
+        with:
+          path: ./tmp/fcnet_tabular_benchmarks
+          key: hpobench-dataset
+      - name: Download hpobench dataset
+        if: steps.cache-hpobench-dataset.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ./tmp
+          wget -O ./tmp/fcnet_tabular_benchmarks.tar.gz http://ml4aad.org/wp-content/uploads/2019/01/fcnet_tabular_benchmarks.tar.gz
+          tar xf ./tmp/fcnet_tabular_benchmarks.tar.gz -C ./tmp
 
-      - name: Run Rastrigin Benchmark
+      - name: Run HPOBench-Naval Benchmark
         env:
           KUROBAKO: ./kurobako
-          DIM: 2
-          REPEATS: 10
-          BUDGET: 2500
-          SOLVERS: ipop
-        run: ./_benchmarks/runner.sh rastrigin ./kurobako-report.json
+          REPEATS: 5
+          BUDGET: 100
+          SOLVERS: pruner
+        run: ./_benchmarks/runner.sh hpobench-naval ./kurobako-report.json
       - name: Plot kurobako result
         uses: c-bata/github-actions-kurobako/plot@v3
         id: kurobako-plot
         with:
           report-json-path: './kurobako-report.json'
-          error-bar: 'true'
       - name: Generate kurobako markdown report
         run: cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
 
@@ -77,29 +87,29 @@ jobs:
         if: ${{ env.HAS_SECRET == 1 }}
       - name: Upload an image to google cloud storage
         if: ${{ env.HAS_SECRET == 1 }}
-        run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/rastrigin-${{ github.sha }}.png
+        run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/hpobench-naval-${{ github.sha }}.png
       - name: Comment to Pull Request
         if: ${{ env.HAS_SECRET == 1 }}
         uses: c-bata/github-actions-kurobako@v2
         with:
           report-md-path: './kurobako-report.md'
-          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/rastrigin-${{ github.sha }}.png
-          title: 'Benchmark result of Rastrigin problem'
+          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/hpobench-naval-${{ github.sha }}.png
+          title: 'Benchmark result of HPOBench-Naval problem'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: cp ${{ steps.kurobako-plot.outputs.image-path }} rastrigin.png
-      - run: mv ./kurobako-report.md ./kurobako-report-rastrigin.md
-      - run: mv ./kurobako-report.json ./kurobako-report-rastrigin.json
+      - run: cp ${{ steps.kurobako-plot.outputs.image-path }} hpobench-naval.png
+      - run: mv ./kurobako-report.md ./kurobako-report-hpobench-naval.md
+      - run: mv ./kurobako-report.json ./kurobako-report-hpobench-naval.json
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
-          path: rastrigin.png
+          path: hpobench-naval.png
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
-          path: kurobako-report-rastrigin.md
+          path: kurobako-report-hpobench-naval.md
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
-          path: kurobako-report-rastrigin.json
+          path: kurobako-report-hpobench-naval.json
