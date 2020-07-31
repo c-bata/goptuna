@@ -10,8 +10,8 @@ This library is particularly designed for machine learning, but everything will 
 
 **Key features:**
 
-| State-of-the-art algorithms | Optuna compatibility |
-| --------------------------- | -------------------- |
+| State-of-the-art algorithms | Optuna compatible RDB storage backend |
+| --------------------------- | ------------------------------------- |
 | <img width="750" alt="state-of-the-art-algorithms" src="https://user-images.githubusercontent.com/5564044/88860180-2d66cc00-d236-11ea-9a2f-de731c54a870.png"> | <img width="750" alt="optuna-compatibility" src="https://user-images.githubusercontent.com/5564044/88843168-a3aa0500-d21b-11ea-8fc1-d1cdca890a3f.png"> |
 
 **Supported algorithms:**
