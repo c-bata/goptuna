@@ -47,8 +47,9 @@ jobs:
       - name: Download hpobench dataset
         if: steps.cache-hpobench-dataset.outputs.cache-hit != 'true'
         run: |
+          mkdir -p ./tmp
           wget -O ./tmp/fcnet_tabular_benchmarks.tar.gz http://ml4aad.org/wp-content/uploads/2019/01/fcnet_tabular_benchmarks.tar.gz
-          tar xf ./tmp/fcnet_tabular_benchmarks.tar.gz -C ./tmp/fcnet_tabular_benchmarks
+          tar xf ./tmp/fcnet_tabular_benchmarks.tar.gz -C ./tmp
 
       - name: Run HPOBench-Naval Benchmark
         env:

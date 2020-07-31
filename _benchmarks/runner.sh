@@ -53,21 +53,24 @@ TPE_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver tpe)
 
 OPTUNA_CMA_SOLVER=$($KUROBAKO solver --name Optuna-CMAES optuna --loglevel ${LOGLEVEL} --sampler CmaEsSampler)
 OPTUNA_TPE_SOLVER=$($KUROBAKO solver --name Optuna-TPE optuna --loglevel ${LOGLEVEL} --sampler TPESampler)
-OPTUNA_RANDOM_MEDIAN_SOLVER=$(kurobako solver --name Optuna-RANDOM-MEDIAN optuna --loglevel ${LOGLEVEL} --sampler RandomSampler --pruner MedianPruner)
-OPTUNA_RANDOM_ASHA_SOLVER=$(kurobako solver --name Optuna-RANDOM-ASHA optuna --loglevel ${LOGLEVEL} --sampler RandomSampler --pruner SuccessiveHalvingPruner)
-OPTUNA_TPE_MEDIAN_SOLVER=$(kurobako solver --name Optuna-TPE-MEDIAN optuna --loglevel  ${LOGLEVEL} --sampler TPESampler --pruner MedianPruner)
-OPTUNA_TPE_ASHA_SOLVER=$(kurobako solver --name Optuna-TPE-ASHA optuna --loglevel ${LOGLEVEL} --sampler TPESampler --pruner SuccessiveHalvingPruner)
+OPTUNA_RANDOM_MEDIAN_SOLVER=$($KUROBAKO solver --name Optuna-RANDOM-MEDIAN optuna --loglevel ${LOGLEVEL} --sampler RandomSampler --pruner MedianPruner)
+OPTUNA_RANDOM_ASHA_SOLVER=$($KUROBAKO solver --name Optuna-RANDOM-ASHA optuna --loglevel ${LOGLEVEL} --sampler RandomSampler --pruner SuccessiveHalvingPruner)
+OPTUNA_TPE_MEDIAN_SOLVER=$($KUROBAKO solver --name Optuna-TPE-MEDIAN optuna --loglevel  ${LOGLEVEL} --sampler TPESampler --pruner MedianPruner)
+OPTUNA_TPE_ASHA_SOLVER=$($KUROBAKO solver --name Optuna-TPE-ASHA optuna --loglevel ${LOGLEVEL} --sampler TPESampler --pruner SuccessiveHalvingPruner)
 
-if [[ $1 == "hpobench-"* ]] ; then
-  if [ ! -d "$TMPDIR/fcnet_tabular_benchmarks" ] ; then
-    if [ ! -f "$TMPDIR/fcnet_tabular_benchmarks.tar.gz" ] ; then
-      wget -O $TMPDIR/fcnet_tabular_benchmarks.tar.gz http://ml4aad.org/wp-content/uploads/2019/01/fcnet_tabular_benchmarks.tar.gz
-    fi
-    tar -xf $TMPDIR/fcnet_tabular_benchmarks.tar.gz -C $TMPDIR
-  else
-    echo "HPOBench dataset has already downloaded."
-  fi
-fi
+case "$1" in
+    hpobench-*)
+        if [ ! -d "$TMPDIR/fcnet_tabular_benchmarks" ] ; then
+          mkdir -p $TMPDIR
+          if [ ! -f "$TMPDIR/fcnet_tabular_benchmarks.tar.gz" ] ; then
+            wget -O $TMPDIR/fcnet_tabular_benchmarks.tar.gz http://ml4aad.org/wp-content/uploads/2019/01/fcnet_tabular_benchmarks.tar.gz
+          fi
+          tar -xf $TMPDIR/fcnet_tabular_benchmarks.tar.gz -C $TMPDIR
+        else
+          echo "HPOBench dataset has already downloaded."
+        fi
+        ;;
+esac
 
 case "$1" in
     himmelblau)
