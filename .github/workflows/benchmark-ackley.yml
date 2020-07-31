@@ -2,12 +2,12 @@ name: Run kurobako benchmark
 on:
   pull_request:
     paths:
-    - '.github/workflows/benchmark-rosenbrock.yml'
+    - '.github/workflows/benchmark-ackley.yml'
     - '_benchmarks/runner.sh'
     - 'cmaes/**.go'
     - 'tpe/**.go'
 jobs:
-  benchmarks-rosenbrock:
+  benchmarks-ackley:
     name: Run kurobako benchmark
     runs-on: ubuntu-latest
 
@@ -39,12 +39,12 @@ jobs:
           chmod +x kurobako
           ./kurobako -h
 
-      - name: Run benchmarks of Rosenbrock function
+      - name: Run benchmarks of Ackley function
         env:
           KUROBAKO: ./kurobako
           REPEATS: 10
           BUDGET: 50
-        run: ./_benchmarks/runner.sh rosenbrock ./kurobako-report.json
+        run: ./_benchmarks/runner.sh ackley ./kurobako-report.json
       - name: Plot kurobako result
         uses: c-bata/github-actions-kurobako/plot@v1
         id: kurobako-plot
@@ -74,30 +74,30 @@ jobs:
       - run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
         if: ${{ env.HAS_SECRET == 1 }}
       - name: Upload an image to google cloud storage
-        run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/rosenbrock-${{ github.sha }}.png
+        run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/ackley-${{ github.sha }}.png
         if: ${{ env.HAS_SECRET == 1 }}
       - name: Comment to a pull request
         if: ${{ env.HAS_SECRET == 1 }}
         uses: c-bata/github-actions-kurobako@v2
         with:
           report-md-path: './kurobako-report.md'
-          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/rosenbrock-${{ github.sha }}.png
-          title: 'Benchmark result of Rosenbrock function'
+          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/ackley-${{ github.sha }}.png
+          title: 'Benchmark result of Ackley function'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: cp ${{ steps.kurobako-plot.outputs.image-path }} rosenbrock.png
-      - run: mv ./kurobako-report.md ./kurobako-report-rosenbrock.md
-      - run: mv ./kurobako-report.json ./kurobako-report-rosenbrock.json
+      - run: cp ${{ steps.kurobako-plot.outputs.image-path }} ackley.png
+      - run: mv ./kurobako-report.md ./kurobako-report-ackley.md
+      - run: mv ./kurobako-report.json ./kurobako-report-ackley.json
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
-          path: rosenbrock.png
+          path: ackley.png
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
-          path: kurobako-report-rosenbrock.md
+          path: kurobako-report-ackley.md
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
-          path: kurobako-report-rosenbrock.json
+          path: kurobako-report-ackley.json
