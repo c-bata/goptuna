@@ -5,11 +5,13 @@ set -e
 KUROBAKO=${KUROBAKO:-kurobako}
 DIR=$(cd $(dirname $0); pwd)
 BINDIR=$(dirname $DIR)/bin
+TMPDIR=$(dirname $DIR)/tmp
 REPEATS=${REPEATS:-5}
 BUDGET=${BUDGET:-300}
-SEED=${BUDGET:-1}
+SEED=${SEED:-1}
 DIM=${DIM:-2}
 SOLVERS=${SOLVERS:-all}
+LOGLEVEL=${LOGLEVEL:-error}
 
 usage() {
     cat <<EOF
@@ -24,6 +26,10 @@ Problem:
     weierstrass    : Weierstrass function in https://github.com/sigopt/evalset
     schwefel20     : https://www.sfu.ca/~ssurjano/schwef.html
     schwefel36     : https://www.sfu.ca/~ssurjano/schwef.html
+    hpobench-naval
+    hpobench-parkinson
+    hpobench-protein
+    hpobench-slice
 Options:
     --help, -h         print this
 Example:
@@ -44,8 +50,24 @@ CMA_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver cmaes)
 IPOP_CMA_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver ipop-cmaes)
 BIPOP_CMA_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver bipop-cmaes)
 TPE_SOLVER=$($KUROBAKO solver command ${BINDIR}/goptuna_solver tpe)
-OPTUNA_CMA_SOLVER=$($KUROBAKO solver --name Optuna-CMAES optuna --loglevel error --sampler CmaEsSampler)
-OPTUNA_TPE_SOLVER=$($KUROBAKO solver --name Optuna-TPE optuna --loglevel error --sampler TPESampler)
+
+OPTUNA_CMA_SOLVER=$($KUROBAKO solver --name Optuna-CMAES optuna --loglevel ${LOGLEVEL} --sampler CmaEsSampler)
+OPTUNA_TPE_SOLVER=$($KUROBAKO solver --name Optuna-TPE optuna --loglevel ${LOGLEVEL} --sampler TPESampler)
+OPTUNA_RANDOM_MEDIAN_SOLVER=$(kurobako solver --name Optuna-RANDOM-MEDIAN optuna --loglevel ${LOGLEVEL} --sampler RandomSampler --pruner MedianPruner)
+OPTUNA_RANDOM_ASHA_SOLVER=$(kurobako solver --name Optuna-RANDOM-ASHA optuna --loglevel ${LOGLEVEL} --sampler RandomSampler --pruner SuccessiveHalvingPruner)
+OPTUNA_TPE_MEDIAN_SOLVER=$(kurobako solver --name Optuna-TPE-MEDIAN optuna --loglevel  ${LOGLEVEL} --sampler TPESampler --pruner MedianPruner)
+OPTUNA_TPE_ASHA_SOLVER=$(kurobako solver --name Optuna-TPE-ASHA optuna --loglevel ${LOGLEVEL} --sampler TPESampler --pruner SuccessiveHalvingPruner)
+
+if [[ $1 == "hpobench-"* ]] ; then
+  if [ ! -d "$TMPDIR/fcnet_tabular_benchmarks" ] ; then
+    if [ ! -f "$TMPDIR/fcnet_tabular_benchmarks.tar.gz" ] ; then
+      wget -O $TMPDIR/fcnet_tabular_benchmarks.tar.gz http://ml4aad.org/wp-content/uploads/2019/01/fcnet_tabular_benchmarks.tar.gz
+    fi
+    tar -xf $TMPDIR/fcnet_tabular_benchmarks.tar.gz -C $TMPDIR
+  else
+    echo "HPOBench dataset has already downloaded."
+  fi
+fi
 
 case "$1" in
     himmelblau)
@@ -69,6 +91,18 @@ case "$1" in
         ;;
     schwefel36)
         PROBLEM=$($KUROBAKO problem sigopt --dim 2 schwefel36)
+        ;;
+    hpobench-naval)
+        PROBLEM=$($KUROBAKO problem hpobench "${TMPDIR}/fcnet_tabular_benchmarks/fcnet_naval_propulsion_data.hdf5")
+        ;;
+    hpobench-parkinson)
+        PROBLEM=$($KUROBAKO problem hpobench "${TMPDIR}/fcnet_tabular_benchmarks/fcnet_parkinsons_telemonitoring_data.hdf5")
+        ;;
+    hpobench-protein)
+        PROBLEM=$($KUROBAKO problem hpobench "${TMPDIR}/fcnet_tabular_benchmarks/fcnet_protein_structure_data.hdf5")
+        ;;
+    hpobench-slice)
+        PROBLEM=$($KUROBAKO problem hpobench "${TMPDIR}/fcnet_tabular_benchmarks/fcnet_slice_localization_data.hdf5")
         ;;
     help|--help|-h)
         usage
@@ -113,6 +147,18 @@ case $SOLVERS in
             $RANDOM_SOLVER \
             $TPE_SOLVER \
             $OPTUNA_TPE_SOLVER \
+          --problems $PROBLEM \
+          --seed $SEED --repeats $REPEATS --budget $BUDGET \
+          | $KUROBAKO run --parallelism 3 > $2
+        ;;
+    pruner)
+        $KUROBAKO studies \
+          --solvers \
+            $RANDOM_SOLVER \
+            $OPTUNA_RANDOM_MEDIAN_SOLVER \
+            $OPTUNA_RANDOM_ASHA_SOLVER \
+            $OPTUNA_TPE_MEDIAN_SOLVER \
+            $OPTUNA_TPE_ASHA_SOLVER \
           --problems $PROBLEM \
           --seed $SEED --repeats $REPEATS --budget $BUDGET \
           | $KUROBAKO run --parallelism 3 > $2
