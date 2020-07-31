@@ -123,8 +123,6 @@ case $SOLVERS in
           --solvers \
             $RANDOM_SOLVER \
             $CMA_SOLVER \
-            $IPOP_CMA_SOLVER \
-            $BIPOP_CMA_SOLVER \
             $TPE_SOLVER \
             $OPTUNA_CMA_SOLVER \
             $OPTUNA_TPE_SOLVER \
@@ -137,8 +135,6 @@ case $SOLVERS in
           --solvers \
             $RANDOM_SOLVER \
             $CMA_SOLVER \
-            $IPOP_CMA_SOLVER \
-            $BIPOP_CMA_SOLVER \
             $OPTUNA_CMA_SOLVER \
           --problems $PROBLEM \
           --seed $SEED --repeats $REPEATS --budget $BUDGET \
@@ -153,6 +149,17 @@ case $SOLVERS in
           --problems $PROBLEM \
           --seed $SEED --repeats $REPEATS --budget $BUDGET \
           | $KUROBAKO run --parallelism 3 > $2
+        ;;
+    ipop)
+        $KUROBAKO studies \
+          --solvers \
+            $RANDOM_SOLVER \
+            $CMA_SOLVER \
+            $IPOP_CMA_SOLVER \
+            $BIPOP_CMA_SOLVER \
+          --problems $PROBLEM \
+          --seed $SEED --repeats $REPEATS --budget $BUDGET \
+          | $KUROBAKO run --parallelism 5 > $2
         ;;
     pruner)
         $KUROBAKO studies \
