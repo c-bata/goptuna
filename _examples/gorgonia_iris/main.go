@@ -139,7 +139,7 @@ func objective(trial goptuna.Trial) (float64, error) {
 
 		if i%100 == 0 {
 			if err := trial.ShouldPrune(i, acc); err != nil {
-				return acc, err
+				return 0, err
 			}
 		}
 	}
