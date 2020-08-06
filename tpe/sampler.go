@@ -441,6 +441,9 @@ func (s *Sampler) sampleCategorical(distribution goptuna.CategoricalDistribution
 	}
 	upper := len(distribution.Choices)
 	size := s.numberOfEICandidates
+	if s.numberOfEICandidates >= len(distribution.Choices) {
+		size = len(distribution.Choices)
+	}
 
 	// below
 	weightsBelow := s.params.Weights(len(below))
@@ -454,8 +457,16 @@ func (s *Sampler) sampleCategorical(distribution goptuna.CategoricalDistribution
 	for i := range weightedBelow {
 		weightedBelow[i] /= weightedBelowSum
 	}
-	samplesBelow := s.sampleFromCategoricalDist(weightedBelow, size)
-	logLikelihoodsBelow := s.categoricalLogPDF(samplesBelow, weightedBelow)
+	var samples []int
+	if s.numberOfEICandidates != size {
+		samples = make([]int, size)
+		for i := 0; i < size; i++ {
+			samples[i] = i
+		}
+	} else {
+		samples = s.sampleFromCategoricalDist(weightedBelow, size)
+	}
+	logLikelihoodsBelow := s.categoricalLogPDF(samples, weightedBelow)
 
 	// above
 	weightsAbove := s.params.Weights(len(above))
@@ -469,13 +480,13 @@ func (s *Sampler) sampleCategorical(distribution goptuna.CategoricalDistribution
 	for i := range weightedAbove {
 		weightedAbove[i] /= weightedAboveSum
 	}
-	logLikelihoodsAbove := s.categoricalLogPDF(samplesBelow, weightedAbove)
+	logLikelihoodsAbove := s.categoricalLogPDF(samples, weightedAbove)
 
-	floatSamplesBelow := make([]float64, len(samplesBelow))
-	for i := range samplesBelow {
-		floatSamplesBelow[i] = float64(samplesBelow[i])
+	floatSamples := make([]float64, size)
+	for i := range samples {
+		floatSamples[i] = float64(samples[i])
 	}
-	return s.compare(floatSamplesBelow, logLikelihoodsBelow, logLikelihoodsAbove)[0]
+	return s.compare(floatSamples, logLikelihoodsBelow, logLikelihoodsAbove)[0]
 }
 
 // Sample a parameter for a given distribution.
