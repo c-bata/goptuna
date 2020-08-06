@@ -469,8 +469,7 @@ func (s *Sampler) sampleCategorical(distribution goptuna.CategoricalDistribution
 	for i := range weightedAbove {
 		weightedAbove[i] /= weightedAboveSum
 	}
-	samplesAbove := s.sampleFromCategoricalDist(weightedAbove, size)
-	logLikelihoodsAbove := s.categoricalLogPDF(samplesAbove, weightedAbove)
+	logLikelihoodsAbove := s.categoricalLogPDF(samplesBelow, weightedAbove)
 
 	floatSamplesBelow := make([]float64, len(samplesBelow))
 	for i := range samplesBelow {
