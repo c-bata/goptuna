@@ -16,8 +16,8 @@ This library is particularly designed for machine learning, but everything will 
 
 **Supported algorithms:**
 
-Goptuna supports various state-of-the-art algorithms.
-These algorithms are written in pure Go with a few dependencies and continuously benchmarked on GitHub Actions.
+Goptuna supports various state-of-the-art Bayesian optimization, Evolution strategy and Multi-armed bandit algorithms.
+These algorithms are implemented in pure Go and continuously benchmarked on GitHub Actions.
 
 * Random search
 * TPE: Tree-structured Parzen Estimators [2]
