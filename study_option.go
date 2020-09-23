@@ -80,7 +80,7 @@ func StudyOptionLoadIfExists(loadIfExists bool) StudyOption {
 	}
 }
 
-// StudyOptionInitialSearchSpace to use RelativeSampler from the first trial.
+// StudyOptionDefineSearchSpace to use RelativeSampler from the first trial.
 // This option is useful for Define-and-Run interface.
 func StudyOptionDefineSearchSpace(space map[string]interface{}) StudyOption {
 	return func(s *Study) error {
