@@ -75,9 +75,9 @@ func handleGetAllStudySummary(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	json.NewEncoder(w).Encode(struct {
-		Studies []goptuna.StudySummary `json:"studies"`
+		StudySummaries []StudySummary `json:"study_summaries"`
 	}{
-		Studies: studies,
+		StudySummaries: toStudySummaries(studies),
 	})
 }
 
@@ -96,8 +96,8 @@ func handleGetTrials(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	json.NewEncoder(w).Encode(struct {
-		Trials []goptuna.FrozenTrial `json:"trials"`
+		Trials []FrozenTrial `json:"trials"`
 	}{
-		Trials: trials,
+		Trials: toFrozenTrials(trials),
 	})
 }
