@@ -47,6 +47,10 @@ declare interface FrozenTrial {
   system_attrs: Attribute[]
 }
 
+declare interface FrozenTrials {
+  [study_id: string]: FrozenTrial[]
+}
+
 declare interface StudySummary {
   study_id: number
   study_name: string

@@ -20,11 +20,11 @@ declare interface TrialsResponse {
   trials: FrozenTrialResponse[]
 }
 
-export const fetchTrialsAction = (studyId: number) => {
-  axiosInstance
+export const fetchTrialsAction = (studyId: number): Promise<FrozenTrial[]> => {
+  return axiosInstance
     .get<TrialsResponse>(`/api/studies/${studyId}/trials`, {})
     .then((res) => {
-      let trials: FrozenTrial[] = res.data.trials.map(
+      return res.data.trials.map(
         (trial: FrozenTrialResponse): FrozenTrial => {
           return {
             trial_id: trial.trial_id,
@@ -43,13 +43,6 @@ export const fetchTrialsAction = (studyId: number) => {
           }
         }
       )
-      // Notify to dispatchers
-      console.log("DEBUG")
-      console.log(trials)
-    })
-    .catch((err) => {
-      // Notify to error dispatchers
-      console.log(err)
     })
 }
 
@@ -67,11 +60,11 @@ declare interface StudySummariesResponse {
   study_summaries: StudySummaryResponse[]
 }
 
-export const fetchStudySummariesAction = () => {
-  axiosInstance
+export const fetchStudySummariesAction = (): Promise<StudySummary[]> => {
+  return axiosInstance
     .get<StudySummariesResponse>(`/api/studies`, {})
     .then((res) => {
-      let studySummaries: StudySummary[] = res.data.study_summaries.map(
+      return res.data.study_summaries.map(
         (study: StudySummaryResponse): StudySummary => {
           const best_trial = study.best_trial
             ? {
@@ -101,12 +94,5 @@ export const fetchStudySummariesAction = () => {
           }
         }
       )
-      // Notify to dispatchers
-      console.log("DEBUG")
-      console.log(studySummaries)
-    })
-    .catch((err) => {
-      // Notify to error dispatchers
-      console.log(err)
     })
 }
