@@ -2,30 +2,28 @@ import axios from "axios"
 
 const axiosInstance = axios.create({ baseURL: API_ENDPOINT })
 
-declare interface FrozenTrialResponse {
-  trial_id: number
-  study_id: number
-  number: number
-  state: TrialState
-  value?: number
-  intermediate_value: IntermediateValue[]
-  datetime_start: string
-  datetime_complete?: string
-  params: Param[]
-  user_attrs: Attribute[]
-  system_attrs: Attribute[]
+interface TrialsResponse {
+  trials: {
+    trial_id: number
+    study_id: number
+    number: number
+    state: TrialState
+    value?: number
+    intermediate_value: TrialIntermediateValue[]
+    datetime_start: string
+    datetime_complete?: string
+    params: TrialParam[]
+    user_attrs: Attribute[]
+    system_attrs: Attribute[]
+  }[]
 }
 
-declare interface TrialsResponse {
-  trials: FrozenTrialResponse[]
-}
-
-export const fetchTrialsAction = (studyId: number): Promise<FrozenTrial[]> => {
+export const fetchTrialsAction = (studyId: number): Promise<Trial[]> => {
   return axiosInstance
     .get<TrialsResponse>(`/api/studies/${studyId}/trials`, {})
     .then((res) => {
       return res.data.trials.map(
-        (trial: FrozenTrialResponse): FrozenTrial => {
+        (trial): Trial => {
           return {
             trial_id: trial.trial_id,
             study_id: trial.study_id,
@@ -46,18 +44,28 @@ export const fetchTrialsAction = (studyId: number): Promise<FrozenTrial[]> => {
     })
 }
 
-declare interface StudySummaryResponse {
-  study_id: number
-  study_name: string
-  direction: StudyDirection
-  best_trial?: FrozenTrialResponse
-  user_attrs: Attribute[]
-  system_attrs: Attribute[]
-  datetime_start: string
-}
-
-declare interface StudySummariesResponse {
-  study_summaries: StudySummaryResponse[]
+interface StudySummariesResponse {
+  study_summaries: {
+    study_id: number
+    study_name: string
+    direction: StudyDirection
+    best_trial?: {
+      trial_id: number
+      study_id: number
+      number: number
+      state: TrialState
+      value?: number
+      intermediate_value: TrialIntermediateValue[]
+      datetime_start: string
+      datetime_complete?: string
+      params: TrialParam[]
+      user_attrs: Attribute[]
+      system_attrs: Attribute[]
+    }
+    user_attrs: Attribute[]
+    system_attrs: Attribute[]
+    datetime_start: string
+  }[]
 }
 
 export const fetchStudySummariesAction = (): Promise<StudySummary[]> => {
@@ -65,7 +73,7 @@ export const fetchStudySummariesAction = (): Promise<StudySummary[]> => {
     .get<StudySummariesResponse>(`/api/studies`, {})
     .then((res) => {
       return res.data.study_summaries.map(
-        (study: StudySummaryResponse): StudySummary => {
+        (study): StudySummary => {
           const best_trial = study.best_trial
             ? {
                 trial_id: study.best_trial.trial_id,

@@ -18,12 +18,12 @@ declare enum StudyDirection {
   Minimize = "minimize",
 }
 
-declare interface IntermediateValue {
+declare interface TrialIntermediateValue {
   step: number
   value: number
 }
 
-declare interface Param {
+declare interface TrialParam {
   name: string
   value: string
 }
@@ -33,30 +33,34 @@ declare interface Attribute {
   value: string
 }
 
-declare interface FrozenTrial {
+declare interface Trial {
   trial_id: number
   study_id: number
   number: number
   state: TrialState
   value?: number
-  intermediate_value: IntermediateValue[]
+  intermediate_value: TrialIntermediateValue[]
   datetime_start: Date
   datetime_complete?: Date
-  params: Param[]
+  params: TrialParam[]
   user_attrs: Attribute[]
   system_attrs: Attribute[]
-}
-
-declare interface FrozenTrials {
-  [study_id: string]: FrozenTrial[]
 }
 
 declare interface StudySummary {
   study_id: number
   study_name: string
   direction: StudyDirection
-  best_trial?: FrozenTrial
+  best_trial?: Trial
   user_attrs: Attribute[]
   system_attrs: Attribute[]
   datetime_start: Date
+}
+
+declare interface Study {
+  trials: Trial[]
+}
+
+declare interface Studies {
+  [study_id: string]: Study
 }
