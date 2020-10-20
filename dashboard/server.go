@@ -16,7 +16,7 @@ var (
 	storageMutex sync.RWMutex
 )
 
-func NewServer(s goptuna.Storage) http.Handler {
+func NewServer(s goptuna.Storage) (http.Handler, error) {
 	storageMutex.Lock()
 	defer storageMutex.Unlock()
 	storage = s
@@ -24,10 +24,15 @@ func NewServer(s goptuna.Storage) http.Handler {
 	router := mux.NewRouter()
 	// HTML
 	router.HandleFunc("/", handleGetIndex).Methods("GET")
+	// Static files
+	err := registerStaticFileRoutes(router, "static")
+	if err != nil {
+		return nil, err
+	}
 	// JSON API
 	router.HandleFunc("/api/studies", handleGetAllStudySummary).Methods("GET")
 	router.HandleFunc("/api/studies/{study_id:[0-9]+}/trials", handleGetTrials).Methods("GET")
-	return router
+	return router, nil
 }
 
 func writeErrorResponse(w http.ResponseWriter, status int, reason string) {
@@ -48,18 +53,14 @@ func handleGetIndex(w http.ResponseWriter, r *http.Request) {
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <link rel="icon" href="favicon.ico" />
     <title>Goptuna Dashboard</title>
+    <script async src="static/bundle.js"></script>
 </head>
 
 <body>
     <noscript>You need to enable JavaScript to run this dashboard.</noscript>
     <div id="dashboard"></div>
 </body>
-<footer>
-    <script type="application/javascript" src="bundle.js"></script>
-</footer>
 </html>
 `
 	fmt.Fprintf(w, htmlStr)

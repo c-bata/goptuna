@@ -45,7 +45,11 @@ func GetCommand() *cobra.Command {
 			defer db.Close()
 
 			storage := rdb.NewStorage(db)
-			server := dashboard.NewServer(storage)
+			server, err := dashboard.NewServer(storage)
+			if err != nil {
+				cmd.PrintErrln(err)
+				os.Exit(1)
+			}
 
 			hostName, err := cmd.Flags().GetString("host")
 			if err != nil {
