@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "strictNullChecks": true,
+    "moduleResolution": "node",
+    "noUnusedLocals": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "outDir": "./public/",
+    "paths": {
+      "plotly.js-dist": ["node_modules/@types/plotly.js"]
+    },
+    "noImplicitAny": true,
+    "lib": ["dom", "ES2017"],
+    "module": "commonjs",
+    "target": "es5",
+    "jsx": "react",
+    "jsxFactory": "jsx",
+    "sourceMap": true
+  },
+  "files": [
+    "./src/index.tsx"
+  ],
+  "include": [
+    "./src/types/**/*"
+  ],
+  "types": ["node"]
+}
