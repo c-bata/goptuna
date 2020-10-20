@@ -3,12 +3,12 @@
 package dashboard
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -35,10 +35,6 @@ func registerStaticFileRoutes(r *mux.Router, prefix string) error {
 		if urlpath[0] != '/' {
 			urlpath = "/" + urlpath
 		}
-		data, err := ioutil.ReadFile(filepath)
-		if err != nil {
-			return err
-		}
 
 		var contentType string
 		if strings.HasSuffix(filepath, ".css") {
@@ -57,8 +53,13 @@ func registerStaticFileRoutes(r *mux.Router, prefix string) error {
 			contentType = "image/vnd.ms-fontobject"
 		}
 		handler := func(w http.ResponseWriter, r *http.Request) {
+			data, err := ioutil.ReadFile(filepath)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprint(w, "Internal server error")
+				return
+			}
 			w.Header().Set("Content-Type", contentType)
-			w.Header().Set("Content-Length", strconv.FormatInt(info.Size(), 10))
 			w.Write(data)
 		}
 		r.Path(urlpath).Methods("Get").HandlerFunc(handler)
