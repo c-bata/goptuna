@@ -2,7 +2,7 @@ import axios from "axios"
 
 const axiosInstance = axios.create({ baseURL: API_ENDPOINT })
 
-interface TrialsResponse {
+interface StudyDetailResponse {
   trials: {
     trial_id: number
     study_id: number
@@ -18,9 +18,9 @@ interface TrialsResponse {
   }[]
 }
 
-export const fetchTrialsAction = (studyId: number): Promise<Trial[]> => {
+export const fetchStudyDetailAction = (studyId: number): Promise<Trial[]> => {
   return axiosInstance
-    .get<TrialsResponse>(`/api/studies/${studyId}/trials`, {})
+    .get<StudyDetailResponse>(`/api/studies/${studyId}`, {})
     .then((res) => {
       return res.data.trials.map(
         (trial): Trial => {

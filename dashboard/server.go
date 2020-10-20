@@ -31,7 +31,7 @@ func NewServer(s goptuna.Storage) (http.Handler, error) {
 	}
 	// JSON API
 	router.HandleFunc("/api/studies", handleGetAllStudySummary).Methods("GET")
-	router.HandleFunc("/api/studies/{study_id:[0-9]+}/trials", handleGetTrials).Methods("GET")
+	router.HandleFunc("/api/studies/{study_id:[0-9]+}", handleGetStudyDetail).Methods("GET")
 	return router, nil
 }
 
@@ -95,7 +95,7 @@ func handleGetAllStudySummary(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func handleGetTrials(w http.ResponseWriter, r *http.Request) {
+func handleGetStudyDetail(w http.ResponseWriter, r *http.Request) {
 	urlVars := mux.Vars(r)
 	studyID, err := strconv.Atoi(urlVars["study_id"])
 	if err != nil {
