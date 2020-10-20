@@ -51,10 +51,23 @@ func handleGetIndex(w http.ResponseWriter, r *http.Request) {
 <html lang="en">
 
 <head>
+    <title>Goptuna Dashboard</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Goptuna Dashboard</title>
-    <script async src="static/bundle.js"></script>
+    <style>
+    body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+    
+    h1, h2, h3 {
+        font-weight: 600;
+        letter-spacing: 1px;
+        line-height: 1.3;
+    }
+    </style>
+    <script defer src="/static/bundle.js"></script>
 </head>
 
 <body>
@@ -63,6 +76,7 @@ func handleGetIndex(w http.ResponseWriter, r *http.Request) {
 </body>
 </html>
 `
+	w.Header().Set("Content-Type", "text/html")
 	fmt.Fprintf(w, htmlStr)
 }
 
