@@ -1,5 +1,5 @@
 import { jsx, css } from "@emotion/core"
-import { FC, useEffect } from "react"
+import { FC, useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { useRecoilState } from "recoil"
 import { studyDetailsState } from "../state"
@@ -14,6 +14,7 @@ const style = css``
 export const HistoryGraph: FC<{}> = () => {
   const { studyId } = useParams<ParamTypes>()
   const studyIdNumber = parseInt(studyId, 10)
+  const [ready, setReady] = useState(false)
   const [studyDetails, setStudyDetails] = useRecoilState<StudyDetails>(
     studyDetailsState
   )
@@ -33,9 +34,28 @@ export const HistoryGraph: FC<{}> = () => {
     return () => clearInterval(intervalId)
   })
 
+  useEffect(() => {
+    if (!ready && studyDetails[studyIdNumber]) {
+      setReady(true)
+    }
+  }, [studyDetails])
+
+  const studyDetail = studyDetails[studyIdNumber]
+  const content = ready ? (
+    studyDetail.trials.map((t) => {
+      return (
+        <li key={t.trial_id}>
+          <p>{t.number}</p>
+        </li>
+      )
+    })
+  ) : (
+    <p>Now loading...</p>
+  )
   return (
     <div css={style}>
-      <h1>{studyId}</h1>
+      <h1>Study {studyId}</h1>
+      <ul>{content}</ul>
     </div>
   )
 }

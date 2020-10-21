@@ -72,7 +72,9 @@ func handleGetIndex(w http.ResponseWriter, r *http.Request) {
 
 <body>
     <noscript>You need to enable JavaScript to run this dashboard.</noscript>
-    <div id="dashboard"></div>
+    <div id="dashboard">
+         <p>Now loading...</p>
+    </div>
 </body>
 </html>
 `
