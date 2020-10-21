@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 
+	//nolint: golint
 	_ "github.com/c-bata/goptuna/dashboard/statik"
 )
 
