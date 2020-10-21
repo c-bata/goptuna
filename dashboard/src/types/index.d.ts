@@ -5,7 +5,7 @@ declare module "*.svg"
 
 declare const API_ENDPOINT: string
 
-declare enum TrialState {
+const enum TrialState {
   Running = "Running",
   Complete = "Complete",
   Pruned = "Pruned",
@@ -13,7 +13,7 @@ declare enum TrialState {
   Waiting = "Waiting",
 }
 
-declare enum StudyDirection {
+const enum StudyDirection {
   Maximize = "maximize",
   Minimize = "minimize",
 }

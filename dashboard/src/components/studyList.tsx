@@ -1,30 +1,30 @@
-import { jsx, css } from "@emotion/core"
+import { jsx } from "@emotion/core"
 import { FC, useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { useRecoilState } from "recoil"
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from "@material-ui/core/Paper";
-import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
+import Table from "@material-ui/core/Table"
+import TableBody from "@material-ui/core/TableBody"
+import TableCell from "@material-ui/core/TableCell"
+import TableContainer from "@material-ui/core/TableContainer"
+import TableHead from "@material-ui/core/TableHead"
+import TableRow from "@material-ui/core/TableRow"
+import Paper from "@material-ui/core/Paper"
+import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import { studySummariesState } from "../state"
 import { updateStudySummaries } from "../action"
-import {formatDate} from "../utils/date";
-import Grid from "@material-ui/core/Grid";
+import { formatDate } from "../utils/date"
+import Grid from "@material-ui/core/Grid"
 
 const useTableStyles = makeStyles({
   table: {
     minWidth: 650,
   },
-});
+})
 
 const StudySummariesTable: FC<{
   studies: StudySummary[]
-}> = ({ studies = []}) => {
-  const classes = useTableStyles();
+}> = ({ studies = [] }) => {
+  const classes = useTableStyles()
   return (
     <TableContainer component={Paper}>
       <Table className={classes.table} aria-label="trials table">
@@ -42,12 +42,8 @@ const StudySummariesTable: FC<{
                 <TableCell component="th" scope="row">
                   <Link to={`/studies/${s.study_id}`}>{s.study_name}</Link>
                 </TableCell>
-                <TableCell>
-                  {s.study_name}
-                </TableCell>
-                <TableCell>
-                  {formatDate(s.datetime_start)}
-                </TableCell>
+                <TableCell>{s.study_name}</TableCell>
+                <TableCell>{formatDate(s.datetime_start)}</TableCell>
               </TableRow>
             )
           })}
@@ -57,23 +53,25 @@ const StudySummariesTable: FC<{
   )
 }
 
-const useStyles = makeStyles((theme: Theme) => createStyles({
-  root: {
-    flexGrow: 1,
-  },
-  paper: {
-    padding: theme.spacing(2),
-    textAlign: 'center',
-    color: theme.palette.text.secondary,
-  },
-}));
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    root: {
+      flexGrow: 1,
+    },
+    paper: {
+      padding: theme.spacing(2),
+      textAlign: "center",
+      color: theme.palette.text.secondary,
+    },
+  })
+)
 
 export const StudyList: FC<{}> = () => {
   const [ready, setReady] = useState(false)
   const [studySummaries, setStudySummaries] = useRecoilState<StudySummary[]>(
     studySummariesState
   )
-  const classes = useStyles();
+  const classes = useStyles()
 
   useEffect(() => {
     updateStudySummaries(setStudySummaries) // fetch immediately
