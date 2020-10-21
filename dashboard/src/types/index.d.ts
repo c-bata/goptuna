@@ -39,7 +39,7 @@ declare interface Trial {
   number: number
   state: TrialState
   value?: number
-  intermediate_value: TrialIntermediateValue[]
+  intermediate_values: TrialIntermediateValue[]
   datetime_start: Date
   datetime_complete?: Date
   params: TrialParam[]

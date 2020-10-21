@@ -8,7 +8,7 @@ interface TrialResponse {
   number: number
   state: TrialState
   value?: number
-  intermediate_value: TrialIntermediateValue[]
+  intermediate_values: TrialIntermediateValue[]
   datetime_start: string
   datetime_complete?: string
   params: TrialParam[]
@@ -23,7 +23,7 @@ const convertTrialResponse = (res: TrialResponse): Trial => {
     number: res.number,
     state: res.state,
     value: res.value,
-    intermediate_value: res.intermediate_value,
+    intermediate_values: res.intermediate_values,
     datetime_start: new Date(res.datetime_start),
     datetime_complete: res.datetime_complete
       ? new Date(res.datetime_complete)
@@ -74,7 +74,7 @@ interface StudySummariesResponse {
       number: number
       state: TrialState
       value?: number
-      intermediate_value: TrialIntermediateValue[]
+      intermediate_values: TrialIntermediateValue[]
       datetime_start: string
       datetime_complete?: string
       params: TrialParam[]
