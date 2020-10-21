@@ -10,8 +10,10 @@ import { studyDetailsState } from "../state"
 import { updateStudyDetail } from "../action"
 import { TrialsTable } from "./trialsTable"
 import { HistoryPlot } from "./historyPlot"
-import { Container } from "@material-ui/core"
+import {Container, Grid} from "@material-ui/core"
 import Typography from "@material-ui/core/Typography"
+import {ParallelCoordinatePlot} from "./parallelCoordinatePlot";
+import {IntermediateValuesPlot} from "./intermediateValuesPlot";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -67,6 +69,22 @@ export const StudyDetail: FC<{}> = () => {
           <HistoryPlot trials={studyDetail.trials} />
         </CardContent>
       </Card>
+      <Grid container direction="row">
+        <Grid item xs={6}>
+          <Card className={classes.card}>
+            <CardContent>
+              <ParallelCoordinatePlot trials={studyDetail.trials} />
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6}>
+          <Card className={classes.card}>
+            <CardContent>
+              <IntermediateValuesPlot trials={studyDetail.trials} />
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
       <Card className={classes.card}>
         <TrialsTable trials={studyDetail.trials} />
       </Card>
