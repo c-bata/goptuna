@@ -6,11 +6,15 @@ import FormLabel from "@material-ui/core/FormLabel"
 import { FormControlLabel, Radio, RadioGroup } from "@material-ui/core"
 
 export const HistoryPlot: FC<{
-  trials: Trial[]
-}> = ({ trials = [] }) => {
+  study: StudyDetail
+}> = ({ study = {
+  name: "",
+  direction: "minimize",
+  datetime_start: new Date(),
+  trials: [],
+} }) => {
   const [ready, setReady] = useState<boolean>(false)
   const [xAxis, setXAxis] = useState<string>("number")
-  const [showPoints, setShowPoints] = useState<boolean>(true)
   const [logScale, setLogScale] = useState<boolean>(false)
   const [filterCompleteTrial, setFilterCompleteTrial] = useState<boolean>(false)
   const [filterPrunedTrial, setFilterPrunedTrial] = useState<boolean>(false)
@@ -19,56 +23,9 @@ export const HistoryPlot: FC<{
     setReady(true)
   }, [])
 
-  let filteredTrials = trials.filter(
-    (t) => t.state === TrialState.Complete || t.state === TrialState.Pruned
-  )
-  if (filterCompleteTrial) {
-    filteredTrials = filteredTrials.filter(
-      (t) => t.state !== TrialState.Complete
-    )
-  }
-  if (filterPrunedTrial) {
-    filteredTrials = filteredTrials.filter((t) => t.state !== TrialState.Pruned)
-  }
-  const plotMode = showPoints ? "lines+markers" : "lines"
-  const dataX =
-    xAxis === "number"
-      ? filteredTrials.map((t: Trial): number => t.number)
-      : xAxis === "datetime_start"
-      ? filteredTrials.map((t: Trial): Date => t.datetime_start)
-      : filteredTrials.map((t: Trial): Date => t.datetime_complete!)
-  const plotData: Partial<plotly.PlotData>[] = [
-    {
-      x: dataX,
-      y: filteredTrials.map((t: Trial): number => t.value || 0),
-      mode: plotMode,
-      type: "scatter",
-      name: "history",
-    },
-  ]
-  const layout: Partial<plotly.Layout> = {
-    margin: {
-      l: 50,
-      t: 0,
-      r: 50,
-      b: 0,
-    },
-    yaxis: {
-      type: logScale ? "log" : "linear",
-    },
-    xaxis: {
-      type: xAxis === "number" ? "linear" : "date",
-    },
-  }
-
   const handleXAxisChange = (e: ChangeEvent<HTMLInputElement>) => {
     console.dir(e.target.value)
     setXAxis(e.target.value)
-  }
-
-  const handleShowPointChange = (e: ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault()
-    setShowPoints(!showPoints)
   }
 
   const handleLogScaleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -87,16 +44,74 @@ export const HistoryPlot: FC<{
   }
 
   if (ready) {
+    let filteredTrials = study.trials.filter(
+      t => t.state === TrialState.Complete || t.state === TrialState.Pruned
+    )
+    if (filterCompleteTrial) {
+      filteredTrials = filteredTrials.filter(
+        t => t.state !== TrialState.Complete
+      )
+    }
+    if (filterPrunedTrial) {
+      filteredTrials = filteredTrials.filter((t) => t.state !== TrialState.Pruned)
+    }
+    let trialsForLinePlot: Trial[] = []
+    let currentBest: number | null = null
+    filteredTrials.forEach(item => {
+      if (currentBest === null) {
+        currentBest = item.value!
+        trialsForLinePlot.push(item)
+      } else if (study.direction === StudyDirection.Maximize && item.value! > currentBest) {
+        currentBest = item.value!
+        trialsForLinePlot.push(item)
+      } else if (study.direction === StudyDirection.Minimize && item.value! < currentBest) {
+        currentBest = item.value!
+        trialsForLinePlot.push(item)
+      }
+    })
+
+    const getAxisXList = (trials: Trial[]): number[] | Date[] => {
+      return xAxis === "number"
+        ? filteredTrials.map((t: Trial): number => t.number)
+        : xAxis === "datetime_start"
+          ? filteredTrials.map((t: Trial): Date => t.datetime_start)
+          : filteredTrials.map((t: Trial): Date => t.datetime_complete!)
+    }
+    const plotData: Partial<plotly.PlotData>[] = [
+      {
+        x: getAxisXList(filteredTrials),
+        y: filteredTrials.map((t: Trial): number => t.value!),
+        mode: "markers",
+        type: "scatter",
+      },
+      {
+        x: getAxisXList(trialsForLinePlot),
+        y: trialsForLinePlot.map((t: Trial): number => t.value || 0),
+        mode: "lines",
+        type: "scatter",
+      },
+    ]
+    const layout: Partial<plotly.Layout> = {
+      margin: {
+        l: 50,
+        t: 0,
+        r: 50,
+        b: 0,
+      },
+      yaxis: {
+        type: logScale ? "log" : "linear",
+      },
+      xaxis: {
+        type: xAxis === "number" ? "linear" : "date",
+      },
+      showlegend: false,
+    }
     plotly.react("history-plot", plotData, layout)
   }
   return (
     <Grid container direction="row">
       <Grid item xs={3}>
         <Grid container direction="column">
-          <FormControl component="fieldset">
-            <FormLabel component="legend">Show points:</FormLabel>
-            <Switch checked={showPoints} onChange={handleShowPointChange} />
-          </FormControl>
           <FormControl component="fieldset">
             <FormLabel component="legend">Log scale:</FormLabel>
             <Switch

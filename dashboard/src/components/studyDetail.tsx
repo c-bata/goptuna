@@ -43,7 +43,7 @@ export const StudyDetail: FC<{}> = () => {
     updateStudyDetail(studyIdNumber, studyDetails, setStudyDetails)
     const intervalId = setInterval(function () {
       updateStudyDetail(studyIdNumber, studyDetails, setStudyDetails)
-    }, 1000)
+    }, 5 * 1000)
     return () => clearInterval(intervalId)
   }, [])
 
@@ -58,7 +58,7 @@ export const StudyDetail: FC<{}> = () => {
     <div>
       <Card className={classes.card}>
         <CardContent>
-          <HistoryPlot trials={studyDetail.trials} />
+          <HistoryPlot study={studyDetail} />
         </CardContent>
       </Card>
       <Grid container direction="row">
