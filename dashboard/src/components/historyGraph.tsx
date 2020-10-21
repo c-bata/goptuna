@@ -20,6 +20,16 @@ export const HistoryGraph: FC<{}> = () => {
   )
 
   useEffect(() => {
+    // fetch immediately
+    fetchStudyDetailAction(studyIdNumber)
+      .then((study) => {
+        let newStudies = Object.assign({}, studyDetails)
+        newStudies[studyIdNumber] = study
+        setStudyDetails(newStudies)
+      })
+      .catch((err) => {
+        console.log(err) // Notify to error dispatchers
+      })
     const intervalId = setInterval(function () {
       fetchStudyDetailAction(studyIdNumber)
         .then((study) => {
@@ -32,7 +42,7 @@ export const HistoryGraph: FC<{}> = () => {
         })
     }, 1000)
     return () => clearInterval(intervalId)
-  })
+  }, [])
 
   useEffect(() => {
     if (!ready && studyDetails[studyIdNumber]) {

@@ -14,6 +14,14 @@ export const StudyList: FC<{}> = () => {
   )
 
   useEffect(() => {
+    // fetch immediately
+    fetchStudySummariesAction()
+      .then((studySummaries: StudySummary[]) => {
+        setStudySummaries(studySummaries)
+      })
+      .catch((err) => {
+        console.log(err) // Notify to error dispatchers
+      })
     const intervalId = setInterval(function () {
       fetchStudySummariesAction()
         .then((studySummaries: StudySummary[]) => {
@@ -24,7 +32,7 @@ export const StudyList: FC<{}> = () => {
         })
     }, 1000)
     return () => clearInterval(intervalId)
-  })
+  }, [])
   useEffect(() => {
     // TODO(c-bata): Show "no studies" if fetch is done.
     if (!ready && studySummaries.length !== 0) {
