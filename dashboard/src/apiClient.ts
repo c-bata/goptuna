@@ -2,20 +2,44 @@ import axios from "axios"
 
 const axiosInstance = axios.create({ baseURL: API_ENDPOINT })
 
+interface TrialResponse {
+  trial_id: number
+  study_id: number
+  number: number
+  state: TrialState
+  value?: number
+  intermediate_value: TrialIntermediateValue[]
+  datetime_start: string
+  datetime_complete?: string
+  params: TrialParam[]
+  user_attrs: Attribute[]
+  system_attrs: Attribute[]
+}
+
+const convertTrialResponse = (res: TrialResponse): Trial => {
+  return {
+    trial_id: res.trial_id,
+    study_id: res.study_id,
+    number: res.number,
+    state: res.state,
+    value: res.value,
+    intermediate_value: res.intermediate_value,
+    datetime_start: new Date(res.datetime_start),
+    datetime_complete: res.datetime_complete
+      ? new Date(res.datetime_complete)
+      : undefined,
+    params: res.params,
+    user_attrs: res.user_attrs,
+    system_attrs: res.system_attrs,
+  }
+}
+
 interface StudyDetailResponse {
-  trials: {
-    trial_id: number
-    study_id: number
-    number: number
-    state: TrialState
-    value?: number
-    intermediate_value: TrialIntermediateValue[]
-    datetime_start: string
-    datetime_complete?: string
-    params: TrialParam[]
-    user_attrs: Attribute[]
-    system_attrs: Attribute[]
-  }[]
+  name: string
+  datetime_start: string
+  direction: StudyDirection
+  best_trial?: TrialResponse
+  trials: TrialResponse[]
 }
 
 export const getStudyDetail = (studyId: number): Promise<StudyDetail> => {
@@ -24,24 +48,16 @@ export const getStudyDetail = (studyId: number): Promise<StudyDetail> => {
     .then((res) => {
       const trials = res.data.trials.map(
         (trial): Trial => {
-          return {
-            trial_id: trial.trial_id,
-            study_id: trial.study_id,
-            number: trial.number,
-            state: trial.state,
-            value: trial.value,
-            intermediate_value: trial.intermediate_value,
-            datetime_start: new Date(trial.datetime_start),
-            datetime_complete: trial.datetime_complete
-              ? new Date(trial.datetime_complete)
-              : undefined,
-            params: trial.params,
-            user_attrs: trial.user_attrs,
-            system_attrs: trial.system_attrs,
-          }
+          return convertTrialResponse(trial)
         }
       )
       return {
+        name: res.data.name,
+        datetime_start: new Date(res.data.datetime_start),
+        direction: res.data.direction,
+        best_trial: res.data.best_trial
+          ? convertTrialResponse(res.data.best_trial)
+          : undefined,
         trials: trials,
       }
     })
@@ -78,21 +94,7 @@ export const getStudySummaries = (): Promise<StudySummary[]> => {
       return res.data.study_summaries.map(
         (study): StudySummary => {
           const best_trial = study.best_trial
-            ? {
-                trial_id: study.best_trial.trial_id,
-                study_id: study.best_trial.study_id,
-                number: study.best_trial.number,
-                state: study.best_trial.state,
-                value: study.best_trial.value,
-                intermediate_value: study.best_trial.intermediate_value,
-                datetime_start: new Date(study.best_trial.datetime_start),
-                datetime_complete: study.best_trial.datetime_complete
-                  ? new Date(study.best_trial.datetime_complete)
-                  : undefined,
-                params: study.best_trial.params,
-                user_attrs: study.best_trial.user_attrs,
-                system_attrs: study.best_trial.system_attrs,
-              }
+            ? convertTrialResponse(study.best_trial)
             : undefined
           return {
             study_id: study.study_id,

@@ -54,11 +54,11 @@ export const HistoryPlot: FC<{
       b: 0,
     },
     yaxis: {
-      type: logScale ? 'log' : 'linear'
+      type: logScale ? "log" : "linear",
     },
     xaxis: {
-      type: xAxis === "number" ? "linear" : "date"
-    }
+      type: xAxis === "number" ? "linear" : "date",
+    },
   }
 
   const handleXAxisChange = (e: ChangeEvent<HTMLInputElement>) => {

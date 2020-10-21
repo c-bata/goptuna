@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -104,6 +105,24 @@ func handleGetStudyDetail(w http.ResponseWriter, r *http.Request) {
 		writeErrorResponse(w, http.StatusBadRequest, "Invalid study id")
 		return
 	}
+	studies, err := storage.GetAllStudySummaries()
+	if err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	studySummary, err := func() (StudySummary, error) {
+		for _, s := range studies {
+			if s.ID == studyID {
+				return toStudySummary(s), nil
+			}
+		}
+		return StudySummary{}, errors.New("not found")
+	}()
+	if err != nil {
+		writeErrorResponse(w, http.StatusNotFound, "Not found")
+		return
+	}
+
 	trials, err := storage.GetAllTrials(studyID)
 	if err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
@@ -112,8 +131,16 @@ func handleGetStudyDetail(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	json.NewEncoder(w).Encode(struct {
-		Trials []FrozenTrial `json:"trials"`
+		Name          string        `json:"name"`
+		Direction     string        `json:"direction"`
+		DatetimeStart string        `json:"datetime_start"`
+		BestTrial     FrozenTrial   `json:"best_trial"`
+		Trials        []FrozenTrial `json:"trials"`
 	}{
-		Trials: toFrozenTrials(trials),
+		Name:          studySummary.Name,
+		Direction:     studySummary.Direction,
+		DatetimeStart: studySummary.DatetimeStart,
+		BestTrial:     studySummary.BestTrial,
+		Trials:        toFrozenTrials(trials),
 	})
 }

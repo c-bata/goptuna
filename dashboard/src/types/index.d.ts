@@ -58,6 +58,10 @@ declare interface StudySummary {
 }
 
 declare interface StudyDetail {
+  name: string
+  direction: StudyDirection
+  datetime_start: Date
+  best_trial?: Trial
   trials: Trial[]
 }
 

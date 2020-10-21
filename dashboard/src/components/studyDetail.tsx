@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from "react"
-import {Link, useParams} from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
 import { useRecoilState } from "recoil"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import Card from "@material-ui/core/Card"
@@ -9,10 +9,10 @@ import { studyDetailsState } from "../state"
 import { updateStudyDetail } from "../action"
 import { TrialsTable } from "./trialsTable"
 import { HistoryPlot } from "./historyPlot"
-import {AppBar, Button, Container, Grid, Toolbar} from "@material-ui/core"
+import { AppBar, Button, Container, Grid, Toolbar } from "@material-ui/core"
 import Typography from "@material-ui/core/Typography"
-import {ParallelCoordinatePlot} from "./parallelCoordinatePlot";
-import {IntermediateValuesPlot} from "./intermediateValuesPlot";
+import { ParallelCoordinatePlot } from "./parallelCoordinatePlot"
+import { IntermediateValuesPlot } from "./intermediateValuesPlot"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -84,16 +84,18 @@ export const StudyDetail: FC<{}> = () => {
   ) : (
     <p>Now loading...</p>
   )
+
+  const title = studyDetail ? studyDetail.name : `Study #${studyId}`
   return (
     <div>
       <AppBar position="static">
         <Container>
           <Toolbar>
-            <Typography variant="h6">
-              Study #{studyId}
-            </Typography>
+            <Typography variant="h6">{title}</Typography>
             <div className={classes.grow} />
-            <Button color="inherit" component={Link} to="/">Return to Top</Button>
+            <Button color="inherit" component={Link} to="/">
+              Return to Top
+            </Button>
           </Toolbar>
         </Container>
       </AppBar>

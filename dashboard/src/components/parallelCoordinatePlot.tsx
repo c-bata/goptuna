@@ -34,7 +34,5 @@ export const ParallelCoordinatePlot: FC<{
   if (ready) {
     plotly.react("parallel-coordinate-plot", plotData, layout)
   }
-  return (
-     <div id="parallel-coordinate-plot" />
-  )
+  return <div id="parallel-coordinate-plot" />
 }

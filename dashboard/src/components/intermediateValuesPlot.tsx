@@ -34,7 +34,5 @@ export const IntermediateValuesPlot: FC<{
   if (ready) {
     plotly.react("intermediate-values-plot", plotData, layout)
   }
-  return (
-    <div id="intermediate-values-plot" />
-  )
+  return <div id="intermediate-values-plot" />
 }

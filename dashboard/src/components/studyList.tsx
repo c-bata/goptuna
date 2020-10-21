@@ -15,7 +15,7 @@ import { studySummariesState } from "../state"
 import { updateStudySummaries } from "../action"
 import { formatDate } from "../utils/date"
 import Typography from "@material-ui/core/Typography"
-import {AppBar, Toolbar} from "@material-ui/core";
+import { AppBar, Toolbar } from "@material-ui/core"
 
 const useTableStyles = makeStyles({
   table: {
@@ -95,9 +95,7 @@ export const StudyList: FC<{}> = () => {
       <AppBar position="static">
         <Container>
           <Toolbar>
-            <Typography variant="h6">
-              TOP
-            </Typography>
+            <Typography variant="h6">TOP</Typography>
           </Toolbar>
         </Container>
       </AppBar>
