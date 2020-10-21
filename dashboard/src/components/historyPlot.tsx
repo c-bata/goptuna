@@ -1,18 +1,26 @@
 import * as plotly from "plotly.js-dist"
 import React, { ChangeEvent, FC, useEffect, useState } from "react"
-import { Checkbox, Grid, Switch } from "@material-ui/core"
-import FormControl from "@material-ui/core/FormControl"
-import FormLabel from "@material-ui/core/FormLabel"
-import { FormControlLabel, Radio, RadioGroup } from "@material-ui/core"
+import {
+  Grid,
+  FormControl,
+  FormLabel,
+  FormControlLabel,
+  Checkbox,
+  Switch,
+  Radio,
+  RadioGroup,
+} from "@material-ui/core"
 
 export const HistoryPlot: FC<{
   study: StudyDetail
-}> = ({ study = {
-  name: "",
-  direction: "minimize",
-  datetime_start: new Date(),
-  trials: [],
-} }) => {
+}> = ({
+  study = {
+    name: "",
+    direction: "minimize",
+    datetime_start: new Date(),
+    trials: [],
+  },
+}) => {
   const [ready, setReady] = useState<boolean>(false)
   const [xAxis, setXAxis] = useState<string>("number")
   const [logScale, setLogScale] = useState<boolean>(false)
@@ -45,35 +53,45 @@ export const HistoryPlot: FC<{
 
   if (ready) {
     let filteredTrials = study.trials.filter(
-      t => t.state === TrialState.Complete || t.state === TrialState.Pruned
+      (t) => t.state === TrialState.Complete || t.state === TrialState.Pruned
     )
     if (filterCompleteTrial) {
       filteredTrials = filteredTrials.filter(
-        t => t.state !== TrialState.Complete
+        (t) => t.state !== TrialState.Complete
       )
     }
     if (filterPrunedTrial) {
-      filteredTrials = filteredTrials.filter((t) => t.state !== TrialState.Pruned)
+      filteredTrials = filteredTrials.filter(
+        (t) => t.state !== TrialState.Pruned
+      )
     }
     let trialsForLinePlot: Trial[] = []
     let currentBest: number | null = null
-    filteredTrials.forEach(item => {
+    filteredTrials.forEach((item) => {
       if (currentBest === null) {
         currentBest = item.value!
         trialsForLinePlot.push(item)
-      } else if (study.direction === StudyDirection.Maximize && item.value! > currentBest) {
+      } else if (
+        study.direction === StudyDirection.Maximize &&
+        item.value! > currentBest
+      ) {
         currentBest = item.value!
         trialsForLinePlot.push(item)
-      } else if (study.direction === StudyDirection.Minimize && item.value! < currentBest) {
+      } else if (
+        study.direction === StudyDirection.Minimize &&
+        item.value! < currentBest
+      ) {
         currentBest = item.value!
         trialsForLinePlot.push(item)
       }
     })
 
     const getAxisX = (trial: Trial): number | Date => {
-      return xAxis === "number" ? trial.number : xAxis === "datetime_start"
-          ? trial.datetime_start
-          : trial.datetime_complete!
+      return xAxis === "number"
+        ? trial.number
+        : xAxis === "datetime_start"
+        ? trial.datetime_start
+        : trial.datetime_complete!
     }
 
     let xForLinePlot = trialsForLinePlot.map(getAxisX)

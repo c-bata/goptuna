@@ -13,10 +13,10 @@ export const IntermediateValuesPlot: FC<{
   let filteredTrials = trials.filter(
     (t) => t.state === TrialState.Complete || t.state === TrialState.Pruned
   )
-  const plotData: Partial<plotly.PlotData>[] = filteredTrials.map(trial => {
+  const plotData: Partial<plotly.PlotData>[] = filteredTrials.map((trial) => {
     return {
-      x: trial.intermediate_values.map(iv => iv.step),
-      y: trial.intermediate_values.map(iv => iv.value),
+      x: trial.intermediate_values.map((iv) => iv.step),
+      y: trial.intermediate_values.map((iv) => iv.value),
       mode: "lines+markers",
       type: "scatter",
       name: `trial #${trial.number}`,

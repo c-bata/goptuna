@@ -1,14 +1,17 @@
-import React, {FC, useState} from "react"
-import Table from "@material-ui/core/Table"
-import TableBody from "@material-ui/core/TableBody"
-import TableCell from "@material-ui/core/TableCell"
-import TableContainer from "@material-ui/core/TableContainer"
-import TableHead from "@material-ui/core/TableHead"
-import TableRow from "@material-ui/core/TableRow"
-import Paper from "@material-ui/core/Paper"
+import React, { FC, useState } from "react"
 import { makeStyles } from "@material-ui/core/styles"
-import {TableFooter, TablePagination} from "@material-ui/core";
-import TablePaginationActions from "@material-ui/core/TablePagination/TablePaginationActions";
+import {
+  TableFooter,
+  TablePagination,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from "@material-ui/core"
+import TablePaginationActions from "@material-ui/core/TablePagination/TablePaginationActions"
 
 const useStyles = makeStyles({
   table: {
@@ -20,21 +23,25 @@ export const TrialsTable: FC<{
   trials: Trial[]
 }> = ({ trials = [] }) => {
   const classes = useStyles()
-  const [page, setPage] = useState<number>(0);
-  const [rowsPerPage, setRowsPerPage] = useState<number>(10);
+  const [page, setPage] = useState<number>(0)
+  const [rowsPerPage, setRowsPerPage] = useState<number>(10)
 
-  const emptyRows = rowsPerPage - Math.min(rowsPerPage, trials.length - page * rowsPerPage);
-  const handleChangePage = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
-    setPage(newPage);
-  };
+  const emptyRows =
+    rowsPerPage - Math.min(rowsPerPage, trials.length - page * rowsPerPage)
+  const handleChangePage = (
+    event: React.MouseEvent<HTMLButtonElement> | null,
+    newPage: number
+  ) => {
+    setPage(newPage)
+  }
 
   const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const value = parseInt(event.target.value, 10)
-    setRowsPerPage(value);
-    setPage(0);
-  };
+    setRowsPerPage(value)
+    setPage(0)
+  }
 
   return (
     <TableContainer component={Paper}>
@@ -51,8 +58,8 @@ export const TrialsTable: FC<{
         <TableBody>
           {(rowsPerPage > 0
             ? trials.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              : trials
-          ).map(t => {
+            : trials
+          ).map((t) => {
             return (
               <TableRow key={t.trial_id}>
                 <TableCell component="th" scope="row">
@@ -61,7 +68,9 @@ export const TrialsTable: FC<{
                 <TableCell>{t.number}</TableCell>
                 <TableCell>{t.state.toString()}</TableCell>
                 <TableCell>{t.value}</TableCell>
-                <TableCell>{t.params.map(p => p.name + ": " + p.value).join(", ")}</TableCell>
+                <TableCell>
+                  {t.params.map((p) => p.name + ": " + p.value).join(", ")}
+                </TableCell>
               </TableRow>
             )
           })}
@@ -74,13 +83,13 @@ export const TrialsTable: FC<{
         <TableFooter>
           <TableRow>
             <TablePagination
-              rowsPerPageOptions={[10, 50, 100, { label: 'All', value: -1 }]}
+              rowsPerPageOptions={[10, 50, 100, { label: "All", value: -1 }]}
               colSpan={3}
               count={trials.length}
               rowsPerPage={rowsPerPage}
               page={page}
               SelectProps={{
-                inputProps: { 'aria-label': 'rows per page' },
+                inputProps: { "aria-label": "rows per page" },
                 native: true,
               }}
               onChangePage={handleChangePage}

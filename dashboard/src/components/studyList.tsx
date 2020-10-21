@@ -1,21 +1,25 @@
 import React, { FC, useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { useRecoilState } from "recoil"
-import Table from "@material-ui/core/Table"
-import TableBody from "@material-ui/core/TableBody"
-import TableCell from "@material-ui/core/TableCell"
-import TableContainer from "@material-ui/core/TableContainer"
-import TableHead from "@material-ui/core/TableHead"
-import TableRow from "@material-ui/core/TableRow"
-import Paper from "@material-ui/core/Paper"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-import Card from "@material-ui/core/Card"
-import Container from "@material-ui/core/Container"
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Container,
+  Card,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@material-ui/core"
+
 import { studySummariesState } from "../state"
 import { updateStudySummaries } from "../action"
 import { formatDate } from "../utils/date"
-import Typography from "@material-ui/core/Typography"
-import { AppBar, Toolbar } from "@material-ui/core"
 
 const useTableStyles = makeStyles({
   table: {

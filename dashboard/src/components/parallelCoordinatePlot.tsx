@@ -26,9 +26,11 @@ const plotCoordinate = (trials: Trial[]) => {
   }
 
   // Intersection param names
-  let paramNames = new Set<string>(trials[0].params.map(p => p.name))
-  filteredTrials.forEach(t => {
-    paramNames = new Set<string>(t.params.filter(p => paramNames.has(p.name)).map(p => p.name))
+  let paramNames = new Set<string>(trials[0].params.map((p) => p.name))
+  filteredTrials.forEach((t) => {
+    paramNames = new Set<string>(
+      t.params.filter((p) => paramNames.has(p.name)).map((p) => p.name)
+    )
   })
 
   if (paramNames.size === 0) {
@@ -36,34 +38,36 @@ const plotCoordinate = (trials: Trial[]) => {
     return
   }
 
-  const objectiveValues: number[] = filteredTrials.map(t => t.value!)
+  const objectiveValues: number[] = filteredTrials.map((t) => t.value!)
   let dimensions = [
     {
       label: "Objective value",
       values: objectiveValues,
       range: [Math.min(...objectiveValues), Math.max(...objectiveValues)],
-    }
+    },
   ]
-  paramNames.forEach(paramName => {
-    const valueStrings = filteredTrials.map(t => {
-      const param = t.params.find(p => p.name == paramName)
+  paramNames.forEach((paramName) => {
+    const valueStrings = filteredTrials.map((t) => {
+      const param = t.params.find((p) => p.name == paramName)
       return param!.value
     })
-    const isnum = valueStrings.every(v => {
+    const isnum = valueStrings.every((v) => {
       return /^-?\d+\.\d+$/.test(v)
     })
     if (isnum) {
-      const values: number[] = valueStrings.map(v => parseFloat(v))
+      const values: number[] = valueStrings.map((v) => parseFloat(v))
       dimensions.push({
         label: paramName,
         values: values,
-        range: [Math.min(...values), Math.max(...values)]
+        range: [Math.min(...values), Math.max(...values)],
       })
     } else {
       // categorical
       const vocabSet = new Set<string>(valueStrings)
       const vocabArr = Array.from<string>(vocabSet)
-      const values: number[] = valueStrings.map(v => vocabArr.findIndex(vocab => v === vocab))
+      const values: number[] = valueStrings.map((v) =>
+        vocabArr.findIndex((vocab) => v === vocab)
+      )
       const tickvals: number[] = vocabArr.map((v, i) => i)
       dimensions.push({
         label: paramName,
