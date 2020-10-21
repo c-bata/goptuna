@@ -22,8 +22,6 @@ func NewServer(s goptuna.Storage) (http.Handler, error) {
 	storage = s
 
 	router := mux.NewRouter()
-	// HTML
-	router.HandleFunc("/", handleGetIndex).Methods("GET")
 	// Static files
 	err := registerStaticFileRoutes(router, "static")
 	if err != nil {
@@ -32,6 +30,8 @@ func NewServer(s goptuna.Storage) (http.Handler, error) {
 	// JSON API
 	router.HandleFunc("/api/studies", handleGetAllStudySummary).Methods("GET")
 	router.HandleFunc("/api/studies/{study_id:[0-9]+}", handleGetStudyDetail).Methods("GET")
+	// Fallback to HTML for react-router's BrowserRouter
+	router.PathPrefix("/").HandlerFunc(handleGetIndex).Methods("GET")
 	return router, nil
 }
 
