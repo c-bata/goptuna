@@ -3,7 +3,7 @@ import { FC, useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { useRecoilState } from "recoil"
 import { studyDetailsState } from "../state"
-import { fetchStudyDetailAction } from "../api"
+import { updateStudyDetail } from "../action"
 
 interface ParamTypes {
   studyId: string
@@ -21,25 +21,9 @@ export const HistoryGraph: FC<{}> = () => {
 
   useEffect(() => {
     // fetch immediately
-    fetchStudyDetailAction(studyIdNumber)
-      .then((study) => {
-        let newStudies = Object.assign({}, studyDetails)
-        newStudies[studyIdNumber] = study
-        setStudyDetails(newStudies)
-      })
-      .catch((err) => {
-        console.log(err) // Notify to error dispatchers
-      })
+    updateStudyDetail(studyIdNumber, studyDetails, setStudyDetails)
     const intervalId = setInterval(function () {
-      fetchStudyDetailAction(studyIdNumber)
-        .then((study) => {
-          let newStudies = Object.assign({}, studyDetails)
-          newStudies[studyIdNumber] = study
-          setStudyDetails(newStudies)
-        })
-        .catch((err) => {
-          console.log(err) // Notify to error dispatchers
-        })
+      updateStudyDetail(studyIdNumber, studyDetails, setStudyDetails)
     }, 1000)
     return () => clearInterval(intervalId)
   }, [])

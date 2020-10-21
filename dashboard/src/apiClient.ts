@@ -18,9 +18,7 @@ interface StudyDetailResponse {
   }[]
 }
 
-export const fetchStudyDetailAction = (
-  studyId: number
-): Promise<StudyDetail> => {
+export const getStudyDetail = (studyId: number): Promise<StudyDetail> => {
   return axiosInstance
     .get<StudyDetailResponse>(`/api/studies/${studyId}`, {})
     .then((res) => {
@@ -73,7 +71,7 @@ interface StudySummariesResponse {
   }[]
 }
 
-export const fetchStudySummariesAction = (): Promise<StudySummary[]> => {
+export const getStudySummaries = (): Promise<StudySummary[]> => {
   return axiosInstance
     .get<StudySummariesResponse>(`/api/studies`, {})
     .then((res) => {

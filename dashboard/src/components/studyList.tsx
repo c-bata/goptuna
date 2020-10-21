@@ -3,7 +3,7 @@ import { FC, useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { useRecoilState } from "recoil"
 import { studySummariesState } from "../state"
-import { fetchStudySummariesAction } from "../api"
+import { updateStudySummaries } from "../action"
 
 const style = css``
 
@@ -14,23 +14,10 @@ export const StudyList: FC<{}> = () => {
   )
 
   useEffect(() => {
-    // fetch immediately
-    fetchStudySummariesAction()
-      .then((studySummaries: StudySummary[]) => {
-        setStudySummaries(studySummaries)
-      })
-      .catch((err) => {
-        console.log(err) // Notify to error dispatchers
-      })
+    updateStudySummaries(setStudySummaries) // fetch immediately
     const intervalId = setInterval(function () {
-      fetchStudySummariesAction()
-        .then((studySummaries: StudySummary[]) => {
-          setStudySummaries(studySummaries)
-        })
-        .catch((err) => {
-          console.log(err) // Notify to error dispatchers
-        })
-    }, 1000)
+      updateStudySummaries(setStudySummaries)
+    }, 10 * 1000)
     return () => clearInterval(intervalId)
   }, [])
   useEffect(() => {
