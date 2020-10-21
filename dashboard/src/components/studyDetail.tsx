@@ -3,7 +3,6 @@ import { FC, useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { useRecoilState } from "recoil"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-import Grid from "@material-ui/core/Grid"
 import Card from "@material-ui/core/Card"
 import CardContent from "@material-ui/core/CardContent"
 
@@ -19,6 +18,9 @@ const useStyles = makeStyles((theme: Theme) =>
     root: {
       flexGrow: 1,
     },
+    card: {
+      margin: theme.spacing(2),
+    }
   })
 )
 
@@ -52,40 +54,23 @@ export const StudyDetail: FC<{}> = () => {
 
   const studyDetail = studyDetails[studyIdNumber]
   const content = ready ? (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <Card>
-          <CardContent>
-            <Typography variant="h5" component="h2">
-              Study {studyId}
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid item xs={3}>
-        <Card>
-          <CardContent>
-            <Typography variant="h5" component="h2">
-              Plot settings
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid item xs={9}>
-        <Card>
-          <CardContent>
-            <HistoryPlot trials={studyDetail.trials} />
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid item xs={12}>
-        <Card>
-          <CardContent>
-            <TrialsTable trials={studyDetail.trials} />
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
+    <div>
+      <Card className={classes.card}>
+        <CardContent>
+          <Typography variant="h5" component="h2">
+            Study {studyId}
+          </Typography>
+        </CardContent>
+      </Card>
+      <Card className={classes.card}>
+        <CardContent>
+          <HistoryPlot trials={studyDetail.trials} />
+        </CardContent>
+      </Card>
+      <Card className={classes.card}>
+        <TrialsTable trials={studyDetail.trials} />
+      </Card>
+    </div>
   ) : (
     <p>Now loading...</p>
   )

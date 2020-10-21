@@ -1,6 +1,8 @@
 import { jsx } from "@emotion/core"
 import * as plotly from "plotly.js-dist"
 import { FC, useEffect, useState } from "react"
+import {Grid} from "@material-ui/core";
+import Typography from "@material-ui/core/Typography";
 
 export const HistoryPlot: FC<{
   trials: Trial[]
@@ -35,5 +37,19 @@ export const HistoryPlot: FC<{
   if (ready) {
     plotly.react("history-plot", plotData, layout)
   }
-  return <div id="history-plot" />
+  return (
+    <Grid
+      container
+      direction="row"
+    >
+      <Grid item xs={3}>
+        <Typography variant="h5" component="h2">
+          Plot settings
+        </Typography>
+      </Grid>
+      <Grid item xs={9}>
+        <div id="history-plot" />
+      </Grid>
+    </Grid>
+  )
 }
