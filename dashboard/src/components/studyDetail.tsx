@@ -18,7 +18,8 @@ import { IntermediateValuesPlot } from "./intermediateValuesPlot"
 import { TrialsTable } from "./trialsTable"
 import { HistoryPlot } from "./historyPlot"
 import { studyDetailsState } from "../state"
-import { updateStudyDetail } from "../action"
+import { actionCreator } from "../action"
+import { useSnackbar } from "notistack"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -36,6 +37,8 @@ interface ParamTypes {
 }
 
 export const StudyDetail: FC<{}> = () => {
+  const { enqueueSnackbar } = useSnackbar()
+  const action = actionCreator(enqueueSnackbar)
   const { studyId } = useParams<ParamTypes>()
   const studyIdNumber = parseInt(studyId, 10)
   const [ready, setReady] = useState(false)
@@ -46,9 +49,9 @@ export const StudyDetail: FC<{}> = () => {
 
   useEffect(() => {
     // fetch immediately
-    updateStudyDetail(studyIdNumber, studyDetails, setStudyDetails)
+    action.updateStudyDetail(studyIdNumber, studyDetails, setStudyDetails)
     const intervalId = setInterval(function () {
-      updateStudyDetail(studyIdNumber, studyDetails, setStudyDetails)
+      action.updateStudyDetail(studyIdNumber, studyDetails, setStudyDetails)
     }, 5 * 1000)
     return () => clearInterval(intervalId)
   }, [])

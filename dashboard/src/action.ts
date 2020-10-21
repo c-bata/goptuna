@@ -1,30 +1,48 @@
 import { SetterOrUpdater } from "recoil"
 import { getStudyDetail, getStudySummaries } from "./apiClient"
+import { ReactNode } from "react"
+import { OptionsObject } from "notistack"
 
-export const updateStudySummaries = (
-  setter: SetterOrUpdater<StudySummary[]>
+export const actionCreator = (
+  enqueueSnackbar: (
+    message: ReactNode,
+    options?: OptionsObject | undefined
+  ) => string | number
 ) => {
-  getStudySummaries()
-    .then((studySummaries: StudySummary[]) => {
-      setter(studySummaries)
-    })
-    .catch((err) => {
-      console.log(err) // Notify to error dispatchers
-    })
-}
+  const updateStudySummaries = (setter: SetterOrUpdater<StudySummary[]>) => {
+    getStudySummaries()
+      .then((studySummaries: StudySummary[]) => {
+        setter(studySummaries)
+      })
+      .catch((err) => {
+        enqueueSnackbar(`Failed to fetch study list.`, {
+          variant: "error",
+        })
+        console.log(err)
+      })
+  }
 
-export const updateStudyDetail = (
-  studyId: number,
-  oldVal: StudyDetails,
-  setter: SetterOrUpdater<StudyDetails>
-) => {
-  getStudyDetail(studyId)
-    .then((study) => {
-      let newVal = Object.assign({}, oldVal)
-      newVal[studyId] = study
-      setter(newVal)
-    })
-    .catch((err) => {
-      console.log(err) // Notify to error dispatchers
-    })
+  const updateStudyDetail = (
+    studyId: number,
+    oldVal: StudyDetails,
+    setter: SetterOrUpdater<StudyDetails>
+  ) => {
+    getStudyDetail(studyId)
+      .then((study) => {
+        let newVal = Object.assign({}, oldVal)
+        newVal[studyId] = study
+        setter(newVal)
+      })
+      .catch((err) => {
+        enqueueSnackbar(`Failed to fetch study (id=${studyId})`, {
+          variant: "error",
+        })
+        console.log(err)
+      })
+  }
+
+  return {
+    updateStudyDetail,
+    updateStudySummaries,
+  }
 }

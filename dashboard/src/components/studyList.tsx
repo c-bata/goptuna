@@ -18,8 +18,9 @@ import {
 } from "@material-ui/core"
 
 import { studySummariesState } from "../state"
-import { updateStudySummaries } from "../action"
+import { actionCreator } from "../action"
 import { formatDate } from "../utils/date"
+import { useSnackbar } from "notistack"
 
 const useTableStyles = makeStyles({
   table: {
@@ -68,6 +69,9 @@ const useStyles = makeStyles((theme: Theme) =>
 )
 
 export const StudyList: FC<{}> = () => {
+  const { enqueueSnackbar } = useSnackbar()
+  const action = actionCreator(enqueueSnackbar)
+
   const [ready, setReady] = useState(false)
   const [studySummaries, setStudySummaries] = useRecoilState<StudySummary[]>(
     studySummariesState
@@ -75,9 +79,9 @@ export const StudyList: FC<{}> = () => {
   const classes = useStyles()
 
   useEffect(() => {
-    updateStudySummaries(setStudySummaries) // fetch immediately
+    action.updateStudySummaries(setStudySummaries) // fetch immediately
     const intervalId = setInterval(function () {
-      updateStudySummaries(setStudySummaries)
+      action.updateStudySummaries(setStudySummaries)
     }, 10 * 1000)
     return () => clearInterval(intervalId)
   }, [])
