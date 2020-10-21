@@ -1,16 +1,29 @@
-import { jsx, css } from "@emotion/core"
+import { jsx } from "@emotion/core"
 import { FC, useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { useRecoilState } from "recoil"
+import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
+import Paper from '@material-ui/core/Paper';
+import Grid from '@material-ui/core/Grid';
+
 import { studyDetailsState } from "../state"
 import { updateStudyDetail } from "../action"
 import {TrialsTable} from "./trialsTable";
 
+const useStyles = makeStyles((theme: Theme) => createStyles({
+  root: {
+    flexGrow: 1,
+  },
+  paper: {
+    padding: theme.spacing(2),
+    textAlign: 'center',
+    color: theme.palette.text.secondary,
+  },
+}));
+
 interface ParamTypes {
   studyId: string
 }
-
-const style = css``
 
 export const StudyDetail: FC<{}> = () => {
   const { studyId } = useParams<ParamTypes>()
@@ -19,6 +32,7 @@ export const StudyDetail: FC<{}> = () => {
   const [studyDetails, setStudyDetails] = useRecoilState<StudyDetails>(
     studyDetailsState
   )
+  const classes = useStyles();
 
   useEffect(() => {
     // fetch immediately
@@ -44,9 +58,15 @@ export const StudyDetail: FC<{}> = () => {
     <p>Now loading...</p>
   )
   return (
-    <div css={style}>
-      <h1>Study {studyId}</h1>
-      {content}
+    <div className={classes.root}>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Paper className={classes.paper}>Study {studyId}</Paper>
+        </Grid>
+        <Grid item xs={12}>
+          {content}
+        </Grid>
+      </Grid>
     </div>
   )
 }

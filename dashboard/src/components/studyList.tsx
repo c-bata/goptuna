@@ -9,10 +9,11 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from "@material-ui/core/Paper";
-import { makeStyles } from '@material-ui/core/styles';
+import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 import { studySummariesState } from "../state"
 import { updateStudySummaries } from "../action"
 import {formatDate} from "../utils/date";
+import Grid from "@material-ui/core/Grid";
 
 const useTableStyles = makeStyles({
   table: {
@@ -56,13 +57,23 @@ const StudySummariesTable: FC<{
   )
 }
 
-const style = css``
+const useStyles = makeStyles((theme: Theme) => createStyles({
+  root: {
+    flexGrow: 1,
+  },
+  paper: {
+    padding: theme.spacing(2),
+    textAlign: 'center',
+    color: theme.palette.text.secondary,
+  },
+}));
 
 export const StudyList: FC<{}> = () => {
   const [ready, setReady] = useState(false)
   const [studySummaries, setStudySummaries] = useRecoilState<StudySummary[]>(
     studySummariesState
   )
+  const classes = useStyles();
 
   useEffect(() => {
     updateStudySummaries(setStudySummaries) // fetch immediately
@@ -85,9 +96,15 @@ export const StudyList: FC<{}> = () => {
   )
 
   return (
-    <div css={style}>
-      <h1>List of studies.</h1>
-      {content}
+    <div className={classes.root}>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Paper className={classes.paper}>Studies</Paper>
+        </Grid>
+        <Grid item xs={12}>
+          {content}
+        </Grid>
+      </Grid>
     </div>
   )
 }

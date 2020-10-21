@@ -21,7 +21,7 @@ export const TrialsTable: FC<{
   const classes = useStyles();
   return (
     <TableContainer component={Paper}>
-      <Table className={classes.table} aria-label="trials table">
+      <Table className={classes.table} size="small" aria-label="trials table">
         <TableHead>
           <TableRow>
             <TableCell>Trial ID</TableCell>
