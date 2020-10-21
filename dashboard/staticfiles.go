@@ -22,7 +22,6 @@ func registerStaticFileRoutes(r *mux.Router, prefix string) error {
 	}
 	files := []string{
 		"/bundle.js",
-		"/bundle.js.map",
 		"/bundle.js.LICENSE.txt",
 	}
 	for _, filepath := range files {
