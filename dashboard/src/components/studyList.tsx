@@ -15,8 +15,8 @@ import Container from "@material-ui/core/Container"
 import { studySummariesState } from "../state"
 import { updateStudySummaries } from "../action"
 import { formatDate } from "../utils/date"
-import CardContent from "@material-ui/core/CardContent";
-import Typography from "@material-ui/core/Typography";
+import CardContent from "@material-ui/core/CardContent"
+import Typography from "@material-ui/core/Typography"
 
 const useTableStyles = makeStyles({
   table: {
@@ -63,7 +63,7 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     card: {
       margin: theme.spacing(2),
-    }
+    },
   })
 )
 
@@ -103,9 +103,7 @@ export const StudyList: FC<{}> = () => {
           </Typography>
         </CardContent>
       </Card>
-      <Card className={classes.card}>
-        {content}
-      </Card>
+      <Card className={classes.card}>{content}</Card>
     </Container>
   )
 }

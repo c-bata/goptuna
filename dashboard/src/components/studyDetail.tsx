@@ -20,7 +20,7 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     card: {
       margin: theme.spacing(2),
-    }
+    },
   })
 )
 
