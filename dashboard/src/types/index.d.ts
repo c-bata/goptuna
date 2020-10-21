@@ -57,10 +57,10 @@ declare interface StudySummary {
   datetime_start: Date
 }
 
-declare interface Study {
+declare interface StudyDetail {
   trials: Trial[]
 }
 
-declare interface Studies {
-  [study_id: string]: Study
+declare interface StudyDetails {
+  [study_id: string]: StudyDetail
 }

@@ -3,12 +3,12 @@ import { jsx } from "@emotion/core"
 import { AppContainer } from "./container"
 import { RecoilRoot } from "recoil"
 
-const appDom = document.getElementById("dashboard")
-if (appDom !== null) {
+const dashboardDOM = document.getElementById("dashboard")
+if (dashboardDOM !== null) {
   ReactDOM.render(
     <RecoilRoot>
       <AppContainer />
     </RecoilRoot>,
-    appDom
+    dashboardDOM
   )
 }

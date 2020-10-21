@@ -5,7 +5,7 @@ export const studySummariesState = atom<StudySummary[]>({
   default: [],
 })
 
-export const trialsState = atom<Studies>({
-  key: "trials",
+export const studyDetailsState = atom<StudyDetails>({
+  key: "studyDetails",
   default: {},
 })

@@ -18,11 +18,13 @@ interface StudyDetailResponse {
   }[]
 }
 
-export const fetchStudyDetailAction = (studyId: number): Promise<Trial[]> => {
+export const fetchStudyDetailAction = (
+  studyId: number
+): Promise<StudyDetail> => {
   return axiosInstance
     .get<StudyDetailResponse>(`/api/studies/${studyId}`, {})
     .then((res) => {
-      return res.data.trials.map(
+      const trials = res.data.trials.map(
         (trial): Trial => {
           return {
             trial_id: trial.trial_id,
@@ -41,6 +43,9 @@ export const fetchStudyDetailAction = (studyId: number): Promise<Trial[]> => {
           }
         }
       )
+      return {
+        trials: trials,
+      }
     })
 }
 
