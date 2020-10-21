@@ -84,9 +84,9 @@ const plotCoordinate = (trials: Trial[]) => {
   ]
 
   const layout: Partial<plotly.Layout> = {
+    title: "Parallel coordinate",
     margin: {
       l: 50,
-      t: 0,
       r: 50,
       b: 0,
     },

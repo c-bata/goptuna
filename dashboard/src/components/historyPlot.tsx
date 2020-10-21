@@ -70,23 +70,27 @@ export const HistoryPlot: FC<{
       }
     })
 
-    const getAxisXList = (trials: Trial[]): number[] | Date[] => {
-      return xAxis === "number"
-        ? filteredTrials.map((t: Trial): number => t.number)
-        : xAxis === "datetime_start"
-          ? filteredTrials.map((t: Trial): Date => t.datetime_start)
-          : filteredTrials.map((t: Trial): Date => t.datetime_complete!)
+    const getAxisX = (trial: Trial): number | Date => {
+      return xAxis === "number" ? trial.number : xAxis === "datetime_start"
+          ? trial.datetime_start
+          : trial.datetime_complete!
     }
+
+    let xForLinePlot = trialsForLinePlot.map(getAxisX)
+    xForLinePlot.push(getAxisX(filteredTrials[filteredTrials.length - 1]))
+    let yForLinePlot = trialsForLinePlot.map((t: Trial): number => t.value!)
+    yForLinePlot.push(yForLinePlot[yForLinePlot.length - 1])
+
     const plotData: Partial<plotly.PlotData>[] = [
       {
-        x: getAxisXList(filteredTrials),
+        x: filteredTrials.map(getAxisX),
         y: filteredTrials.map((t: Trial): number => t.value!),
         mode: "markers",
         type: "scatter",
       },
       {
-        x: getAxisXList(trialsForLinePlot),
-        y: trialsForLinePlot.map((t: Trial): number => t.value || 0),
+        x: xForLinePlot,
+        y: yForLinePlot,
         mode: "lines",
         type: "scatter",
       },
