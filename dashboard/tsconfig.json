@@ -11,12 +11,14 @@
       "plotly.js-dist": ["node_modules/@types/plotly.js"]
     },
     "noImplicitAny": true,
-    "lib": ["dom", "ES2017"],
-    "module": "commonjs",
+    "lib": ["dom", "esnext"],
+    "module": "esnext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "target": "es5",
     "jsx": "react",
-    "jsxFactory": "jsx",
-    "sourceMap": true
+    "sourceMap": true,
+    "strict": true
   },
   "files": [
     "./src/index.tsx"

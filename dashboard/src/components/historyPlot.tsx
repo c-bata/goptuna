@@ -1,6 +1,5 @@
-import { jsx } from "@emotion/core"
 import * as plotly from "plotly.js-dist"
-import { ChangeEvent, FC, useEffect, useState } from "react"
+import React, { ChangeEvent, FC, useEffect, useState } from "react"
 import { Checkbox, Grid, Switch } from "@material-ui/core"
 import FormControl from "@material-ui/core/FormControl"
 import FormLabel from "@material-ui/core/FormLabel"

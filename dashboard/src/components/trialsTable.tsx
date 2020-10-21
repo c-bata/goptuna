@@ -1,5 +1,4 @@
-import { jsx } from "@emotion/core"
-import { FC } from "react"
+import React, { FC } from "react"
 import Table from "@material-ui/core/Table"
 import TableBody from "@material-ui/core/TableBody"
 import TableCell from "@material-ui/core/TableCell"

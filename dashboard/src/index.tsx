@@ -1,14 +1,13 @@
-import * as ReactDOM from "react-dom"
-import { jsx } from "@emotion/core"
+import React from 'react'
+import {render} from "react-dom"
 import { AppContainer } from "./container"
 import { RecoilRoot } from "recoil"
 
-const dashboardDOM = document.getElementById("dashboard")
-if (dashboardDOM !== null) {
-  ReactDOM.render(
+render(
+  <React.StrictMode>
     <RecoilRoot>
       <AppContainer />
-    </RecoilRoot>,
-    dashboardDOM
-  )
-}
+    </RecoilRoot>
+  </React.StrictMode>,
+  document.getElementById("dashboard")
+)

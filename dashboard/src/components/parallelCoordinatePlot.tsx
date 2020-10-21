@@ -1,6 +1,5 @@
-import { jsx } from "@emotion/core"
 import * as plotly from "plotly.js-dist"
-import { FC, useEffect, useState } from "react"
+import React, { FC, useEffect, useState } from "react"
 
 export const ParallelCoordinatePlot: FC<{
   trials: Trial[]
