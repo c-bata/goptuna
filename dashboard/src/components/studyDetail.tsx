@@ -1,6 +1,6 @@
 import { jsx } from "@emotion/core"
 import { FC, useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
+import {Link, useParams} from "react-router-dom"
 import { useRecoilState } from "recoil"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import Card from "@material-ui/core/Card"
@@ -10,18 +10,18 @@ import { studyDetailsState } from "../state"
 import { updateStudyDetail } from "../action"
 import { TrialsTable } from "./trialsTable"
 import { HistoryPlot } from "./historyPlot"
-import {Container, Grid} from "@material-ui/core"
+import {AppBar, Button, Container, Grid, Toolbar} from "@material-ui/core"
 import Typography from "@material-ui/core/Typography"
 import {ParallelCoordinatePlot} from "./parallelCoordinatePlot";
 import {IntermediateValuesPlot} from "./intermediateValuesPlot";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
-    root: {
-      flexGrow: 1,
-    },
     card: {
       margin: theme.spacing(2),
+    },
+    grow: {
+      flexGrow: 1,
     },
   })
 )
@@ -59,13 +59,6 @@ export const StudyDetail: FC<{}> = () => {
     <div>
       <Card className={classes.card}>
         <CardContent>
-          <Typography variant="h5" component="h2">
-            Study {studyId}
-          </Typography>
-        </CardContent>
-      </Card>
-      <Card className={classes.card}>
-        <CardContent>
           <HistoryPlot trials={studyDetail.trials} />
         </CardContent>
       </Card>
@@ -92,5 +85,20 @@ export const StudyDetail: FC<{}> = () => {
   ) : (
     <p>Now loading...</p>
   )
-  return <Container className={classes.root}>{content}</Container>
+  return (
+    <div>
+      <AppBar position="static">
+        <Container>
+          <Toolbar>
+            <Typography variant="h6">
+              Study #{studyId}
+            </Typography>
+            <div className={classes.grow} />
+            <Button color="inherit" component={Link} to="/">Return to Top</Button>
+          </Toolbar>
+        </Container>
+      </AppBar>
+      <Container>{content}</Container>
+    </div>
+  )
 }

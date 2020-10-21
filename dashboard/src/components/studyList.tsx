@@ -15,8 +15,8 @@ import Container from "@material-ui/core/Container"
 import { studySummariesState } from "../state"
 import { updateStudySummaries } from "../action"
 import { formatDate } from "../utils/date"
-import CardContent from "@material-ui/core/CardContent"
 import Typography from "@material-ui/core/Typography"
+import {AppBar, Toolbar} from "@material-ui/core";
 
 const useTableStyles = makeStyles({
   table: {
@@ -58,9 +58,6 @@ const StudySummariesTable: FC<{
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
-    root: {
-      flexGrow: 1,
-    },
     card: {
       margin: theme.spacing(2),
     },
@@ -95,15 +92,19 @@ export const StudyList: FC<{}> = () => {
   )
 
   return (
-    <Container className={classes.root}>
-      <Card className={classes.card}>
-        <CardContent>
-          <Typography variant="h5" component="h2">
-            Study list
-          </Typography>
-        </CardContent>
-      </Card>
-      <Card className={classes.card}>{content}</Card>
-    </Container>
+    <div>
+      <AppBar position="static">
+        <Container>
+          <Toolbar>
+            <Typography variant="h6">
+              TOP
+            </Typography>
+          </Toolbar>
+        </Container>
+      </AppBar>
+      <Container>
+        <Card className={classes.card}>{content}</Card>
+      </Container>
+    </div>
   )
 }
