@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom"
 import { useRecoilState } from "recoil"
 import { studyDetailsState } from "../state"
 import { updateStudyDetail } from "../action"
+import {TrialsTable} from "./trialsTable";
 
 interface ParamTypes {
   studyId: string
@@ -11,7 +12,7 @@ interface ParamTypes {
 
 const style = css``
 
-export const HistoryGraph: FC<{}> = () => {
+export const StudyDetail: FC<{}> = () => {
   const { studyId } = useParams<ParamTypes>()
   const studyIdNumber = parseInt(studyId, 10)
   const [ready, setReady] = useState(false)
@@ -36,20 +37,16 @@ export const HistoryGraph: FC<{}> = () => {
 
   const studyDetail = studyDetails[studyIdNumber]
   const content = ready ? (
-    studyDetail.trials.map((t) => {
-      return (
-        <li key={t.trial_id}>
-          <p>{t.number}</p>
-        </li>
-      )
-    })
-  ) : (
+    <div>
+      <TrialsTable trials={studyDetail.trials} />
+    </div>
+) : (
     <p>Now loading...</p>
   )
   return (
     <div css={style}>
       <h1>Study {studyId}</h1>
-      <ul>{content}</ul>
+      {content}
     </div>
   )
 }
