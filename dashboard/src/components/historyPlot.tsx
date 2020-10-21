@@ -23,9 +23,17 @@ export const HistoryPlot: FC<{
       name: "history",
     },
   ]
+  const layout: Partial<plotly.Layout> = {
+    margin: {
+      l: 50,
+      t: 0,
+      r: 50,
+      b: 0,
+    },
+  }
 
   if (ready) {
-    plotly.react("history-plot", plotData)
+    plotly.react("history-plot", plotData, layout)
   }
   return <div id="history-plot" />
 }

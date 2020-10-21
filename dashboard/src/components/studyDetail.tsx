@@ -3,23 +3,21 @@ import { FC, useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { useRecoilState } from "recoil"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-import Paper from "@material-ui/core/Paper"
 import Grid from "@material-ui/core/Grid"
+import Card from "@material-ui/core/Card"
+import CardContent from "@material-ui/core/CardContent"
 
 import { studyDetailsState } from "../state"
 import { updateStudyDetail } from "../action"
 import { TrialsTable } from "./trialsTable"
 import { HistoryPlot } from "./historyPlot"
+import { Container } from "@material-ui/core"
+import Typography from "@material-ui/core/Typography"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
       flexGrow: 1,
-    },
-    paper: {
-      padding: theme.spacing(2),
-      textAlign: "center",
-      color: theme.palette.text.secondary,
     },
   })
 )
@@ -56,17 +54,40 @@ export const StudyDetail: FC<{}> = () => {
   const content = ready ? (
     <Grid container spacing={3}>
       <Grid item xs={12}>
-        <Paper className={classes.paper}>Study {studyId}</Paper>
+        <Card>
+          <CardContent>
+            <Typography variant="h5" component="h2">
+              Study {studyId}
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
+      <Grid item xs={3}>
+        <Card>
+          <CardContent>
+            <Typography variant="h5" component="h2">
+              Plot settings
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grid>
+      <Grid item xs={9}>
+        <Card>
+          <CardContent>
+            <HistoryPlot trials={studyDetail.trials} />
+          </CardContent>
+        </Card>
       </Grid>
       <Grid item xs={12}>
-        <HistoryPlot trials={studyDetail.trials} />
-      </Grid>
-      <Grid item xs={12}>
-        <TrialsTable trials={studyDetail.trials} />
+        <Card>
+          <CardContent>
+            <TrialsTable trials={studyDetail.trials} />
+          </CardContent>
+        </Card>
       </Grid>
     </Grid>
   ) : (
     <p>Now loading...</p>
   )
-  return <div className={classes.root}>{content}</div>
+  return <Container className={classes.root}>{content}</Container>
 }
