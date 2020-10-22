@@ -11,28 +11,17 @@ import {
   RadioGroup,
 } from "@material-ui/core"
 
+const plotDomId = "history-plot"
+
 export const HistoryPlot: FC<{
-  study: StudyDetail
-}> = ({
-  study = {
-    name: "",
-    direction: "minimize",
-    datetime_start: new Date(),
-    trials: [],
-  },
-}) => {
-  const [ready, setReady] = useState<boolean>(false)
+  study: StudyDetail | null
+}> = ({ study = null }) => {
   const [xAxis, setXAxis] = useState<string>("number")
   const [logScale, setLogScale] = useState<boolean>(false)
   const [filterCompleteTrial, setFilterCompleteTrial] = useState<boolean>(false)
   const [filterPrunedTrial, setFilterPrunedTrial] = useState<boolean>(false)
 
-  useEffect(() => {
-    setReady(true)
-  }, [])
-
   const handleXAxisChange = (e: ChangeEvent<HTMLInputElement>) => {
-    console.dir(e.target.value)
     setXAxis(e.target.value)
   }
 
@@ -51,85 +40,18 @@ export const HistoryPlot: FC<{
     setFilterPrunedTrial(!filterPrunedTrial)
   }
 
-  if (ready) {
-    let filteredTrials = study.trials.filter(
-      (t) => t.state === TrialState.Complete || t.state === TrialState.Pruned
-    )
-    if (filterCompleteTrial) {
-      filteredTrials = filteredTrials.filter(
-        (t) => t.state !== TrialState.Complete
+  useEffect(() => {
+    if (study !== null) {
+      plotHistory(
+        study,
+        xAxis,
+        logScale,
+        filterCompleteTrial,
+        filterPrunedTrial
       )
     }
-    if (filterPrunedTrial) {
-      filteredTrials = filteredTrials.filter(
-        (t) => t.state !== TrialState.Pruned
-      )
-    }
-    let trialsForLinePlot: Trial[] = []
-    let currentBest: number | null = null
-    filteredTrials.forEach((item) => {
-      if (currentBest === null) {
-        currentBest = item.value!
-        trialsForLinePlot.push(item)
-      } else if (
-        study.direction === StudyDirection.Maximize &&
-        item.value! > currentBest
-      ) {
-        currentBest = item.value!
-        trialsForLinePlot.push(item)
-      } else if (
-        study.direction === StudyDirection.Minimize &&
-        item.value! < currentBest
-      ) {
-        currentBest = item.value!
-        trialsForLinePlot.push(item)
-      }
-    })
+  }, [study, logScale, xAxis, filterPrunedTrial, filterCompleteTrial])
 
-    const getAxisX = (trial: Trial): number | Date => {
-      return xAxis === "number"
-        ? trial.number
-        : xAxis === "datetime_start"
-        ? trial.datetime_start
-        : trial.datetime_complete!
-    }
-
-    let xForLinePlot = trialsForLinePlot.map(getAxisX)
-    xForLinePlot.push(getAxisX(filteredTrials[filteredTrials.length - 1]))
-    let yForLinePlot = trialsForLinePlot.map((t: Trial): number => t.value!)
-    yForLinePlot.push(yForLinePlot[yForLinePlot.length - 1])
-
-    const plotData: Partial<plotly.PlotData>[] = [
-      {
-        x: filteredTrials.map(getAxisX),
-        y: filteredTrials.map((t: Trial): number => t.value!),
-        mode: "markers",
-        type: "scatter",
-      },
-      {
-        x: xForLinePlot,
-        y: yForLinePlot,
-        mode: "lines",
-        type: "scatter",
-      },
-    ]
-    const layout: Partial<plotly.Layout> = {
-      margin: {
-        l: 50,
-        t: 0,
-        r: 50,
-        b: 0,
-      },
-      yaxis: {
-        type: logScale ? "log" : "linear",
-      },
-      xaxis: {
-        type: xAxis === "number" ? "linear" : "date",
-      },
-      showlegend: false,
-    }
-    plotly.react("history-plot", plotData, layout)
-  }
   return (
     <Grid container direction="row">
       <Grid item xs={3}>
@@ -191,8 +113,101 @@ export const HistoryPlot: FC<{
         </Grid>
       </Grid>
       <Grid item xs={9}>
-        <div id="history-plot" />
+        <div id={plotDomId} />
       </Grid>
     </Grid>
   )
+}
+
+const plotHistory = (
+  study: StudyDetail,
+  xAxis: string,
+  logScale: boolean,
+  filterCompleteTrial: boolean,
+  filterPrunedTrial: boolean
+) => {
+  if (document.getElementById(plotDomId) === null) {
+    return
+  }
+
+  const layout: Partial<plotly.Layout> = {
+    margin: {
+      l: 50,
+      t: 0,
+      r: 50,
+      b: 0,
+    },
+    yaxis: {
+      type: logScale ? "log" : "linear",
+    },
+    xaxis: {
+      type: xAxis === "number" ? "linear" : "date",
+    },
+    showlegend: false,
+  }
+
+  let filteredTrials = study.trials.filter(
+    (t) => t.state === TrialState.Complete || t.state === TrialState.Pruned
+  )
+  if (filterCompleteTrial) {
+    filteredTrials = filteredTrials.filter(
+      (t) => t.state !== TrialState.Complete
+    )
+  }
+  if (filterPrunedTrial) {
+    filteredTrials = filteredTrials.filter((t) => t.state !== TrialState.Pruned)
+  }
+  if (filteredTrials.length === 0) {
+    plotly.react(plotDomId, [])
+    return
+  }
+  let trialsForLinePlot: Trial[] = []
+  let currentBest: number | null = null
+  filteredTrials.forEach((item) => {
+    if (currentBest === null) {
+      currentBest = item.value!
+      trialsForLinePlot.push(item)
+    } else if (
+      study.direction === StudyDirection.Maximize &&
+      item.value! > currentBest
+    ) {
+      currentBest = item.value!
+      trialsForLinePlot.push(item)
+    } else if (
+      study.direction === StudyDirection.Minimize &&
+      item.value! < currentBest
+    ) {
+      currentBest = item.value!
+      trialsForLinePlot.push(item)
+    }
+  })
+
+  const getAxisX = (trial: Trial): number | Date => {
+    return xAxis === "number"
+      ? trial.number
+      : xAxis === "datetime_start"
+      ? trial.datetime_start
+      : trial.datetime_complete!
+  }
+
+  let xForLinePlot = trialsForLinePlot.map(getAxisX)
+  xForLinePlot.push(getAxisX(filteredTrials[filteredTrials.length - 1]))
+  let yForLinePlot = trialsForLinePlot.map((t: Trial): number => t.value!)
+  yForLinePlot.push(yForLinePlot[yForLinePlot.length - 1])
+
+  const plotData: Partial<plotly.PlotData>[] = [
+    {
+      x: filteredTrials.map(getAxisX),
+      y: filteredTrials.map((t: Trial): number => t.value!),
+      mode: "markers",
+      type: "scatter",
+    },
+    {
+      x: xForLinePlot,
+      y: yForLinePlot,
+      mode: "lines",
+      type: "scatter",
+    },
+  ]
+  plotly.react(plotDomId, plotData, layout)
 }

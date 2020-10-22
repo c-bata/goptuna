@@ -1,29 +1,38 @@
 import * as plotly from "plotly.js-dist"
-import React, { FC, useEffect, useState } from "react"
+import React, { FC, useEffect } from "react"
+
+const plotDomId = "parallel-coordinate-plot"
 
 export const ParallelCoordinatePlot: FC<{
   trials: Trial[]
 }> = ({ trials = [] }) => {
-  const [ready, setReady] = useState<boolean>(false)
-
   useEffect(() => {
-    setReady(true)
-  }, [])
-
-  if (ready) {
     plotCoordinate(trials)
-  }
-  return <div id="parallel-coordinate-plot" />
+  }, [trials])
+  return <div id={plotDomId} />
 }
 
 const plotCoordinate = (trials: Trial[]) => {
+  if (document.getElementById(plotDomId) === null) {
+    return
+  }
+
+  const layout: Partial<plotly.Layout> = {
+    title: "Parallel coordinate",
+    margin: {
+      l: 50,
+      r: 50,
+      b: 0,
+    },
+  }
+
+  if (trials.length === 0) {
+    plotly.react(plotDomId, [])
+    return
+  }
   let filteredTrials = trials.filter(
     (t) => t.state === TrialState.Complete || t.state === TrialState.Pruned
   )
-  if (trials.length === 0) {
-    plotly.react("parallel-coordinate-plot", [])
-    return
-  }
 
   // Intersection param names
   let paramNames = new Set<string>(trials[0].params.map((p) => p.name))
@@ -34,7 +43,7 @@ const plotCoordinate = (trials: Trial[]) => {
   })
 
   if (paramNames.size === 0) {
-    plotly.react("parallel-coordinate-plot", [])
+    plotly.react(plotDomId, [])
     return
   }
 
@@ -87,14 +96,5 @@ const plotCoordinate = (trials: Trial[]) => {
     },
   ]
 
-  const layout: Partial<plotly.Layout> = {
-    title: "Parallel coordinate",
-    margin: {
-      l: 50,
-      r: 50,
-      b: 0,
-    },
-  }
-
-  plotly.react("parallel-coordinate-plot", plotData, layout)
+  plotly.react(plotDomId, plotData, layout)
 }

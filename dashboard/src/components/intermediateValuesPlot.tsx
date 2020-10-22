@@ -1,14 +1,34 @@
 import * as plotly from "plotly.js-dist"
-import React, { FC, useEffect, useState } from "react"
+import React, { FC, useEffect } from "react"
+
+const plotDomId = "intermediate-values-plot"
 
 export const IntermediateValuesPlot: FC<{
   trials: Trial[]
 }> = ({ trials = [] }) => {
-  const [ready, setReady] = useState<boolean>(false)
-
   useEffect(() => {
-    setReady(true)
-  }, [])
+    plotIntermediateValue(trials)
+  }, [trials])
+  return <div id={plotDomId} />
+}
+
+const plotIntermediateValue = (trials: Trial[]) => {
+  if (document.getElementById(plotDomId) === null) {
+    return
+  }
+
+  const layout: Partial<plotly.Layout> = {
+    title: "Intermediate values",
+    margin: {
+      l: 50,
+      r: 50,
+      b: 0,
+    },
+  }
+  if (trials.length === 0) {
+    plotly.react(plotDomId, [], layout)
+    return
+  }
 
   let filteredTrials = trials.filter(
     (t) => t.state === TrialState.Complete || t.state === TrialState.Pruned
@@ -22,17 +42,5 @@ export const IntermediateValuesPlot: FC<{
       name: `trial #${trial.number}`,
     }
   })
-  const layout: Partial<plotly.Layout> = {
-    title: "Intermediate values",
-    margin: {
-      l: 50,
-      r: 50,
-      b: 0,
-    },
-  }
-
-  if (ready) {
-    plotly.react("intermediate-values-plot", plotData, layout)
-  }
-  return <div id="intermediate-values-plot" />
+  plotly.react(plotDomId, plotData, layout)
 }
