@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from "react"
+import React, { FC } from "react"
 import { Link } from "react-router-dom"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import {
@@ -74,21 +74,6 @@ export const StudyList: FC<{}> = () => {
   const action = actionCreator(enqueueSnackbar)
   const studySummaries = useStudySummaries(action)
 
-  const [ready, setReady] = useState(false)
-
-  useEffect(() => {
-    // TODO(c-bata): Show "no studies" if fetch is done.
-    if (!ready && studySummaries.length !== 0) {
-      setReady(true)
-    }
-  }, [studySummaries])
-
-  const content = ready ? (
-    <StudySummariesTable studies={studySummaries} />
-  ) : (
-    <p>Now loading...</p>
-  )
-
   return (
     <div>
       <AppBar position="static">
@@ -99,7 +84,9 @@ export const StudyList: FC<{}> = () => {
         </Container>
       </AppBar>
       <Container>
-        <Card className={classes.card}>{content}</Card>
+        <Card className={classes.card}>
+          <StudySummariesTable studies={studySummaries} />
+        </Card>
       </Container>
     </div>
   )
