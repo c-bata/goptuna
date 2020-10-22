@@ -35,5 +35,5 @@ export const useStudyDetail = (
     return () => clearInterval(intervalId)
   }, [])
 
-  return studyDetails[studyId] ? studyDetails[studyId] : null
+  return studyDetails[studyId] || null
 }
