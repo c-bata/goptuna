@@ -11,9 +11,9 @@ import {
   RadioGroup,
 } from "@material-ui/core"
 
-const plotDomId = "history-plot"
+const plotDomId = "graph-history"
 
-export const HistoryPlot: FC<{
+export const GraphHistory: FC<{
   study: StudyDetail | null
 }> = ({ study = null }) => {
   const [xAxis, setXAxis] = useState<string>("number")

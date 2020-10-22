@@ -1,9 +1,9 @@
 import * as plotly from "plotly.js-dist"
 import React, { FC, useEffect } from "react"
 
-const plotDomId = "intermediate-values-plot"
+const plotDomId = "graph-intermediate-values"
 
-export const IntermediateValuesPlot: FC<{
+export const GraphIntermediateValues: FC<{
   trials: Trial[]
 }> = ({ trials = [] }) => {
   useEffect(() => {

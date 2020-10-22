@@ -1,9 +1,9 @@
 import * as plotly from "plotly.js-dist"
 import React, { FC, useEffect } from "react"
 
-const plotDomId = "parallel-coordinate-plot"
+const plotDomId = "graph-parallel-coordinate"
 
-export const ParallelCoordinatePlot: FC<{
+export const GraphParallelCoordinate: FC<{
   trials: Trial[]
 }> = ({ trials = [] }) => {
   useEffect(() => {

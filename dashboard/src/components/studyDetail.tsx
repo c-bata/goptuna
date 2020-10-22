@@ -12,10 +12,10 @@ import {
   Toolbar,
 } from "@material-ui/core"
 
-import { ParallelCoordinatePlot } from "./parallelCoordinatePlot"
-import { IntermediateValuesPlot } from "./intermediateValuesPlot"
+import { GraphParallelCoordinate } from "./graphParallelCoordinate"
+import { GraphIntermediateValues } from "./graphIntermediateValues"
 import { TrialsTable } from "./trialsTable"
-import { HistoryPlot } from "./historyPlot"
+import { GraphHistory } from "./graphHistory"
 import { actionCreator } from "../action"
 import { useStudyDetail } from "../hook"
 import { useSnackbar } from "notistack"
@@ -62,21 +62,21 @@ export const StudyDetail: FC<{}> = () => {
         <div>
           <Card className={classes.card}>
             <CardContent>
-              <HistoryPlot study={studyDetail} />
+              <GraphHistory study={studyDetail} />
             </CardContent>
           </Card>
           <Grid container direction="row">
             <Grid item xs={6}>
               <Card className={classes.card}>
                 <CardContent>
-                  <ParallelCoordinatePlot trials={trials} />
+                  <GraphParallelCoordinate trials={trials} />
                 </CardContent>
               </Card>
             </Grid>
             <Grid item xs={6}>
               <Card className={classes.card}>
                 <CardContent>
-                  <IntermediateValuesPlot trials={trials} />
+                  <GraphIntermediateValues trials={trials} />
                 </CardContent>
               </Card>
             </Grid>
