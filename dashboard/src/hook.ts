@@ -22,7 +22,7 @@ export const useStudySummaries = (action: Action): StudySummary[] => {
 export const useStudyDetail = (
   action: Action,
   studyId: number
-): StudyDetail => {
+): StudyDetail | null => {
   const [studyDetails, setStudyDetails] = useRecoilState<StudyDetails>(
     studyDetailsState
   )
@@ -35,5 +35,5 @@ export const useStudyDetail = (
     return () => clearInterval(intervalId)
   }, [])
 
-  return studyDetails[studyId]
+  return studyDetails[studyId] ? studyDetails[studyId] : null
 }

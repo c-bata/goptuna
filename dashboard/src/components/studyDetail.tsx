@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from "react"
+import React, { FC } from "react"
 import { Link, useParams } from "react-router-dom"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import {
@@ -42,15 +42,8 @@ export const StudyDetail: FC<{}> = () => {
   const { studyId } = useParams<ParamTypes>()
   const studyIdNumber = parseInt(studyId, 10)
   const studyDetail = useStudyDetail(action, studyIdNumber)
-  const [ready, setReady] = useState(false)
 
-  useEffect(() => {
-    if (!ready && studyDetail !== undefined) {
-      setReady(true)
-    }
-  }, [studyDetail])
-
-  const content = ready ? (
+  const content = studyDetail !== null ? (
     <div>
       <Card className={classes.card}>
         <CardContent>
