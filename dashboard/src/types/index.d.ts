@@ -5,6 +5,7 @@ declare module "*.svg"
 
 declare const API_ENDPOINT: string
 
+// @ts-ignore
 const enum TrialState {
   Running = "Running",
   Complete = "Complete",
@@ -13,6 +14,7 @@ const enum TrialState {
   Waiting = "Waiting",
 }
 
+// @ts-ignore
 const enum StudyDirection {
   Maximize = "maximize",
   Minimize = "minimize",
