@@ -1,6 +1,5 @@
 import React, { FC, useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { useRecoilState } from "recoil"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import {
   AppBar,
@@ -17,10 +16,10 @@ import {
   TableRow,
 } from "@material-ui/core"
 
-import { studySummariesState } from "../state"
 import { actionCreator } from "../action"
 import { formatDate } from "../utils/date"
 import { useSnackbar } from "notistack"
+import { useStudySummaries } from "../hook"
 
 const useTableStyles = makeStyles({
   table: {
@@ -69,22 +68,14 @@ const useStyles = makeStyles((theme: Theme) =>
 )
 
 export const StudyList: FC<{}> = () => {
-  const { enqueueSnackbar } = useSnackbar()
-  const action = actionCreator(enqueueSnackbar)
-
-  const [ready, setReady] = useState(false)
-  const [studySummaries, setStudySummaries] = useRecoilState<StudySummary[]>(
-    studySummariesState
-  )
   const classes = useStyles()
 
-  useEffect(() => {
-    action.updateStudySummaries(setStudySummaries) // fetch immediately
-    const intervalId = setInterval(function () {
-      action.updateStudySummaries(setStudySummaries)
-    }, 10 * 1000)
-    return () => clearInterval(intervalId)
-  }, [])
+  const { enqueueSnackbar } = useSnackbar()
+  const action = actionCreator(enqueueSnackbar)
+  const studySummaries = useStudySummaries(action)
+
+  const [ready, setReady] = useState(false)
+
   useEffect(() => {
     // TODO(c-bata): Show "no studies" if fetch is done.
     if (!ready && studySummaries.length !== 0) {

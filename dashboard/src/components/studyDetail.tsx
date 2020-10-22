@@ -1,6 +1,5 @@
 import React, { FC, useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
-import { useRecoilState } from "recoil"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import {
   AppBar,
@@ -17,8 +16,8 @@ import { ParallelCoordinatePlot } from "./parallelCoordinatePlot"
 import { IntermediateValuesPlot } from "./intermediateValuesPlot"
 import { TrialsTable } from "./trialsTable"
 import { HistoryPlot } from "./historyPlot"
-import { studyDetailsState } from "../state"
 import { actionCreator } from "../action"
+import { useStudyDetail } from "../hook"
 import { useSnackbar } from "notistack"
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -37,32 +36,20 @@ interface ParamTypes {
 }
 
 export const StudyDetail: FC<{}> = () => {
+  const classes = useStyles()
   const { enqueueSnackbar } = useSnackbar()
   const action = actionCreator(enqueueSnackbar)
   const { studyId } = useParams<ParamTypes>()
   const studyIdNumber = parseInt(studyId, 10)
+  const studyDetail = useStudyDetail(action, studyIdNumber)
   const [ready, setReady] = useState(false)
-  const [studyDetails, setStudyDetails] = useRecoilState<StudyDetails>(
-    studyDetailsState
-  )
-  const classes = useStyles()
 
   useEffect(() => {
-    // fetch immediately
-    action.updateStudyDetail(studyIdNumber, studyDetails, setStudyDetails)
-    const intervalId = setInterval(function () {
-      action.updateStudyDetail(studyIdNumber, studyDetails, setStudyDetails)
-    }, 5 * 1000)
-    return () => clearInterval(intervalId)
-  }, [])
-
-  useEffect(() => {
-    if (!ready && studyDetails[studyIdNumber]) {
+    if (!ready && studyDetail !== undefined) {
       setReady(true)
     }
-  }, [studyDetails])
+  }, [studyDetail])
 
-  const studyDetail = studyDetails[studyIdNumber]
   const content = ready ? (
     <div>
       <Card className={classes.card}>

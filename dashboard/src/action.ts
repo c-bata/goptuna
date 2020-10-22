@@ -46,3 +46,5 @@ export const actionCreator = (
     updateStudySummaries,
   }
 }
+
+export type Action = ReturnType<typeof actionCreator>
