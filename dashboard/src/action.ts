@@ -1,5 +1,5 @@
 import { SetterOrUpdater } from "recoil"
-import { getStudyDetail, getStudySummaries } from "./apiClient"
+import { getStudyDetail, getStudySummaries } from "./utils/apiClient"
 import { ReactNode } from "react"
 import { OptionsObject } from "notistack"
 
@@ -46,3 +46,5 @@ export const actionCreator = (
     updateStudySummaries,
   }
 }
+
+export type Action = ReturnType<typeof actionCreator>
