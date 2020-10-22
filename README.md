@@ -48,23 +48,7 @@ $ go get -u github.com/c-bata/goptuna
 Goptuna supports Define-by-Run style API like Optuna.
 You can dynamically construct the search spaces.
 
-<table><tr><td valign="top" width="50%">
-
-### 5 steps to use Goptuna.
-
-1. Define an objective function which returns a value you want to minimize.
-1. Define the search space via Suggest APIs.
-1. Create a study which manages each experiment.
-1. Evaluate your objective function.
-1. Print the best evaluation parameters.
-
-Furthermore, I recommend you to use RDB storage backend for following purposes.
-
-* Continue from where we stopped in the previous optimizations.
-* Scale studies to tens of workers that connecting to the same RDB storage.
-* Visualize parameters on Jupyter notebook using Optuna.
-
-</td><td valign="top" width="50%">
+### Basic usage
 
 ```go
 package main
@@ -77,21 +61,26 @@ import (
     "github.com/c-bata/goptuna/tpe"
 )
 
+// ① Define an objective function which returns a value you want to minimize.
 func objective(trial goptuna.Trial) (float64, error) {
+    // ② Define the search space via Suggest APIs.
     x1, _ := trial.SuggestFloat("x1", -10, 10)
     x2, _ := trial.SuggestFloat("x2", -10, 10)
     return math.Pow(x1-2, 2) + math.Pow(x2+5, 2), nil
 }
 
 func main() {
+    // ③ Create a study which manages each experiment.
     study, err := goptuna.CreateStudy(
         "goptuna-example",
         goptuna.StudyOptionSampler(tpe.NewSampler()))
     if err != nil { ... }
 
+    // ④ Evaluate your objective function.
     err = study.Optimize(objective, 100)
     if err != nil { ... }
 
+    // ⑤ Print the best evaluation parameters.
     v, _ := study.GetBestValue()
     p, _ := study.GetBestParams()
     log.Printf("Best value=%f (x1=%f, x2=%f)",
@@ -99,23 +88,19 @@ func main() {
 }
 ```
 
-</td></tr></table>
+Furthermore, I recommend you to use RDB storage backend for following purposes.
 
-**Advanced usages**
+* Continue from where we stopped in the previous optimizations.
+* Scale studies to tens of workers that connecting to the same RDB storage.
+* Check optimization results via built-in dashboard.
+* Visualize parameters on Jupyter notebook using Optuna.
 
-<details>
+### Advanced usage: Distributed optimization and Real-time Web dashboard
 
-<summary>Distributed optimization using RDB storage backend with MySQL</summary>
-
-There is no complicated setup for distributed optimization but all Goptuna workers need to use the same RDB storage backend.
+There is no complicated setup to use RDB storage backend.
 First, setup MySQL server like following to share the optimization result.
 
 ```console
-$ cat mysql/my.cnf
-[mysqld]
-bind-address = 0.0.0.0
-default_authentication_plugin=mysql_native_password
-
 $ docker pull mysql:8.0
 $ docker run \
   -d \
@@ -130,7 +115,7 @@ $ docker run \
   mysql:8.0
 ```
 
-Then, create a study object using goptuna CLI
+Then, create a study object using goptuna CLI.
 
 ```console
 $ goptuna create-study --storage mysql://goptuna:password@localhost:3306/yourdb --study yourstudy
@@ -148,6 +133,7 @@ $ mysql --host 127.0.0.1 --port 3306 --user goptuna -ppassword -e "SELECT * FROM
 ```
 
 Finally, run the Goptuna workers which contains following code.
+You can execute distributed optimization by just executing this script from multiple server instances.
 
 ```go
 package main
@@ -169,61 +155,16 @@ func main() {
 }
 ```
 
-The schema of Goptuna RDB storage backend is compatible with Optuna's one.
-So you can check optimization result with Optuna's dashboard like following:
+If you execute this Goptuna script from differen
 
 ```console
-$ pip install optuna bokeh mysqlclient
-$ optuna dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/yourdb --study yourstudy
+$ goptuna dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/yourdb --study yourstudy
 ...
 ```
 
-[shell script to reproduce this](./_examples/simple_rdb/check_mysql.sh)
+![goptuna dashboard](https://user-images.githubusercontent.com/5564044/96722047-e7aa4180-13e7-11eb-9f56-99a3ca7c6d35.gif)
 
-</details>
-
-<details>
-
-<summary>Receive notifications of each trials</summary>
-
-You can receive notifications of each trials via channel.
-It can be used for logging and any notification systems.
-
-```go
-package main
-
-import ...
-
-func main() {
-    trialchan := make(chan goptuna.FrozenTrial, 8)
-    study, _ := goptuna.CreateStudy(
-        ...
-        goptuna.StudyOptionIgnoreObjectiveErr(true),
-        goptuna.StudyOptionSetTrialNotifyChannel(trialchan),
-    )
-
-    var wg sync.WaitGroup
-    wg.Add(2)
-    go func() {
-        defer wg.Done()
-        err = study.Optimize(objective, 100)
-        close(trialchan)
-    }()
-    go func() {
-        defer wg.Done()
-        for t := range trialchan {
-            log.Println("trial", t)
-        }
-    }()
-    wg.Wait()
-    if err != nil { ... }
-    ...
-}
-```
-
-[full source code](./_examples/trialnotify/main.go)
-
-</details>
+[Shell script to reproduce this](./_examples/simple_rdb/check_mysql.sh) (SQLite3 version is [here](./_examples/simple_rdb/check_sqlite3.sh)).
 
 ## Links
 

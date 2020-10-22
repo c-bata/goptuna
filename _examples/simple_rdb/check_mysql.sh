@@ -40,19 +40,9 @@ go run ${DIR}/main.go mysql "goptuna:password@tcp(localhost:3306)/goptuna?parseT
 
 ##################################################################
 echo ""
-echo "3. View the optimization results on Optuna's dashboard."
+echo "3. View the optimization results on Goptuna bulit-in dashboard."
 echo ""
-
-if [ -d ./venv ]; then
-    source venv/bin/activate
-    pip install mysqlclient
-else
-    python3.7 -m venv venv
-    source venv/bin/activate
-    pip install optuna bokeh mysqlclient
-fi
-
-optuna dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/goptuna --study rdb
+go run ${DIR}/cmd/main.go dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/goptuna
 
 ##################################################################
 echo ""
