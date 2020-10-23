@@ -9,28 +9,51 @@ import {
   Card,
   Grid,
   Box,
+  Button,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  TextField,
+  DialogActions,
+  FormControlLabel,
+  Checkbox,
 } from "@material-ui/core"
 
 import { actionCreator } from "../action"
-import { formatDate } from "../dateUtil"
 import { useSnackbar } from "notistack"
 import { useStudySummaries } from "../hook"
 import { DataGrid, DataGridColumn } from "./dataGrid"
+import { AddBox } from "@material-ui/icons"
+import { studySummariesState } from "../state"
+import { useSetRecoilState } from "recoil"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     card: {
       margin: theme.spacing(2),
     },
+    grow: {
+      flexGrow: 1,
+    },
   })
 )
 
 export const StudyList: FC<{}> = () => {
   const classes = useStyles()
+  const [openDialog, setOpenDialog] = React.useState(false)
+  const [newStudyName, setNewStudyName] = React.useState("")
+  const [maximize, setMaximize] = React.useState<boolean>(false)
 
   const { enqueueSnackbar } = useSnackbar()
   const action = actionCreator(enqueueSnackbar)
   const studies = useStudySummaries(action)
+  const setStudies = useSetRecoilState<StudySummary[]>(studySummariesState)
+
+  const newStudyNameAlreadyUsed = studies.some(
+    (v) => v.study_name === newStudyName
+  )
 
   const columns: DataGridColumn<StudySummary>[] = [
     {
@@ -60,18 +83,24 @@ export const StudyList: FC<{}> = () => {
       sortable: false,
       toCellValue: (i) => studies[i].best_trial?.value || null,
     },
-    {
-      field: "datetime_start",
-      label: "Datetime start",
-      sortable: false,
-      toCellValue: (i) => formatDate(studies[i].datetime_start),
-    },
   ]
 
   const collapseAttrColumns: DataGridColumn<Attribute>[] = [
     { field: "key", label: "Key", sortable: true },
     { field: "value", label: "Value", sortable: true },
   ]
+
+  const handleCloseNewStudyDialog = () => {
+    setNewStudyName("")
+    setOpenDialog(false)
+  }
+
+  const handleCreateNewStudy = () => {
+    const direction = maximize ? "maximize" : "minimize"
+    action.createNewStudy(newStudyName, direction, studies, setStudies)
+    setOpenDialog(false)
+    setNewStudyName("")
+  }
 
   const collapseBody = (index: number) => {
     return (
@@ -116,6 +145,17 @@ export const StudyList: FC<{}> = () => {
         <Container>
           <Toolbar>
             <Typography variant="h6">Goptuna dashboard</Typography>
+            <div className={classes.grow} />
+            <IconButton
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={(e) => {
+                setOpenDialog(true)
+              }}
+              color="inherit"
+            >
+              <AddBox />
+            </IconButton>
           </Toolbar>
         </Container>
       </AppBar>
@@ -131,6 +171,51 @@ export const StudyList: FC<{}> = () => {
           />
         </Card>
       </Container>
+      <Dialog
+        open={openDialog}
+        onClose={(e) => handleCloseNewStudyDialog}
+        aria-labelledby="form-dialog-title"
+      >
+        <DialogTitle id="form-dialog-title">New study</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            To create a new study, please enter the study name here.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            error={newStudyNameAlreadyUsed}
+            helperText={
+              newStudyNameAlreadyUsed ? `"${newStudyName}" is already used` : ""
+            }
+            label="Study name"
+            type="text"
+            onChange={(e) => {
+              setNewStudyName(e.target.value)
+            }}
+            fullWidth
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={maximize}
+                onChange={(e) => {
+                  setMaximize(!maximize)
+                }}
+                color="primary"
+              />
+            }
+            label="Set maximize direction"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseNewStudyDialog} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleCreateNewStudy} color="primary">
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   )
 }

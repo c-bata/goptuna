@@ -216,7 +216,9 @@ function DataGridRow<T>(props: {
         ) : null}
         {columns.map((column) => (
           <TableCell key={`${row[keyField]}:${column.field}`}>
-            {column.toCellValue ? column.toCellValue(rowIndex) : row[column.field]}
+            {column.toCellValue
+              ? column.toCellValue(rowIndex)
+              : row[column.field]}
           </TableCell>
         ))}
       </TableRow>

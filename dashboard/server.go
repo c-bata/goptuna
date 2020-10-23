@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/c-bata/goptuna"
@@ -15,6 +16,8 @@ import (
 var (
 	storage      goptuna.Storage
 	storageMutex sync.RWMutex
+
+	errNotFound = errors.New("not found")
 )
 
 func NewServer(s goptuna.Storage) (http.Handler, error) {
@@ -30,7 +33,9 @@ func NewServer(s goptuna.Storage) (http.Handler, error) {
 
 	// JSON API
 	router.HandleFunc("/api/studies", handleGetAllStudySummary).Methods("GET")
+	router.HandleFunc("/api/studies", handleCreateStudy).Methods("POST")
 	router.HandleFunc("/api/studies/{study_id:[0-9]+}", handleGetStudyDetail).Methods("GET")
+	router.HandleFunc("/api/studies/{study_id:[0-9]+}", handleDeleteStudy).Methods("DELETE")
 
 	// Static files
 	err := registerStaticFileRoutes(router, "static")
@@ -102,6 +107,66 @@ func handleGetAllStudySummary(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func handleCreateStudy(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Name      string `json:"study_name"`
+		Direction string `json:"direction"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		writeErrorResponse(w, http.StatusBadRequest, "Invalid JSON payload")
+		return
+	}
+	direction := strings.ToLower(req.Direction)
+	if req.Name == "" || (direction != "maximize" && direction != "minimize") {
+		// TODO(c-bata): Return bad request if study already exist
+		writeErrorResponse(w, http.StatusBadRequest, "Invalid JSON payload")
+		return
+	}
+
+	studyID, err := storage.CreateNewStudy(req.Name)
+	if err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	err = storage.SetStudyDirection(studyID, goptuna.StudyDirection(direction))
+	if err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	studySummary, err := getStudySummary(studyID)
+	if err == errNotFound {
+		writeErrorResponse(w, http.StatusNotFound, "Not found")
+		return
+	} else if err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json;charset=utf-8")
+	json.NewEncoder(w).Encode(struct {
+		StudySummary StudySummary `json:"study_summary"`
+	}{
+		StudySummary: studySummary,
+	})
+}
+
+func handleDeleteStudy(w http.ResponseWriter, r *http.Request) {
+	urlVars := mux.Vars(r)
+	studyID, err := strconv.Atoi(urlVars["study_id"])
+	if err != nil {
+		writeErrorResponse(w, http.StatusBadRequest, "Invalid study id")
+		return
+	}
+	if err := storage.DeleteStudy(studyID); err != nil {
+		// TODO(c-bata): Return bad request if study is not found
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func handleGetStudyDetail(w http.ResponseWriter, r *http.Request) {
 	urlVars := mux.Vars(r)
 	studyID, err := strconv.Atoi(urlVars["study_id"])
@@ -109,21 +174,13 @@ func handleGetStudyDetail(w http.ResponseWriter, r *http.Request) {
 		writeErrorResponse(w, http.StatusBadRequest, "Invalid study id")
 		return
 	}
-	studies, err := storage.GetAllStudySummaries()
-	if err != nil {
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
-		return
-	}
-	studySummary, err := func() (StudySummary, error) {
-		for _, s := range studies {
-			if s.ID == studyID {
-				return toStudySummary(s), nil
-			}
-		}
-		return StudySummary{}, errors.New("not found")
-	}()
-	if err != nil {
+
+	studySummary, err := getStudySummary(studyID)
+	if err == errNotFound {
 		writeErrorResponse(w, http.StatusNotFound, "Not found")
+		return
+	} else if err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -147,4 +204,17 @@ func handleGetStudyDetail(w http.ResponseWriter, r *http.Request) {
 		BestTrial:     studySummary.BestTrial,
 		Trials:        toFrozenTrials(trials),
 	})
+}
+
+func getStudySummary(studyID int) (StudySummary, error) {
+	studies, err := storage.GetAllStudySummaries()
+	if err != nil {
+		return StudySummary{}, err
+	}
+	for _, s := range studies {
+		if s.ID == studyID {
+			return toStudySummary(s), nil
+		}
+	}
+	return StudySummary{}, errNotFound
 }

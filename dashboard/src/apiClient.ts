@@ -42,7 +42,7 @@ interface StudyDetailResponse {
   trials: TrialResponse[]
 }
 
-export const getStudyDetail = (studyId: number): Promise<StudyDetail> => {
+export const getStudyDetailAPI = (studyId: number): Promise<StudyDetail> => {
   return axiosInstance
     .get<StudyDetailResponse>(`/api/studies/${studyId}`, {})
     .then((res) => {
@@ -87,7 +87,7 @@ interface StudySummariesResponse {
   }[]
 }
 
-export const getStudySummaries = (): Promise<StudySummary[]> => {
+export const getStudySummariesAPI = (): Promise<StudySummary[]> => {
   return axiosInstance
     .get<StudySummariesResponse>(`/api/studies`, {})
     .then((res) => {
@@ -107,5 +107,32 @@ export const getStudySummaries = (): Promise<StudySummary[]> => {
           }
         }
       )
+    })
+}
+
+interface CreateNewStudyResponse {
+  study_summary: StudySummary
+}
+
+export const createNewStudyAPI = (
+  study_name: string,
+  direction: StudyDirection
+): Promise<StudySummary> => {
+  return axiosInstance
+    .post<CreateNewStudyResponse>(`/api/studies`, {
+      study_name,
+      direction,
+    })
+    .then((res) => {
+      const study_summary = res.data.study_summary
+      return {
+        study_id: study_summary.study_id,
+        study_name: study_summary.study_name,
+        direction: study_summary.direction,
+        // best_trial: undefined,
+        user_attrs: study_summary.user_attrs,
+        system_attrs: study_summary.system_attrs,
+        datetime_start: new Date(study_summary.datetime_start),
+      }
     })
 }

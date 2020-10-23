@@ -13,7 +13,10 @@ const DashboardApp: FC<{}> = () => {
       <SnackbarProvider maxSnack={3}>
         <Router>
           <Switch>
-            <Route path={URL_PREFIX + "/studies/:studyId"} children={<StudyDetail />} />
+            <Route
+              path={URL_PREFIX + "/studies/:studyId"}
+              children={<StudyDetail />}
+            />
             <Route path={URL_PREFIX + "/"} children={<StudyList />} />
           </Switch>
         </Router>
