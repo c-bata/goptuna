@@ -43,7 +43,7 @@ export const StudyList: FC<{}> = () => {
       label: "Name",
       sortable: true,
       toCellValue: (i) => (
-        <Link to={`/studies/${studies[i].study_id}`}>
+        <Link to={`${URL_PREFIX}/studies/${studies[i].study_id}`}>
           {studies[i].study_name}
         </Link>
       ),

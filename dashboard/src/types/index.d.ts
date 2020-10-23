@@ -5,6 +5,8 @@ declare module "*.svg"
 
 declare const API_ENDPOINT: string
 
+declare const URL_PREFIX: string
+
 // @ts-ignore
 const enum TrialState {
   Running = "Running",

@@ -69,7 +69,8 @@ var config = {
     plugins: [
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-            'API_ENDPOINT': JSON.stringify(process.env.API_ENDPOINT)
+            'API_ENDPOINT': JSON.stringify(process.env.API_ENDPOINT),
+            'URL_PREFIX': JSON.stringify(process.env.API_ENDPOINT || "/dashboard")
         })
     ],
     externals

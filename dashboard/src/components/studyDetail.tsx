@@ -64,7 +64,7 @@ export const StudyDetail: FC<{}> = () => {
               aria-controls="menu-appbar"
               aria-haspopup="true"
               component={Link}
-              to="/"
+              to={URL_PREFIX + "/"}
               color="inherit"
             >
               <Home />
