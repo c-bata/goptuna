@@ -95,7 +95,11 @@ Furthermore, I recommend you to use RDB storage backend for following purposes.
 * Check optimization results via built-in dashboard.
 * Visualize parameters on Jupyter notebook using Optuna.
 
-### Advanced usage: Distributed optimization and Real-time Web dashboard
+### Advanced usage
+
+<details>
+
+<summary>Distributed optimization using MySQL</summary>
 
 There is no complicated setup to use RDB storage backend.
 First, setup MySQL server like following to share the optimization result.
@@ -155,16 +159,27 @@ func main() {
 }
 ```
 
-If you execute this Goptuna script from differen
+[Shell script to reproduce this](./_examples/simple_rdb/check_mysql.sh) (SQLite3 version is [here](./_examples/simple_rdb/check_sqlite3.sh)).
+
+</details>
+
+<details>
+
+<summary>Built-in Realtime Web Dashboard</summary>
+
+You can check optimizatioin results by built-in web dashboard.
 
 ```console
-$ goptuna dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/yourdb --study yourstudy
+$ goptuna dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/yourdb
 ...
 ```
 
 ![goptuna dashboard](https://user-images.githubusercontent.com/5564044/96722047-e7aa4180-13e7-11eb-9f56-99a3ca7c6d35.gif)
 
-[Shell script to reproduce this](./_examples/simple_rdb/check_mysql.sh) (SQLite3 version is [here](./_examples/simple_rdb/check_sqlite3.sh)).
+Due to RDB schema compatibility with Optuna, you can use this dashboard for Optuna's results.
+
+</details>
+
 
 ## Links
 
