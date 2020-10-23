@@ -162,10 +162,11 @@ function DataGrid<T>(props: {
             {paginateRows.map((row, index) => (
               <DataGridRow<T>
                 columns={columns}
-                index={index}
+                rowIndex={page * rowsPerPage + index}
                 row={row}
                 keyField={keyField}
                 collapseBody={collapseBody}
+                key={`data-grid-row-${row[keyField]}`}
               />
             ))}
             {emptyRows > 0 && (
@@ -191,17 +192,17 @@ function DataGrid<T>(props: {
 
 function DataGridRow<T>(props: {
   columns: DataGridColumn<T>[]
-  index: number
+  rowIndex: number
   row: T
   keyField: keyof T
   collapseBody?: (dataIndex: number) => React.ReactNode
 }) {
-  const { columns, index, row, keyField, collapseBody } = props
+  const { columns, rowIndex, row, keyField, collapseBody } = props
   const [open, setOpen] = React.useState(false)
 
   return (
     <React.Fragment>
-      <TableRow hover role="checkbox" tabIndex={-1} key={index}>
+      <TableRow hover role="checkbox" tabIndex={-1}>
         {collapseBody ? (
           <TableCell>
             <IconButton
@@ -215,7 +216,7 @@ function DataGridRow<T>(props: {
         ) : null}
         {columns.map((column) => (
           <TableCell key={`${row[keyField]}:${column.field}`}>
-            {column.toCellValue ? column.toCellValue(index) : row[column.field]}
+            {column.toCellValue ? column.toCellValue(rowIndex) : row[column.field]}
           </TableCell>
         ))}
       </TableRow>
@@ -223,7 +224,7 @@ function DataGridRow<T>(props: {
         <TableRow>
           <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
             <Collapse in={open} timeout="auto" unmountOnExit>
-              {collapseBody(index)}
+              {collapseBody(rowIndex)}
             </Collapse>
           </TableCell>
         </TableRow>
