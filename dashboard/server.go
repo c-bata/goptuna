@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/c-bata/goptuna"
@@ -108,10 +109,16 @@ func handleGetAllStudySummary(w http.ResponseWriter, r *http.Request) {
 
 func handleCreateStudy(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Name string `json:"study_name"`
+		Name      string `json:"study_name"`
+		Direction string `json:"direction"`
 	}
 	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil || req.Name == "" {
+	if err != nil {
+		writeErrorResponse(w, http.StatusBadRequest, "Invalid JSON payload")
+		return
+	}
+	direction := strings.ToLower(req.Direction)
+	if req.Name == "" || (direction != "maximize" && direction != "minimize") {
 		// TODO(c-bata): Return bad request if study already exist
 		writeErrorResponse(w, http.StatusBadRequest, "Invalid JSON payload")
 		return
@@ -122,9 +129,14 @@ func handleCreateStudy(w http.ResponseWriter, r *http.Request) {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
+	err = storage.SetStudyDirection(studyID, goptuna.StudyDirection(direction))
+	if err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
 
 	studySummary, err := getStudySummary(studyID)
-	if err != errNotFound {
+	if err == errNotFound {
 		writeErrorResponse(w, http.StatusNotFound, "Not found")
 		return
 	} else if err != nil {
