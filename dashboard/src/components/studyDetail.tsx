@@ -11,6 +11,7 @@ import {
   Grid,
   Toolbar,
   Paper,
+  Box,
 } from "@material-ui/core"
 import { useSnackbar } from "notistack"
 
@@ -114,6 +115,15 @@ export const StudyDetail: FC<{}> = () => {
               rows={trials}
               keyField={"trial_id"}
               dense={true}
+              collapseBody={(index) => {
+                return (
+                  <Box margin={1}>
+                    <Typography variant="h6" gutterBottom component="div">
+                      History of trial {trials[index].trial_id}
+                    </Typography>
+                  </Box>
+                )
+              }}
             />
           </Card>
         </div>

@@ -1,13 +1,19 @@
 import React from "react"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
-import Table from "@material-ui/core/Table"
-import TableBody from "@material-ui/core/TableBody"
-import TableCell from "@material-ui/core/TableCell"
-import TableContainer from "@material-ui/core/TableContainer"
-import TableHead from "@material-ui/core/TableHead"
-import TablePagination from "@material-ui/core/TablePagination"
-import TableRow from "@material-ui/core/TableRow"
-import TableSortLabel from "@material-ui/core/TableSortLabel"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  TableSortLabel,
+  Collapse,
+  IconButton,
+} from "@material-ui/core"
+import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown"
+import KeyboardArrowUpIcon from "@material-ui/icons/KeyboardArrowUp"
 
 type Order = "asc" | "desc"
 
@@ -55,9 +61,10 @@ function DataGrid<T>(props: {
   rows: T[]
   keyField: keyof T
   dense?: boolean
+  collapseBody?: (dataIndex: number) => React.ReactNode
 }) {
   const classes = useStyles()
-  const { columns, rows, keyField, dense } = props
+  const { columns, rows, keyField, dense, collapseBody } = props
   const [order, setOrder] = React.useState<Order>("asc")
   const [orderBy, setOrderBy] = React.useState<keyof T>(keyField)
   const [page, setPage] = React.useState(0)
@@ -108,6 +115,7 @@ function DataGrid<T>(props: {
         >
           <TableHead>
             <TableRow>
+              {collapseBody ? <TableCell /> : null}
               {columns.map((column, index) => (
                 <TableCell
                   key={index}
@@ -142,6 +150,7 @@ function DataGrid<T>(props: {
                 index={index}
                 row={row}
                 keyField={keyField}
+                collapseBody={collapseBody}
               />
             ))}
             {emptyRows > 0 && (
@@ -170,16 +179,41 @@ function DataGridRow<T>(props: {
   index: number
   row: T
   keyField: keyof T
+  collapseBody?: (dataIndex: number) => React.ReactNode
 }) {
-  const { columns, index, row, keyField } = props
+  const { columns, index, row, keyField, collapseBody } = props
+  const [open, setOpen] = React.useState(false)
+
   return (
-    <TableRow hover role="checkbox" tabIndex={-1} key={index}>
-      {columns.map((column) => (
-        <TableCell key={`${row[keyField]}:${column.field}`}>
-          {column.toCellValue ? column.toCellValue(index) : row[column.field]}
-        </TableCell>
-      ))}
-    </TableRow>
+    <React.Fragment>
+      <TableRow hover role="checkbox" tabIndex={-1} key={index}>
+        {collapseBody ? (
+          <TableCell>
+            <IconButton
+              aria-label="expand row"
+              size="small"
+              onClick={() => setOpen(!open)}
+            >
+              {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+            </IconButton>
+          </TableCell>
+        ) : null}
+        {columns.map((column) => (
+          <TableCell key={`${row[keyField]}:${column.field}`}>
+            {column.toCellValue ? column.toCellValue(index) : row[column.field]}
+          </TableCell>
+        ))}
+      </TableRow>
+      {collapseBody ? (
+        <TableRow>
+          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+            <Collapse in={open} timeout="auto" unmountOnExit>
+              {collapseBody(index)}
+            </Collapse>
+          </TableCell>
+        </TableRow>
+      ) : null}
+    </React.Fragment>
   )
 }
 
