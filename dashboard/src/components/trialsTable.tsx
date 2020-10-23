@@ -43,62 +43,11 @@ function stableSort<T>(array: T[], comparator: (a: T, b: T) => number) {
   return stabilizedThis.map((el) => el[0])
 }
 
-interface HeadCell {
-  id: keyof Trial
+interface Column {
+  field: keyof Trial
   label: string
-}
-
-const headCells: HeadCell[] = [
-  { id: "trial_id", label: "Trial ID" },
-  { id: "number", label: "Number" },
-  { id: "state", label: "State" },
-  { id: "value", label: "Value" },
-  { id: "params", label: "Params" },
-]
-
-interface TrialsTableProps {
-  classes: ReturnType<typeof useStyles>
-  onRequestSort: (
-    event: React.MouseEvent<unknown>,
-    property: keyof Trial
-  ) => void
-  order: Order
-  orderBy: string
-}
-
-function TrialsTableHead(props: TrialsTableProps) {
-  const { classes, order, orderBy, onRequestSort } = props
-  const createSortHandler = (property: keyof Trial) => (
-    event: React.MouseEvent<unknown>
-  ) => {
-    onRequestSort(event, property)
-  }
-
-  return (
-    <TableHead>
-      <TableRow>
-        {headCells.map((headCell) => (
-          <TableCell
-            key={headCell.id}
-            sortDirection={orderBy === headCell.id ? order : false}
-          >
-            <TableSortLabel
-              active={orderBy === headCell.id}
-              direction={orderBy === headCell.id ? order : "asc"}
-              onClick={createSortHandler(headCell.id)}
-            >
-              {headCell.label}
-              {orderBy === headCell.id ? (
-                <span className={classes.visuallyHidden}>
-                  {order === "desc" ? "sorted descending" : "sorted ascending"}
-                </span>
-              ) : null}
-            </TableSortLabel>
-          </TableCell>
-        ))}
-      </TableRow>
-    </TableHead>
-  )
+  sortable: boolean
+  toCellValue?: (dataIndex: number) => string | React.ReactNode
 }
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -132,6 +81,25 @@ export const TrialsTable: FC<{
   const [page, setPage] = React.useState(0)
   const [rowsPerPage, setRowsPerPage] = React.useState(10)
 
+  const columns: Column[] = [
+    { field: "trial_id", label: "Trial ID", sortable: true },
+    { field: "number", label: "Number", sortable: true },
+    {
+      field: "state",
+      label: "State",
+      sortable: false,
+      toCellValue: (i) => rows[i].state.toString(),
+    },
+    { field: "value", label: "Value", sortable: true },
+    {
+      field: "params",
+      label: "Params",
+      sortable: false,
+      toCellValue: (i) =>
+        rows[i].params.map((p) => p.name + ": " + p.value).join(", "),
+    },
+  ]
+
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
     property: keyof Trial
@@ -139,6 +107,11 @@ export const TrialsTable: FC<{
     const isAsc = orderBy === property && order === "asc"
     setOrder(isAsc ? "desc" : "asc")
     setOrderBy(property)
+  }
+  const createSortHandler = (property: keyof Trial) => (
+    event: React.MouseEvent<unknown>
+  ) => {
+    handleRequestSort(event, property)
   }
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -155,6 +128,7 @@ export const TrialsTable: FC<{
   const emptyRows =
     rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage)
 
+  // @ts-ignore
   const sortedRows = stableSort(rows, getComparator(order, orderBy))
   const paginateRows =
     rowsPerPage > 0
@@ -170,16 +144,37 @@ export const TrialsTable: FC<{
           size="small"
           aria-label="enhanced table"
         >
-          <TrialsTableHead
-            classes={classes}
-            order={order}
-            orderBy={orderBy}
-            onRequestSort={handleRequestSort}
-          />
+          <TableHead>
+            <TableRow>
+              {columns.map((column) => (
+                <TableCell
+                  key={column.field}
+                  sortDirection={orderBy === column.field ? order : false}
+                >
+                  {column.sortable ? (
+                    <TableSortLabel
+                      active={orderBy === column.field}
+                      direction={orderBy === column.field ? order : "asc"}
+                      onClick={createSortHandler(column.field)}
+                    >
+                      {column.label}
+                      {orderBy === column.field ? (
+                        <span className={classes.visuallyHidden}>
+                          {order === "desc"
+                            ? "sorted descending"
+                            : "sorted ascending"}
+                        </span>
+                      ) : null}
+                    </TableSortLabel>
+                  ) : (
+                    column.label
+                  )}
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
           <TableBody>
             {paginateRows.map((row, index) => {
-              const labelId = `enhanced-table-checkbox-${index}`
-
               return (
                 <TableRow
                   hover
@@ -187,20 +182,13 @@ export const TrialsTable: FC<{
                   tabIndex={-1}
                   key={row.trial_id}
                 >
-                  <TableCell
-                    component="th"
-                    id={labelId}
-                    scope="row"
-                    align="right"
-                  >
-                    {row.trial_id}
-                  </TableCell>
-                  <TableCell align="right">{row.number}</TableCell>
-                  <TableCell align="right">{row.state.toString()}</TableCell>
-                  <TableCell align="right">{row.value}</TableCell>
-                  <TableCell align="left">
-                    {row.params.map((p) => p.name + ": " + p.value).join(", ")}
-                  </TableCell>
+                  {columns.map((column) => (
+                    <TableCell key={`${row.trial_id}:${column.field}`}>
+                      {column.toCellValue
+                        ? column.toCellValue(index)
+                        : row[column.field]}
+                    </TableCell>
+                  ))}
                 </TableRow>
               )
             })}
