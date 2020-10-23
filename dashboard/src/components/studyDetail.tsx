@@ -18,7 +18,7 @@ import { GraphHistory } from "./graphHistory"
 import { actionCreator } from "../action"
 import { useStudyDetail } from "../hook"
 import { useSnackbar } from "notistack"
-import { TrialsTable } from "./trialsTable"
+import { DataGridColumn, TrialsTable } from "./trialsTable"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -45,6 +45,25 @@ export const StudyDetail: FC<{}> = () => {
 
   const title = studyDetail !== null ? studyDetail.name : `Study #${studyId}`
   const trials: Trial[] = studyDetail !== null ? studyDetail.trials : []
+
+  const columns: DataGridColumn<Trial>[] = [
+    { field: "trial_id", label: "Trial ID", sortable: true },
+    { field: "number", label: "Number", sortable: true },
+    {
+      field: "state",
+      label: "State",
+      sortable: false,
+      toCellValue: (i) => trials[i].state.toString(),
+    },
+    { field: "value", label: "Value", sortable: true },
+    {
+      field: "params",
+      label: "Params",
+      sortable: false,
+      toCellValue: (i) =>
+        trials[i].params.map((p) => p.name + ": " + p.value).join(", "),
+    },
+  ]
   return (
     <div>
       <AppBar position="static">
@@ -82,7 +101,11 @@ export const StudyDetail: FC<{}> = () => {
             </Grid>
           </Grid>
           <Card className={classes.card}>
-            <TrialsTable rows={trials} />
+            <TrialsTable<Trial>
+              columns={columns}
+              rows={trials}
+              keyField={"trial_id"}
+            />
           </Card>
         </div>
       </Container>

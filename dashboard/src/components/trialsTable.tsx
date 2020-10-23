@@ -1,4 +1,4 @@
-import React, { FC } from "react"
+import React from "react"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import Table from "@material-ui/core/Table"
 import TableBody from "@material-ui/core/TableBody"
@@ -8,6 +8,28 @@ import TableHead from "@material-ui/core/TableHead"
 import TablePagination from "@material-ui/core/TablePagination"
 import TableRow from "@material-ui/core/TableRow"
 import TableSortLabel from "@material-ui/core/TableSortLabel"
+
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    root: {
+      width: "100%",
+    },
+    table: {
+      minWidth: 750,
+    },
+    visuallyHidden: {
+      border: 0,
+      clip: "rect(0 0 0 0)",
+      height: 1,
+      margin: -1,
+      overflow: "hidden",
+      padding: 0,
+      position: "absolute",
+      top: 20,
+      width: 1,
+    },
+  })
+)
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -40,72 +62,34 @@ function stableSort<T>(array: T[], comparator: (a: T, b: T) => number) {
   return stabilizedThis.map((el) => el[0])
 }
 
-interface Column {
-  field: keyof Trial
+export interface DataGridColumn<T> {
+  field: keyof T
   label: string
   sortable: boolean
   toCellValue?: (dataIndex: number) => string | React.ReactNode
 }
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    root: {
-      width: "100%",
-    },
-    table: {
-      minWidth: 750,
-    },
-    visuallyHidden: {
-      border: 0,
-      clip: "rect(0 0 0 0)",
-      height: 1,
-      margin: -1,
-      overflow: "hidden",
-      padding: 0,
-      position: "absolute",
-      top: 20,
-      width: 1,
-    },
-  })
-)
-
-export const TrialsTable: FC<{
-  rows: Trial[]
-}> = ({ rows = [] }) => {
+export function TrialsTable<T>(props: {
+  columns: DataGridColumn<T>[]
+  rows: T[]
+  keyField: keyof T
+}) {
   const classes = useStyles()
+  const { columns, rows, keyField } = props
   const [order, setOrder] = React.useState<Order>("asc")
-  const [orderBy, setOrderBy] = React.useState<keyof Trial>("trial_id")
+  const [orderBy, setOrderBy] = React.useState<keyof T>(keyField)
   const [page, setPage] = React.useState(0)
   const [rowsPerPage, setRowsPerPage] = React.useState(10)
 
-  const columns: Column[] = [
-    { field: "trial_id", label: "Trial ID", sortable: true },
-    { field: "number", label: "Number", sortable: true },
-    {
-      field: "state",
-      label: "State",
-      sortable: false,
-      toCellValue: (i) => rows[i].state.toString(),
-    },
-    { field: "value", label: "Value", sortable: true },
-    {
-      field: "params",
-      label: "Params",
-      sortable: false,
-      toCellValue: (i) =>
-        rows[i].params.map((p) => p.name + ": " + p.value).join(", "),
-    },
-  ]
-
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
-    property: keyof Trial
+    property: keyof T
   ) => {
     const isAsc = orderBy === property && order === "asc"
     setOrder(isAsc ? "desc" : "asc")
     setOrderBy(property)
   }
-  const createSortHandler = (property: keyof Trial) => (
+  const createSortHandler = (property: keyof T) => (
     event: React.MouseEvent<unknown>
   ) => {
     handleRequestSort(event, property)
@@ -125,7 +109,7 @@ export const TrialsTable: FC<{
   const emptyRows =
     rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage)
 
-  const sortedRows = stableSort<Trial>(rows, getComparator(order, orderBy))
+  const sortedRows = stableSort<T>(rows, getComparator(order, orderBy))
   const paginateRows =
     rowsPerPage > 0
       ? sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
@@ -142,9 +126,9 @@ export const TrialsTable: FC<{
         >
           <TableHead>
             <TableRow>
-              {columns.map((column) => (
+              {columns.map((column, index) => (
                 <TableCell
-                  key={column.field}
+                  key={index}
                   sortDirection={orderBy === column.field ? order : false}
                 >
                   {column.sortable ? (
@@ -172,14 +156,9 @@ export const TrialsTable: FC<{
           <TableBody>
             {paginateRows.map((row, index) => {
               return (
-                <TableRow
-                  hover
-                  role="checkbox"
-                  tabIndex={-1}
-                  key={row.trial_id}
-                >
+                <TableRow hover role="checkbox" tabIndex={-1} key={index}>
                   {columns.map((column) => (
-                    <TableCell key={`${row.trial_id}:${column.field}`}>
+                    <TableCell key={`${row[keyField]}:${column.field}`}>
                       {column.toCellValue
                         ? column.toCellValue(index)
                         : row[column.field]}
