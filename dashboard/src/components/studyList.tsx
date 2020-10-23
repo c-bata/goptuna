@@ -4,7 +4,7 @@ import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import { AppBar, Toolbar, Typography, Container, Card } from "@material-ui/core"
 
 import { actionCreator } from "../action"
-import { formatDate } from "../utils/date"
+import { formatDate } from "../dateUtil"
 import { useSnackbar } from "notistack"
 import { useStudySummaries } from "../hook"
 import { DataGrid, DataGridColumn } from "./dataGrid"

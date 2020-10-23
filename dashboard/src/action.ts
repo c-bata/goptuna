@@ -1,5 +1,5 @@
 import { SetterOrUpdater } from "recoil"
-import { getStudyDetail, getStudySummaries } from "./utils/apiClient"
+import { getStudyDetail, getStudySummaries } from "./apiClient"
 import { ReactNode } from "react"
 import { OptionsObject } from "notistack"
 
