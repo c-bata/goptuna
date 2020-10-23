@@ -80,7 +80,6 @@ function EnhancedTableHead(props: EnhancedTableProps) {
         {headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
-            padding={headCell.disablePadding ? "none" : "default"}
             sortDirection={orderBy === headCell.id ? order : false}
           >
             <TableSortLabel
@@ -131,7 +130,7 @@ export const EnhancedTable: FC<{
   const [order, setOrder] = React.useState<Order>("asc")
   const [orderBy, setOrderBy] = React.useState<keyof Trial>("trial_id")
   const [page, setPage] = React.useState(0)
-  const [rowsPerPage, setRowsPerPage] = React.useState(5)
+  const [rowsPerPage, setRowsPerPage] = React.useState(10)
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
@@ -156,6 +155,12 @@ export const EnhancedTable: FC<{
   const emptyRows =
     rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage)
 
+  const sortedRows = stableSort(rows, getComparator(order, orderBy))
+  const paginateRows =
+    rowsPerPage > 0
+      ? sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+      : sortedRows
+
   return (
     <div className={classes.root}>
       <TableContainer>
@@ -172,37 +177,33 @@ export const EnhancedTable: FC<{
             onRequestSort={handleRequestSort}
           />
           <TableBody>
-            {stableSort(rows, getComparator(order, orderBy))
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row, index) => {
-                const labelId = `enhanced-table-checkbox-${index}`
+            {paginateRows.map((row, index) => {
+              const labelId = `enhanced-table-checkbox-${index}`
 
-                return (
-                  <TableRow
-                    hover
-                    role="checkbox"
-                    tabIndex={-1}
-                    key={row.trial_id}
+              return (
+                <TableRow
+                  hover
+                  role="checkbox"
+                  tabIndex={-1}
+                  key={row.trial_id}
+                >
+                  <TableCell
+                    component="th"
+                    id={labelId}
+                    scope="row"
+                    align="right"
                   >
-                    <TableCell
-                      component="th"
-                      id={labelId}
-                      scope="row"
-                      align="right"
-                    >
-                      {row.trial_id}
-                    </TableCell>
-                    <TableCell align="right">{row.number}</TableCell>
-                    <TableCell align="right">{row.state.toString()}</TableCell>
-                    <TableCell align="right">{row.value}</TableCell>
-                    <TableCell align="left">
-                      {row.params
-                        .map((p) => p.name + ": " + p.value)
-                        .join(", ")}
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
+                    {row.trial_id}
+                  </TableCell>
+                  <TableCell align="right">{row.number}</TableCell>
+                  <TableCell align="right">{row.state.toString()}</TableCell>
+                  <TableCell align="right">{row.value}</TableCell>
+                  <TableCell align="left">
+                    {row.params.map((p) => p.name + ": " + p.value).join(", ")}
+                  </TableCell>
+                </TableRow>
+              )
+            })}
             {emptyRows > 0 && (
               <TableRow style={{ height: 33 * emptyRows }}>
                 <TableCell colSpan={6} />
@@ -212,7 +213,7 @@ export const EnhancedTable: FC<{
         </Table>
       </TableContainer>
       <TablePagination
-        rowsPerPageOptions={[5, 10, 25]}
+        rowsPerPageOptions={[10, 50, 100, { label: "All", value: -1 }]}
         component="div"
         count={rows.length}
         rowsPerPage={rowsPerPage}
