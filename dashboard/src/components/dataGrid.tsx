@@ -9,6 +9,8 @@ import TablePagination from "@material-ui/core/TablePagination"
 import TableRow from "@material-ui/core/TableRow"
 import TableSortLabel from "@material-ui/core/TableSortLabel"
 
+type Order = "asc" | "desc"
+
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
@@ -41,35 +43,14 @@ function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   return 0
 }
 
-type Order = "asc" | "desc"
-
-function getComparator<T>(
-  order: Order,
-  orderBy: keyof T
-): (a: T, b: T) => number {
-  return order === "desc"
-    ? (a, b) => descendingComparator<T>(a, b, orderBy)
-    : (a, b) => -descendingComparator<T>(a, b, orderBy)
-}
-
-function stableSort<T>(array: T[], comparator: (a: T, b: T) => number) {
-  const stabilizedThis = array.map((el, index) => [el, index] as [T, number])
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0])
-    if (order !== 0) return order
-    return a[1] - b[1]
-  })
-  return stabilizedThis.map((el) => el[0])
-}
-
-export interface DataGridColumn<T> {
+interface DataGridColumn<T> {
   field: keyof T
   label: string
   sortable: boolean
   toCellValue?: (dataIndex: number) => string | React.ReactNode
 }
 
-export function DataGrid<T>(props: {
+function DataGrid<T>(props: {
   columns: DataGridColumn<T>[]
   rows: T[]
   keyField: keyof T
@@ -155,19 +136,14 @@ export function DataGrid<T>(props: {
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginateRows.map((row, index) => {
-              return (
-                <TableRow hover role="checkbox" tabIndex={-1} key={index}>
-                  {columns.map((column) => (
-                    <TableCell key={`${row[keyField]}:${column.field}`}>
-                      {column.toCellValue
-                        ? column.toCellValue(index)
-                        : row[column.field]}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              )
-            })}
+            {paginateRows.map((row, index) => (
+              <DataGridRow<T>
+                columns={columns}
+                index={index}
+                row={row}
+                keyField={keyField}
+              />
+            ))}
             {emptyRows > 0 && (
               <TableRow style={{ height: (dense ? 33 : 53) * emptyRows }}>
                 <TableCell colSpan={6} />
@@ -188,3 +164,42 @@ export function DataGrid<T>(props: {
     </div>
   )
 }
+
+function DataGridRow<T>(props: {
+  columns: DataGridColumn<T>[]
+  index: number
+  row: T
+  keyField: keyof T
+}) {
+  const { columns, index, row, keyField } = props
+  return (
+    <TableRow hover role="checkbox" tabIndex={-1} key={index}>
+      {columns.map((column) => (
+        <TableCell key={`${row[keyField]}:${column.field}`}>
+          {column.toCellValue ? column.toCellValue(index) : row[column.field]}
+        </TableCell>
+      ))}
+    </TableRow>
+  )
+}
+
+function getComparator<T>(
+  order: Order,
+  orderBy: keyof T
+): (a: T, b: T) => number {
+  return order === "desc"
+    ? (a, b) => descendingComparator<T>(a, b, orderBy)
+    : (a, b) => -descendingComparator<T>(a, b, orderBy)
+}
+
+function stableSort<T>(array: T[], comparator: (a: T, b: T) => number) {
+  const stabilizedThis = array.map((el, index) => [el, index] as [T, number])
+  stabilizedThis.sort((a, b) => {
+    const order = comparator(a[0], b[0])
+    if (order !== 0) return order
+    return a[1] - b[1]
+  })
+  return stabilizedThis.map((el) => el[0])
+}
+
+export { DataGrid, DataGridColumn }
