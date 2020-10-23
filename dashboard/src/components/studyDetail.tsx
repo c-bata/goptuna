@@ -14,11 +14,11 @@ import {
 
 import { GraphParallelCoordinate } from "./graphParallelCoordinate"
 import { GraphIntermediateValues } from "./graphIntermediateValues"
-import { TrialsTable } from "./trialsTable"
 import { GraphHistory } from "./graphHistory"
 import { actionCreator } from "../action"
 import { useStudyDetail } from "../hook"
 import { useSnackbar } from "notistack"
+import { EnhancedTable } from "./dataGrid"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -82,7 +82,7 @@ export const StudyDetail: FC<{}> = () => {
             </Grid>
           </Grid>
           <Card className={classes.card}>
-            <TrialsTable trials={trials} />
+            <EnhancedTable rows={trials} />
           </Card>
         </div>
       </Container>
