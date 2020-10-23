@@ -105,6 +105,7 @@ export const StudyDetail: FC<{}> = () => {
               columns={columns}
               rows={trials}
               keyField={"trial_id"}
+              dense={true}
             />
           </Card>
         </div>

@@ -73,9 +73,10 @@ export function DataGrid<T>(props: {
   columns: DataGridColumn<T>[]
   rows: T[]
   keyField: keyof T
+  dense?: boolean
 }) {
   const classes = useStyles()
-  const { columns, rows, keyField } = props
+  const { columns, rows, keyField, dense } = props
   const [order, setOrder] = React.useState<Order>("asc")
   const [orderBy, setOrderBy] = React.useState<keyof T>(keyField)
   const [page, setPage] = React.useState(0)
@@ -121,7 +122,7 @@ export function DataGrid<T>(props: {
         <Table
           className={classes.table}
           aria-labelledby="tableTitle"
-          size="small"
+          size={dense ? "small" : "medium"}
           aria-label="enhanced table"
         >
           <TableHead>
@@ -168,7 +169,7 @@ export function DataGrid<T>(props: {
               )
             })}
             {emptyRows > 0 && (
-              <TableRow style={{ height: 33 * emptyRows }}>
+              <TableRow style={{ height: (dense ? 33 : 53) * emptyRows }}>
                 <TableCell colSpan={6} />
               </TableRow>
             )}
