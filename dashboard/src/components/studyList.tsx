@@ -51,6 +51,10 @@ export const StudyList: FC<{}> = () => {
   const studies = useStudySummaries(action)
   const setStudies = useSetRecoilState<StudySummary[]>(studySummariesState)
 
+  const newStudyNameAlreadyUsed = studies.some(
+    (v) => v.study_name === newStudyName
+  )
+
   const columns: DataGridColumn<StudySummary>[] = [
     {
       field: "study_id",
@@ -95,6 +99,7 @@ export const StudyList: FC<{}> = () => {
     const direction = maximize ? "maximize" : "minimize"
     action.createNewStudy(newStudyName, direction, studies, setStudies)
     setOpenDialog(false)
+    setNewStudyName("")
   }
 
   const collapseBody = (index: number) => {
@@ -178,6 +183,10 @@ export const StudyList: FC<{}> = () => {
           </DialogContentText>
           <TextField
             autoFocus
+            error={newStudyNameAlreadyUsed}
+            helperText={
+              newStudyNameAlreadyUsed ? `"${newStudyName}" is already used` : ""
+            }
             label="Study name"
             type="text"
             onChange={(e) => {
