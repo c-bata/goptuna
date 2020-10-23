@@ -7,20 +7,8 @@ declare const API_ENDPOINT: string
 
 declare const URL_PREFIX: string
 
-// @ts-ignore
-const enum TrialState {
-  Running = "Running",
-  Complete = "Complete",
-  Pruned = "Pruned",
-  Fail = "Fail",
-  Waiting = "Waiting",
-}
-
-// @ts-ignore
-const enum StudyDirection {
-  Maximize = "maximize",
-  Minimize = "minimize",
-}
+type TrialState = "Running" | "Complete" | "Pruned" | "Fail" | "Waiting"
+type StudyDirection = "maximize" | "minimize"
 
 declare interface TrialIntermediateValue {
   step: number

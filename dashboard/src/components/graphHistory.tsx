@@ -147,15 +147,15 @@ const plotHistory = (
   }
 
   let filteredTrials = study.trials.filter(
-    (t) => t.state === TrialState.Complete || t.state === TrialState.Pruned
+    (t) => t.state === "Complete" || t.state === "Pruned"
   )
   if (filterCompleteTrial) {
     filteredTrials = filteredTrials.filter(
-      (t) => t.state !== TrialState.Complete
+      (t) => t.state !== "Complete"
     )
   }
   if (filterPrunedTrial) {
-    filteredTrials = filteredTrials.filter((t) => t.state !== TrialState.Pruned)
+    filteredTrials = filteredTrials.filter((t) => t.state !== "Pruned")
   }
   if (filteredTrials.length === 0) {
     plotly.react(plotDomId, [])
@@ -168,13 +168,13 @@ const plotHistory = (
       currentBest = item.value!
       trialsForLinePlot.push(item)
     } else if (
-      study.direction === StudyDirection.Maximize &&
+      study.direction === "maximize" &&
       item.value! > currentBest
     ) {
       currentBest = item.value!
       trialsForLinePlot.push(item)
     } else if (
-      study.direction === StudyDirection.Minimize &&
+      study.direction === "minimize" &&
       item.value! < currentBest
     ) {
       currentBest = item.value!

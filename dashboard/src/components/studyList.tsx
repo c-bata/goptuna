@@ -24,6 +24,8 @@ import { useSnackbar } from "notistack"
 import { useStudySummaries } from "../hook"
 import { DataGrid, DataGridColumn } from "./dataGrid"
 import { AddBox } from "@material-ui/icons"
+import {studySummariesState} from "../state";
+import {useSetRecoilState} from "recoil";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -44,6 +46,7 @@ export const StudyList: FC<{}> = () => {
   const { enqueueSnackbar } = useSnackbar()
   const action = actionCreator(enqueueSnackbar)
   const studies = useStudySummaries(action)
+  const setStudies = useSetRecoilState<StudySummary[]>(studySummariesState)
 
   const columns: DataGridColumn<StudySummary>[] = [
     {
@@ -86,8 +89,8 @@ export const StudyList: FC<{}> = () => {
   }
 
   const handleCreateNewStudy = () => {
-    // TODO(c-bata): Call action
-    console.log(newStudyName)
+    // TODO(c-bata): Add choice field for direction
+    action.createNewStudy(newStudyName, "minimize", studies, setStudies)
     setOpenDialog(false)
   }
 
