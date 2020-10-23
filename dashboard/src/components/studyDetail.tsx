@@ -18,7 +18,7 @@ import { GraphHistory } from "./graphHistory"
 import { actionCreator } from "../action"
 import { useStudyDetail } from "../hook"
 import { useSnackbar } from "notistack"
-import { EnhancedTable } from "./dataGrid"
+import { TrialsTable } from "./trialsTable"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -82,7 +82,7 @@ export const StudyDetail: FC<{}> = () => {
             </Grid>
           </Grid>
           <Card className={classes.card}>
-            <EnhancedTable rows={trials} />
+            <TrialsTable rows={trials} />
           </Card>
         </div>
       </Container>
