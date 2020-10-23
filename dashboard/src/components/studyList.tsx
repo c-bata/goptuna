@@ -53,7 +53,7 @@ export const StudyList: FC<{}> = () => {
       <AppBar position="static">
         <Container>
           <Toolbar>
-            <Typography variant="h6">TOP</Typography>
+            <Typography variant="h6">Goptuna dashboard</Typography>
           </Toolbar>
         </Container>
       </AppBar>

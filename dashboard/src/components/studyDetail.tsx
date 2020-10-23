@@ -9,7 +9,7 @@ import {
   Button,
   Container,
   Grid,
-  Toolbar,
+  Toolbar, Paper,
 } from "@material-ui/core"
 import { useSnackbar } from "notistack"
 
@@ -22,6 +22,10 @@ import { useStudyDetail } from "../hook"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
+    paper: {
+      margin: theme.spacing(2),
+      padding: theme.spacing(2),
+    },
     card: {
       margin: theme.spacing(2),
     },
@@ -69,7 +73,7 @@ export const StudyDetail: FC<{}> = () => {
       <AppBar position="static">
         <Container>
           <Toolbar>
-            <Typography variant="h6">{title}</Typography>
+            <Typography variant="h6">Goptuna dashboard</Typography>
             <div className={classes.grow} />
             <Button color="inherit" component={Link} to="/">
               Return to Top
@@ -79,6 +83,9 @@ export const StudyDetail: FC<{}> = () => {
       </AppBar>
       <Container>
         <div>
+          <Paper className={classes.paper}>
+            <Typography variant="h6">{title}</Typography>
+          </Paper>
           <Card className={classes.card}>
             <CardContent>
               <GraphHistory study={studyDetail} />
