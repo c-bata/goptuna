@@ -11,14 +11,14 @@ import {
   Grid,
   Toolbar,
 } from "@material-ui/core"
+import { useSnackbar } from "notistack"
 
+import { DataGridColumn, DataGrid } from "./dataGrid"
 import { GraphParallelCoordinate } from "./graphParallelCoordinate"
 import { GraphIntermediateValues } from "./graphIntermediateValues"
-import { TrialsTable } from "./trialsTable"
 import { GraphHistory } from "./graphHistory"
 import { actionCreator } from "../action"
 import { useStudyDetail } from "../hook"
-import { useSnackbar } from "notistack"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -45,6 +45,25 @@ export const StudyDetail: FC<{}> = () => {
 
   const title = studyDetail !== null ? studyDetail.name : `Study #${studyId}`
   const trials: Trial[] = studyDetail !== null ? studyDetail.trials : []
+
+  const columns: DataGridColumn<Trial>[] = [
+    { field: "trial_id", label: "Trial ID", sortable: true },
+    { field: "number", label: "Number", sortable: true },
+    {
+      field: "state",
+      label: "State",
+      sortable: false,
+      toCellValue: (i) => trials[i].state.toString(),
+    },
+    { field: "value", label: "Value", sortable: true },
+    {
+      field: "params",
+      label: "Params",
+      sortable: false,
+      toCellValue: (i) =>
+        trials[i].params.map((p) => p.name + ": " + p.value).join(", "),
+    },
+  ]
   return (
     <div>
       <AppBar position="static">
@@ -82,7 +101,11 @@ export const StudyDetail: FC<{}> = () => {
             </Grid>
           </Grid>
           <Card className={classes.card}>
-            <TrialsTable trials={trials} />
+            <DataGrid<Trial>
+              columns={columns}
+              rows={trials}
+              keyField={"trial_id"}
+            />
           </Card>
         </div>
       </Container>
