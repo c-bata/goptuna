@@ -52,24 +52,6 @@ export const StudyDetail: FC<{}> = () => {
   const title = studyDetail !== null ? studyDetail.name : `Study #${studyId}`
   const trials: Trial[] = studyDetail !== null ? studyDetail.trials : []
 
-  const columns: DataGridColumn<Trial>[] = [
-    { field: "trial_id", label: "Trial ID", sortable: true },
-    { field: "number", label: "Number", sortable: true },
-    {
-      field: "state",
-      label: "State",
-      sortable: false,
-      toCellValue: (i) => trials[i].state.toString(),
-    },
-    { field: "value", label: "Value", sortable: true },
-    {
-      field: "params",
-      label: "Params",
-      sortable: false,
-      toCellValue: (i) =>
-        trials[i].params.map((p) => p.name + ": " + p.value).join(", "),
-    },
-  ]
   return (
     <div>
       <AppBar position="static">
@@ -110,24 +92,63 @@ export const StudyDetail: FC<{}> = () => {
             </Grid>
           </Grid>
           <Card className={classes.card}>
-            <DataGrid<Trial>
-              columns={columns}
-              rows={trials}
-              keyField={"trial_id"}
-              dense={true}
-              collapseBody={(index) => {
-                return (
-                  <Box margin={1}>
-                    <Typography variant="h6" gutterBottom component="div">
-                      History of trial {trials[index].trial_id}
-                    </Typography>
-                  </Box>
-                )
-              }}
-            />
+            <TrialTable trials={trials} />
           </Card>
         </div>
       </Container>
     </div>
+  )
+}
+
+const TrialTable: FC<{ trials: Trial[] }> = ({ trials = [] }) => {
+  const columns: DataGridColumn<Trial>[] = [
+    { field: "trial_id", label: "Trial ID", sortable: true },
+    { field: "number", label: "Number", sortable: true },
+    {
+      field: "state",
+      label: "State",
+      sortable: false,
+      toCellValue: (i) => trials[i].state.toString(),
+    },
+    { field: "value", label: "Value", sortable: true },
+    {
+      field: "params",
+      label: "Params",
+      sortable: false,
+      toCellValue: (i) =>
+        trials[i].params.map((p) => p.name + ": " + p.value).join(", "),
+    },
+  ]
+
+  const collapseBody = (index: number) => {
+    const collapseIntermediateValueColumns: DataGridColumn<
+      TrialIntermediateValue
+    >[] = [
+      { field: "step", label: "Step", sortable: true },
+      { field: "value", label: "Value", sortable: true },
+    ]
+    return (
+      <Box margin={1}>
+        <Typography variant="h6" gutterBottom component="div">
+          Intermediate values
+        </Typography>
+        <DataGrid
+          columns={collapseIntermediateValueColumns}
+          rows={trials[index].intermediate_values}
+          keyField={"step"}
+          dense={true}
+        />
+      </Box>
+    )
+  }
+
+  return (
+    <DataGrid<Trial>
+      columns={columns}
+      rows={trials}
+      keyField={"trial_id"}
+      dense={true}
+      collapseBody={collapseBody}
+    />
   )
 }

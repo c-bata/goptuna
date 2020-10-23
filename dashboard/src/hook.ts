@@ -31,7 +31,7 @@ export const useStudyDetail = (
     action.updateStudyDetail(studyId, studyDetails, setStudyDetails)
     const intervalId = setInterval(function () {
       action.updateStudyDetail(studyId, studyDetails, setStudyDetails)
-    }, 5 * 1000)
+    }, 10 * 1000)
     return () => clearInterval(intervalId)
   }, [])
 
