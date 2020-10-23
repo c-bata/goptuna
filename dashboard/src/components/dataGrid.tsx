@@ -39,6 +39,9 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 )
 
+const defaultInitialRowsPerPage = 10
+const defaultRowsPerPageOption = [10, 50, 100, { label: "All", value: -1 }]
+
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
     return -1
@@ -62,13 +65,25 @@ function DataGrid<T>(props: {
   keyField: keyof T
   dense?: boolean
   collapseBody?: (dataIndex: number) => React.ReactNode
+  initialRowsPerPage?: number
+  rowsPerPageOption?: Array<number | { value: number; label: string }>
 }) {
   const classes = useStyles()
-  const { columns, rows, keyField, dense, collapseBody } = props
+  const {
+    columns,
+    rows,
+    keyField,
+    dense,
+    collapseBody,
+    initialRowsPerPage,
+    rowsPerPageOption,
+  } = props
   const [order, setOrder] = React.useState<Order>("asc")
   const [orderBy, setOrderBy] = React.useState<keyof T>(keyField)
   const [page, setPage] = React.useState(0)
-  const [rowsPerPage, setRowsPerPage] = React.useState(10)
+  const [rowsPerPage, setRowsPerPage] = React.useState(
+    initialRowsPerPage || defaultInitialRowsPerPage
+  )
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
@@ -162,7 +177,7 @@ function DataGrid<T>(props: {
         </Table>
       </TableContainer>
       <TablePagination
-        rowsPerPageOptions={[10, 50, 100, { label: "All", value: -1 }]}
+        rowsPerPageOptions={rowsPerPageOption || defaultRowsPerPageOption}
         component="div"
         count={rows.length}
         rowsPerPage={rowsPerPage}

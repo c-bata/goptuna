@@ -143,6 +143,8 @@ const TrialTable: FC<{ trials: Trial[] }> = ({ trials = [] }) => {
               rows={trials[index].intermediate_values}
               keyField={"step"}
               dense={true}
+              initialRowsPerPage={5}
+              rowsPerPageOption={[5, 10, { label: "All", value: -1 }]}
             />
           </Box>
         </Grid>
@@ -156,6 +158,8 @@ const TrialTable: FC<{ trials: Trial[] }> = ({ trials = [] }) => {
               rows={trials[index].user_attrs}
               keyField={"key"}
               dense={true}
+              initialRowsPerPage={5}
+              rowsPerPageOption={[5, 10, { label: "All", value: -1 }]}
             />
           </Box>
         </Grid>

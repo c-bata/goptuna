@@ -86,6 +86,8 @@ export const StudyList: FC<{}> = () => {
               rows={studies[index].user_attrs}
               keyField={"key"}
               dense={true}
+              initialRowsPerPage={5}
+              rowsPerPageOption={[5, 10, { label: "All", value: -1 }]}
             />
           </Box>
         </Grid>
@@ -99,6 +101,8 @@ export const StudyList: FC<{}> = () => {
               rows={studies[index].system_attrs}
               keyField={"key"}
               dense={true}
+              initialRowsPerPage={5}
+              rowsPerPageOption={[5, 10, { label: "All", value: -1 }]}
             />
           </Box>
         </Grid>
@@ -122,6 +126,8 @@ export const StudyList: FC<{}> = () => {
             rows={studies}
             keyField={"study_id"}
             collapseBody={collapseBody}
+            initialRowsPerPage={5}
+            rowsPerPageOption={[5, 10, { label: "All", value: -1 }]}
           />
         </Card>
       </Container>
