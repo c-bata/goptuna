@@ -34,6 +34,7 @@ func NewServer(s goptuna.Storage) (http.Handler, error) {
 	router.HandleFunc("/api/studies", handleGetAllStudySummary).Methods("GET")
 	router.HandleFunc("/api/studies", handleCreateStudy).Methods("POST")
 	router.HandleFunc("/api/studies/{study_id:[0-9]+}", handleGetStudyDetail).Methods("GET")
+	router.HandleFunc("/api/studies/{study_id:[0-9]+}", handleDeleteStudy).Methods("DELETE")
 
 	// Static files
 	err := registerStaticFileRoutes(router, "static")
@@ -139,6 +140,21 @@ func handleCreateStudy(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func handleDeleteStudy(w http.ResponseWriter, r *http.Request) {
+	urlVars := mux.Vars(r)
+	studyID, err := strconv.Atoi(urlVars["study_id"])
+	if err != nil {
+		writeErrorResponse(w, http.StatusBadRequest, "Invalid study id")
+		return
+	}
+	if err := storage.DeleteStudy(studyID); err != nil {
+		// TODO(c-bata): Return bad request if study is not found
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func handleGetStudyDetail(w http.ResponseWriter, r *http.Request) {
 	urlVars := mux.Vars(r)
 	studyID, err := strconv.Atoi(urlVars["study_id"])
@@ -148,7 +164,7 @@ func handleGetStudyDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	studySummary, err := getStudySummary(studyID)
-	if err != errNotFound {
+	if err == errNotFound {
 		writeErrorResponse(w, http.StatusNotFound, "Not found")
 		return
 	} else if err != nil {
