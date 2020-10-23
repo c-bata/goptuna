@@ -11,14 +11,14 @@ import {
   Grid,
   Toolbar,
 } from "@material-ui/core"
+import { useSnackbar } from "notistack"
 
+import { DataGridColumn, DataGrid } from "./dataGrid"
 import { GraphParallelCoordinate } from "./graphParallelCoordinate"
 import { GraphIntermediateValues } from "./graphIntermediateValues"
 import { GraphHistory } from "./graphHistory"
 import { actionCreator } from "../action"
 import { useStudyDetail } from "../hook"
-import { useSnackbar } from "notistack"
-import { DataGridColumn, TrialsTable } from "./trialsTable"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -101,7 +101,7 @@ export const StudyDetail: FC<{}> = () => {
             </Grid>
           </Grid>
           <Card className={classes.card}>
-            <TrialsTable<Trial>
+            <DataGrid<Trial>
               columns={columns}
               rows={trials}
               keyField={"trial_id"}

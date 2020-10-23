@@ -69,7 +69,7 @@ export interface DataGridColumn<T> {
   toCellValue?: (dataIndex: number) => string | React.ReactNode
 }
 
-export function TrialsTable<T>(props: {
+export function DataGrid<T>(props: {
   columns: DataGridColumn<T>[]
   rows: T[]
   keyField: keyof T
