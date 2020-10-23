@@ -6,13 +6,14 @@ import {
   Card,
   Typography,
   CardContent,
-  Button,
   Container,
   Grid,
   Toolbar,
   Paper,
   Box,
+  IconButton,
 } from "@material-ui/core"
+import { Home } from "@material-ui/icons"
 import { useSnackbar } from "notistack"
 
 import { DataGridColumn, DataGrid } from "./dataGrid"
@@ -59,9 +60,15 @@ export const StudyDetail: FC<{}> = () => {
           <Toolbar>
             <Typography variant="h6">Goptuna dashboard</Typography>
             <div className={classes.grow} />
-            <Button color="inherit" component={Link} to="/">
-              Return to Top
-            </Button>
+            <IconButton
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              component={Link}
+              to="/"
+              color="inherit"
+            >
+              <Home />
+            </IconButton>
           </Toolbar>
         </Container>
       </AppBar>
