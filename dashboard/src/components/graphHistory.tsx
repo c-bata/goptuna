@@ -150,9 +150,7 @@ const plotHistory = (
     (t) => t.state === "Complete" || t.state === "Pruned"
   )
   if (filterCompleteTrial) {
-    filteredTrials = filteredTrials.filter(
-      (t) => t.state !== "Complete"
-    )
+    filteredTrials = filteredTrials.filter((t) => t.state !== "Complete")
   }
   if (filterPrunedTrial) {
     filteredTrials = filteredTrials.filter((t) => t.state !== "Pruned")
@@ -167,16 +165,10 @@ const plotHistory = (
     if (currentBest === null) {
       currentBest = item.value!
       trialsForLinePlot.push(item)
-    } else if (
-      study.direction === "maximize" &&
-      item.value! > currentBest
-    ) {
+    } else if (study.direction === "maximize" && item.value! > currentBest) {
       currentBest = item.value!
       trialsForLinePlot.push(item)
-    } else if (
-      study.direction === "minimize" &&
-      item.value! < currentBest
-    ) {
+    } else if (study.direction === "minimize" && item.value! < currentBest) {
       currentBest = item.value!
       trialsForLinePlot.push(item)
     }

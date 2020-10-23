@@ -17,6 +17,8 @@ import {
   DialogContentText,
   TextField,
   DialogActions,
+  FormControlLabel,
+  Checkbox,
 } from "@material-ui/core"
 
 import { actionCreator } from "../action"
@@ -24,8 +26,8 @@ import { useSnackbar } from "notistack"
 import { useStudySummaries } from "../hook"
 import { DataGrid, DataGridColumn } from "./dataGrid"
 import { AddBox } from "@material-ui/icons"
-import {studySummariesState} from "../state";
-import {useSetRecoilState} from "recoil";
+import { studySummariesState } from "../state"
+import { useSetRecoilState } from "recoil"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -42,6 +44,7 @@ export const StudyList: FC<{}> = () => {
   const classes = useStyles()
   const [openDialog, setOpenDialog] = React.useState(false)
   const [newStudyName, setNewStudyName] = React.useState("")
+  const [maximize, setMaximize] = React.useState<boolean>(false)
 
   const { enqueueSnackbar } = useSnackbar()
   const action = actionCreator(enqueueSnackbar)
@@ -89,8 +92,8 @@ export const StudyList: FC<{}> = () => {
   }
 
   const handleCreateNewStudy = () => {
-    // TODO(c-bata): Add choice field for direction
-    action.createNewStudy(newStudyName, "minimize", studies, setStudies)
+    const direction = maximize ? "maximize" : "minimize"
+    action.createNewStudy(newStudyName, direction, studies, setStudies)
     setOpenDialog(false)
   }
 
@@ -175,13 +178,24 @@ export const StudyList: FC<{}> = () => {
           </DialogContentText>
           <TextField
             autoFocus
-            margin="dense"
             label="Study name"
             type="text"
             onChange={(e) => {
               setNewStudyName(e.target.value)
             }}
             fullWidth
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={maximize}
+                onChange={(e) => {
+                  setMaximize(!maximize)
+                }}
+                color="primary"
+              />
+            }
+            label="Set maximize direction"
           />
         </DialogContent>
         <DialogActions>

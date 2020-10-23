@@ -1,5 +1,9 @@
 import { SetterOrUpdater } from "recoil"
-import { getStudyDetailAPI, getStudySummariesAPI, createNewStudyAPI } from "./apiClient"
+import {
+  getStudyDetailAPI,
+  getStudySummariesAPI,
+  createNewStudyAPI,
+} from "./apiClient"
 import { ReactNode } from "react"
 import { OptionsObject } from "notistack"
 
@@ -49,9 +53,14 @@ export const actionCreator = (
   ) => {
     createNewStudyAPI(study_name, direction)
       .then((study_summary) => {
-        const newVal =  [...oldVal, study_summary]
+        const newVal = [...oldVal, study_summary]
         setter(newVal)
-        enqueueSnackbar(`Success to create a study (study_name=${study_name})`)
+        enqueueSnackbar(
+          `Success to create a study (study_name=${study_name})`,
+          {
+            variant: "success",
+          }
+        )
       })
       .catch((err) => {
         enqueueSnackbar(`Failed to create a study (study_name=${study_name})`, {
