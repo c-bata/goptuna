@@ -21,16 +21,13 @@ function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
 
 type Order = "asc" | "desc"
 
-function getComparator<Key extends keyof any>(
+function getComparator<T>(
   order: Order,
-  orderBy: Key
-): (
-  a: { [key in Key]: number | string },
-  b: { [key in Key]: number | string }
-) => number {
+  orderBy: keyof T
+): (a: T, b: T) => number {
   return order === "desc"
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy)
+    ? (a, b) => descendingComparator<T>(a, b, orderBy)
+    : (a, b) => -descendingComparator<T>(a, b, orderBy)
 }
 
 function stableSort<T>(array: T[], comparator: (a: T, b: T) => number) {
@@ -128,8 +125,7 @@ export const TrialsTable: FC<{
   const emptyRows =
     rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage)
 
-  // @ts-ignore
-  const sortedRows = stableSort(rows, getComparator(order, orderBy))
+  const sortedRows = stableSort<Trial>(rows, getComparator(order, orderBy))
   const paginateRows =
     rowsPerPage > 0
       ? sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
