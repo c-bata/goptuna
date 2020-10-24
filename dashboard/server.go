@@ -70,12 +70,6 @@ func handleGetIndex(w http.ResponseWriter, r *http.Request) {
         margin: 0;
         padding: 0;
     }
-    
-    h1, h2, h3 {
-        font-weight: 600;
-        letter-spacing: 1px;
-        line-height: 1.3;
-    }
     </style>
     <script defer src="/static/bundle.js"></script>
 </head>
