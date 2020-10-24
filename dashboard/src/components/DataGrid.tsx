@@ -76,6 +76,10 @@ function DataGrid<T>(props: {
     : rowsPerPageOption[0].value
   const [rowsPerPage, setRowsPerPage] = React.useState(initialRowsPerPage)
 
+  const getDataIndex = (row: T): number => {
+    return rows.findIndex(row2 => row[keyField] === row2[keyField])
+  }
+
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
     property: keyof T
@@ -163,7 +167,7 @@ function DataGrid<T>(props: {
             {currentPageRows.map((row, index) => (
               <DataGridRow<T>
                 columns={columns}
-                rowIndex={page * rowsPerPage + index}
+                rowIndex={ getDataIndex(row) }
                 row={row}
                 keyField={keyField}
                 collapseBody={collapseBody}
