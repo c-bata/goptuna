@@ -58,6 +58,13 @@ build: ## Build example command lines.
 	$(GO) build -o ./bin/goptuna -ldflags "$(LDFLAGS)" cmd/main.go
 	./_examples/build.sh
 
+.PHONY: build-dashboard
+build-dashboard: ## Build dashboard and bundle it.
+	docker build -t c-bata/goptuna-dashboard ./dashboard
+	docker run -it --rm \
+		-v `PWD`/dashboard/statik:/usr/src/statik \
+		c-bata/goptuna-dashboard
+
 .PHONY: help
 help: ## Show help text
 	@echo "Commands:"
