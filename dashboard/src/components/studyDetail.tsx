@@ -125,7 +125,6 @@ export const StudyDetail: FC<{}> = () => {
 
 const TrialTable: FC<{ trials: Trial[] }> = ({ trials = [] }) => {
   const columns: DataGridColumn<Trial>[] = [
-    { field: "trial_id", label: "Trial ID", sortable: true },
     { field: "number", label: "Number", sortable: true },
     {
       field: "state",
