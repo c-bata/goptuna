@@ -69,6 +69,7 @@ var config = {
     plugins: [
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+            'APP_BAR_TITLE': JSON.stringify(process.env.APP_BAR_TITLE || "Goptuna Dashboard"),
             'API_ENDPOINT': JSON.stringify(process.env.API_ENDPOINT),
             'URL_PREFIX': JSON.stringify(process.env.API_ENDPOINT || "/dashboard")
         })

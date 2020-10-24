@@ -74,7 +74,7 @@ export const StudyDetail: FC<{}> = () => {
       <AppBar position="static">
         <Container>
           <Toolbar>
-            <Typography variant="h6">Goptuna dashboard</Typography>
+            <Typography variant="h6">{APP_BAR_TITLE}</Typography>
             <div className={classes.grow} />
             <IconButton
               aria-controls="menu-appbar"
