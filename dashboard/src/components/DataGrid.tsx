@@ -17,6 +17,8 @@ import KeyboardArrowUpIcon from "@material-ui/icons/KeyboardArrowUp"
 
 type Order = "asc" | "desc"
 
+const defaultRowsPerPageOption = [10, 50, 100, { label: "All", value: -1 }]
+
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
@@ -43,29 +45,33 @@ interface DataGridColumn<T> {
   toCellValue?: (dataIndex: number) => string | React.ReactNode
 }
 
-function DataGrid<T>({
-  columns,
-  rows,
-  keyField,
-  collapseBody,
-  rowsPerPageOption = [10, 50, 100, { label: "All", value: -1 }],
-  initialRowsPerPage,
-  dense = false,
-}: {
+function DataGrid<T>(props: {
   columns: DataGridColumn<T>[]
   rows: T[]
   keyField: keyof T
-  collapseBody?: (rowIndex: number) => React.ReactNode
+  dense?: boolean
+  collapseBody?: (dataIndex: number) => React.ReactNode
   initialRowsPerPage?: number
-  rowsPerPageOption: Array<number | { value: number; label: string }>
-  dense: boolean
+  rowsPerPageOption?: Array<number | { value: number; label: string }>
 }) {
   const classes = useStyles()
+  const {
+    columns,
+    rows,
+    keyField,
+    dense,
+    collapseBody,
+  } = props
+  let {
+    initialRowsPerPage,
+    rowsPerPageOption,
+  } = props
   const [order, setOrder] = React.useState<Order>("asc")
   const [orderBy, setOrderBy] = React.useState<keyof T>(keyField)
   const [page, setPage] = React.useState(0)
 
-  initialRowsPerPage = initialRowsPerPage
+  rowsPerPageOption = rowsPerPageOption || defaultRowsPerPageOption
+  initialRowsPerPage = initialRowsPerPage  // use first element as default
     ? initialRowsPerPage
     : isNumber(rowsPerPageOption[0])
     ? rowsPerPageOption[0]
