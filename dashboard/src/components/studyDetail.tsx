@@ -1,4 +1,5 @@
-import React, { FC } from "react"
+import React, { FC, useEffect } from "react"
+import { useRecoilValue } from "recoil"
 import { Link, useParams } from "react-router-dom"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import {
@@ -19,8 +20,8 @@ import { DataGridColumn, DataGrid } from "./dataGrid"
 import { GraphParallelCoordinate } from "./graphParallelCoordinate"
 import { GraphIntermediateValues } from "./graphIntermediateValues"
 import { GraphHistory } from "./graphHistory"
-import { actionCreator } from "../action"
-import { useStudyDetail } from "../hook"
+import { Action, actionCreator } from "../action"
+import { studyDetailsState } from "../state"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -39,6 +40,23 @@ const useStyles = makeStyles((theme: Theme) =>
 
 interface ParamTypes {
   studyId: string
+}
+
+export const useStudyDetail = (
+  action: Action,
+  studyId: number
+): StudyDetail | null => {
+  const studyDetails = useRecoilValue<StudyDetails>(studyDetailsState)
+
+  useEffect(() => {
+    action.updateStudyDetail(studyId)
+    const intervalId = setInterval(function () {
+      action.updateStudyDetail(studyId)
+    }, 10 * 1000)
+    return () => clearInterval(intervalId)
+  }, [])
+
+  return studyDetails[studyId] || null
 }
 
 export const StudyDetail: FC<{}> = () => {

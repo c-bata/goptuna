@@ -1,16 +1,19 @@
-import { SetterOrUpdater, useRecoilState } from "recoil"
+import { useRecoilState } from "recoil"
 import { useSnackbar } from "notistack"
 import {
   getStudyDetailAPI,
   getStudySummariesAPI,
   createNewStudyAPI,
 } from "./apiClient"
-import { studySummariesState } from "./state"
+import { studyDetailsState, studySummariesState } from "./state"
 
 export const actionCreator = () => {
   const { enqueueSnackbar } = useSnackbar()
   const [studySummaries, setStudySummaries] = useRecoilState<StudySummary[]>(
     studySummariesState
+  )
+  const [studyDetails, setStudyDetails] = useRecoilState<StudyDetails>(
+    studyDetailsState
   )
 
   const updateStudySummaries = (successMsg?: string) => {
@@ -30,16 +33,12 @@ export const actionCreator = () => {
       })
   }
 
-  const updateStudyDetail = (
-    studyId: number,
-    oldVal: StudyDetails,
-    setter: SetterOrUpdater<StudyDetails>
-  ) => {
+  const updateStudyDetail = (studyId: number) => {
     getStudyDetailAPI(studyId)
       .then((study) => {
-        let newVal = Object.assign({}, oldVal)
+        let newVal = Object.assign({}, studyDetails)
         newVal[studyId] = study
-        setter(newVal)
+        setStudyDetails(newVal)
       })
       .catch((err) => {
         enqueueSnackbar(`Failed to fetch study (id=${studyId})`, {
