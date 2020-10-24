@@ -41,8 +41,14 @@ const useStyles = makeStyles((theme: Theme) =>
 interface DataGridColumn<T> {
   field: keyof T
   label: string
-  sortable: boolean
+  sortable?: boolean
+  filterable?: boolean
   toCellValue?: (dataIndex: number) => string | React.ReactNode
+}
+
+interface RowFilter<T> {
+  field: keyof T
+  value: any
 }
 
 function DataGrid<T>(props: {
@@ -55,23 +61,15 @@ function DataGrid<T>(props: {
   rowsPerPageOption?: Array<number | { value: number; label: string }>
 }) {
   const classes = useStyles()
-  const {
-    columns,
-    rows,
-    keyField,
-    dense,
-    collapseBody,
-  } = props
-  let {
-    initialRowsPerPage,
-    rowsPerPageOption,
-  } = props
+  const { columns, rows, keyField, dense, collapseBody } = props
+  let { initialRowsPerPage, rowsPerPageOption } = props
   const [order, setOrder] = React.useState<Order>("asc")
   const [orderBy, setOrderBy] = React.useState<keyof T>(keyField)
   const [page, setPage] = React.useState(0)
+  const [filters, setFilters] = React.useState<RowFilter<T>[]>([])
 
   rowsPerPageOption = rowsPerPageOption || defaultRowsPerPageOption
-  initialRowsPerPage = initialRowsPerPage  // use first element as default
+  initialRowsPerPage = initialRowsPerPage // use first element as default
     ? initialRowsPerPage
     : isNumber(rowsPerPageOption[0])
     ? rowsPerPageOption[0]
@@ -103,14 +101,25 @@ function DataGrid<T>(props: {
     setPage(0)
   }
 
-  const emptyRows =
-    rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage)
+  const handleClickFilterCell = (field: keyof T, value: any) => {
+    const newFilters = [...filters, { field: field, value: value }]
+    setFilters(newFilters)
+  }
 
-  const sortedRows = stableSort<T>(rows, getComparator(order, orderBy))
-  const paginateRows =
+  const filteredRows = rows.filter((row) =>
+    filters.length === 0
+      ? true
+      : filters.some((f) => {
+          return row[f.field] === f.value
+        })
+  )
+  const sortedRows = stableSort<T>(filteredRows, getComparator(order, orderBy))
+  const currentPageRows =
     rowsPerPage > 0
       ? sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
       : sortedRows
+  const emptyRows =
+    rowsPerPage - Math.min(rowsPerPage, sortedRows.length - page * rowsPerPage)
 
   return (
     <div className={classes.root}>
@@ -151,7 +160,7 @@ function DataGrid<T>(props: {
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginateRows.map((row, index) => (
+            {currentPageRows.map((row, index) => (
               <DataGridRow<T>
                 columns={columns}
                 rowIndex={page * rowsPerPage + index}
@@ -159,6 +168,7 @@ function DataGrid<T>(props: {
                 keyField={keyField}
                 collapseBody={collapseBody}
                 key={`data-grid-row-${row[keyField]}`}
+                handleClickFilterCell={handleClickFilterCell}
               />
             ))}
             {emptyRows > 0 && (
@@ -172,7 +182,7 @@ function DataGrid<T>(props: {
       <TablePagination
         rowsPerPageOptions={rowsPerPageOption}
         component="div"
-        count={rows.length}
+        count={filteredRows.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onChangePage={handleChangePage}
@@ -188,8 +198,16 @@ function DataGridRow<T>(props: {
   row: T
   keyField: keyof T
   collapseBody?: (dataIndex: number) => React.ReactNode
+  handleClickFilterCell: (field: keyof T, value: any) => void
 }) {
-  const { columns, rowIndex, row, keyField, collapseBody } = props
+  const {
+    columns,
+    rowIndex,
+    row,
+    keyField,
+    collapseBody,
+    handleClickFilterCell,
+  } = props
   const [open, setOpen] = React.useState(false)
 
   return (
@@ -206,13 +224,26 @@ function DataGridRow<T>(props: {
             </IconButton>
           </TableCell>
         ) : null}
-        {columns.map((column) => (
-          <TableCell key={`${row[keyField]}:${column.field}`}>
-            {column.toCellValue
-              ? column.toCellValue(rowIndex)
-              : row[column.field]}
-          </TableCell>
-        ))}
+        {columns.map((column) => {
+          const cellItem = column.toCellValue
+            ? column.toCellValue(rowIndex)
+            : row[column.field]
+
+          return column.filterable ? (
+            <TableCell
+              key={`${row[keyField]}:${column.field}`}
+              onClick={(e) => {
+                handleClickFilterCell(column.field, row[column.field])
+              }}
+            >
+              {cellItem}
+            </TableCell>
+          ) : (
+            <TableCell key={`${row[keyField]}:${column.field}`}>
+              {cellItem}
+            </TableCell>
+          )
+        })}
       </TableRow>
       {collapseBody ? (
         <TableRow>
