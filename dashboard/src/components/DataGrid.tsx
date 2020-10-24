@@ -22,9 +22,6 @@ const useStyles = makeStyles((theme: Theme) =>
     root: {
       width: "100%",
     },
-    table: {
-      minWidth: 750,
-    },
     visuallyHidden: {
       border: 0,
       clip: "rect(0 0 0 0)",
@@ -39,19 +36,6 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 )
 
-const defaultInitialRowsPerPage = 10
-const defaultRowsPerPageOption = [10, 50, 100, { label: "All", value: -1 }]
-
-function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
-  if (b[orderBy] < a[orderBy]) {
-    return -1
-  }
-  if (b[orderBy] > a[orderBy]) {
-    return 1
-  }
-  return 0
-}
-
 interface DataGridColumn<T> {
   field: keyof T
   label: string
@@ -59,31 +43,34 @@ interface DataGridColumn<T> {
   toCellValue?: (dataIndex: number) => string | React.ReactNode
 }
 
-function DataGrid<T>(props: {
+function DataGrid<T>({
+  columns,
+  rows,
+  keyField,
+  collapseBody,
+  rowsPerPageOption = [10, 50, 100, { label: "All", value: -1 }],
+  initialRowsPerPage,
+  dense = false,
+}: {
   columns: DataGridColumn<T>[]
   rows: T[]
   keyField: keyof T
-  dense?: boolean
-  collapseBody?: (dataIndex: number) => React.ReactNode
+  collapseBody?: (rowIndex: number) => React.ReactNode
   initialRowsPerPage?: number
-  rowsPerPageOption?: Array<number | { value: number; label: string }>
+  rowsPerPageOption: Array<number | { value: number; label: string }>
+  dense: boolean
 }) {
   const classes = useStyles()
-  const {
-    columns,
-    rows,
-    keyField,
-    dense,
-    collapseBody,
-    initialRowsPerPage,
-    rowsPerPageOption,
-  } = props
   const [order, setOrder] = React.useState<Order>("asc")
   const [orderBy, setOrderBy] = React.useState<keyof T>(keyField)
   const [page, setPage] = React.useState(0)
-  const [rowsPerPage, setRowsPerPage] = React.useState(
-    initialRowsPerPage || defaultInitialRowsPerPage
-  )
+
+  initialRowsPerPage = initialRowsPerPage
+    ? initialRowsPerPage
+    : isNumber(rowsPerPageOption[0])
+    ? rowsPerPageOption[0]
+    : rowsPerPageOption[0].value
+  const [rowsPerPage, setRowsPerPage] = React.useState(initialRowsPerPage)
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
@@ -123,10 +110,9 @@ function DataGrid<T>(props: {
     <div className={classes.root}>
       <TableContainer>
         <Table
-          className={classes.table}
           aria-labelledby="tableTitle"
           size={dense ? "small" : "medium"}
-          aria-label="enhanced table"
+          aria-label="data grid"
         >
           <TableHead>
             <TableRow>
@@ -178,7 +164,7 @@ function DataGrid<T>(props: {
         </Table>
       </TableContainer>
       <TablePagination
-        rowsPerPageOptions={rowsPerPageOption || defaultRowsPerPageOption}
+        rowsPerPageOptions={rowsPerPageOption}
         component="div"
         count={rows.length}
         rowsPerPage={rowsPerPage}
@@ -244,6 +230,16 @@ function getComparator<T>(
     : (a, b) => -descendingComparator<T>(a, b, orderBy)
 }
 
+function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
+  if (b[orderBy] < a[orderBy]) {
+    return -1
+  }
+  if (b[orderBy] > a[orderBy]) {
+    return 1
+  }
+  return 0
+}
+
 function stableSort<T>(array: T[], comparator: (a: T, b: T) => number) {
   const stabilizedThis = array.map((el, index) => [el, index] as [T, number])
   stabilizedThis.sort((a, b) => {
@@ -252,6 +248,12 @@ function stableSort<T>(array: T[], comparator: (a: T, b: T) => number) {
     return a[1] - b[1]
   })
   return stabilizedThis.map((el) => el[0])
+}
+
+const isNumber = (
+  rowsPerPage: number | { value: number; label: string }
+): rowsPerPage is number => {
+  return typeof rowsPerPage === "number"
 }
 
 export { DataGrid, DataGridColumn }
