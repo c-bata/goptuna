@@ -14,7 +14,6 @@ import {
   IconButton,
 } from "@material-ui/core"
 import { Home } from "@material-ui/icons"
-import { useSnackbar } from "notistack"
 
 import { DataGridColumn, DataGrid } from "./dataGrid"
 import { GraphParallelCoordinate } from "./graphParallelCoordinate"
@@ -44,8 +43,7 @@ interface ParamTypes {
 
 export const StudyDetail: FC<{}> = () => {
   const classes = useStyles()
-  const { enqueueSnackbar } = useSnackbar()
-  const action = actionCreator(enqueueSnackbar)
+  const action = actionCreator()
   const { studyId } = useParams<ParamTypes>()
   const studyIdNumber = parseInt(studyId, 10)
   const studyDetail = useStudyDetail(action, studyIdNumber)

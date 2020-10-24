@@ -1,22 +1,26 @@
-import { SetterOrUpdater } from "recoil"
+import { SetterOrUpdater, useRecoilState } from "recoil"
+import { useSnackbar } from "notistack"
 import {
   getStudyDetailAPI,
   getStudySummariesAPI,
   createNewStudyAPI,
 } from "./apiClient"
-import { ReactNode } from "react"
-import { OptionsObject } from "notistack"
+import { studySummariesState } from "./state"
 
-export const actionCreator = (
-  enqueueSnackbar: (
-    message: ReactNode,
-    options?: OptionsObject | undefined
-  ) => string | number
-) => {
-  const updateStudySummaries = (setter: SetterOrUpdater<StudySummary[]>) => {
+export const actionCreator = () => {
+  const { enqueueSnackbar } = useSnackbar()
+  const [studySummaries, setStudySummaries] = useRecoilState<StudySummary[]>(
+    studySummariesState
+  )
+
+  const updateStudySummaries = (successMsg?: string) => {
     getStudySummariesAPI()
       .then((studySummaries: StudySummary[]) => {
-        setter(studySummaries)
+        setStudySummaries(studySummaries)
+
+        if (successMsg) {
+          enqueueSnackbar(successMsg, { variant: "success" })
+        }
       })
       .catch((err) => {
         enqueueSnackbar(`Failed to fetch study list.`, {
@@ -45,25 +49,17 @@ export const actionCreator = (
       })
   }
 
-  const createNewStudy = (
-    study_name: string,
-    direction: StudyDirection,
-    oldVal: StudySummary[],
-    setter: SetterOrUpdater<StudySummary[]>
-  ) => {
-    createNewStudyAPI(study_name, direction)
+  const createNewStudy = (studyName: string, direction: StudyDirection) => {
+    createNewStudyAPI(studyName, direction)
       .then((study_summary) => {
-        const newVal = [...oldVal, study_summary]
-        setter(newVal)
-        enqueueSnackbar(
-          `Success to create a study (study_name=${study_name})`,
-          {
-            variant: "success",
-          }
-        )
+        const newVal = [...studySummaries, study_summary]
+        setStudySummaries(newVal)
+        enqueueSnackbar(`Success to create a study (study_name=${studyName})`, {
+          variant: "success",
+        })
       })
       .catch((err) => {
-        enqueueSnackbar(`Failed to create a study (study_name=${study_name})`, {
+        enqueueSnackbar(`Failed to create a study (study_name=${studyName})`, {
           variant: "error",
         })
         console.log(err)

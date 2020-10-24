@@ -1,4 +1,5 @@
-import React, { FC } from "react"
+import React, { FC, useEffect } from "react"
+import { useRecoilValue } from "recoil"
 import { Link } from "react-router-dom"
 import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
 import {
@@ -20,14 +21,11 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@material-ui/core"
+import { AddBox, Refresh } from "@material-ui/icons"
 
 import { actionCreator } from "../action"
-import { useSnackbar } from "notistack"
-import { useStudySummaries } from "../hook"
 import { DataGrid, DataGridColumn } from "./dataGrid"
-import { AddBox } from "@material-ui/icons"
 import { studySummariesState } from "../state"
-import { useSetRecoilState } from "recoil"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -46,14 +44,16 @@ export const StudyList: FC<{}> = () => {
   const [newStudyName, setNewStudyName] = React.useState("")
   const [maximize, setMaximize] = React.useState<boolean>(false)
 
-  const { enqueueSnackbar } = useSnackbar()
-  const action = actionCreator(enqueueSnackbar)
-  const studies = useStudySummaries(action)
-  const setStudies = useSetRecoilState<StudySummary[]>(studySummariesState)
+  const action = actionCreator()
+  const studies = useRecoilValue<StudySummary[]>(studySummariesState)
 
   const newStudyNameAlreadyUsed = studies.some(
     (v) => v.study_name === newStudyName
   )
+
+  useEffect(() => {
+    action.updateStudySummaries()
+  }, [])
 
   const columns: DataGridColumn<StudySummary>[] = [
     {
@@ -97,7 +97,7 @@ export const StudyList: FC<{}> = () => {
 
   const handleCreateNewStudy = () => {
     const direction = maximize ? "maximize" : "minimize"
-    action.createNewStudy(newStudyName, direction, studies, setStudies)
+    action.createNewStudy(newStudyName, direction)
     setOpenDialog(false)
     setNewStudyName("")
   }
@@ -146,6 +146,16 @@ export const StudyList: FC<{}> = () => {
           <Toolbar>
             <Typography variant="h6">Goptuna dashboard</Typography>
             <div className={classes.grow} />
+            <IconButton
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={(e) => {
+                action.updateStudySummaries("Success to reload")
+              }}
+              color="inherit"
+            >
+              <Refresh />
+            </IconButton>
             <IconButton
               aria-controls="menu-appbar"
               aria-haspopup="true"
