@@ -14,6 +14,7 @@ import {
 } from "@material-ui/core"
 import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown"
 import KeyboardArrowUpIcon from "@material-ui/icons/KeyboardArrowUp"
+import { Clear } from "@material-ui/icons"
 
 type Order = "asc" | "desc"
 
@@ -35,6 +36,11 @@ const useStyles = makeStyles((theme: Theme) =>
       top: 20,
       width: 1,
     },
+    filterable: {
+      color: theme.palette.primary.main,
+      textDecoration: "underline",
+      cursor: "pointer",
+    },
   })
 )
 
@@ -43,7 +49,7 @@ interface DataGridColumn<T> {
   label: string
   sortable?: boolean
   filterable?: boolean
-  toCellValue?: (dataIndex: number) => string | React.ReactNode
+  toCellValue?: (rowIndex: number) => string | React.ReactNode
 }
 
 interface RowFilter<T> {
@@ -56,7 +62,7 @@ function DataGrid<T>(props: {
   rows: T[]
   keyField: keyof T
   dense?: boolean
-  collapseBody?: (dataIndex: number) => React.ReactNode
+  collapseBody?: (rowIndex: number) => React.ReactNode
   initialRowsPerPage?: number
   rowsPerPageOption?: Array<number | { value: number; label: string }>
 }) {
@@ -75,10 +81,6 @@ function DataGrid<T>(props: {
     ? rowsPerPageOption[0]
     : rowsPerPageOption[0].value
   const [rowsPerPage, setRowsPerPage] = React.useState(initialRowsPerPage)
-
-  const getDataIndex = (row: T): number => {
-    return rows.findIndex(row2 => row[keyField] === row2[keyField])
-  }
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
@@ -105,9 +107,24 @@ function DataGrid<T>(props: {
     setPage(0)
   }
 
+  const fieldAlreadyFiltered = (field: keyof T): boolean =>
+    filters.some((f) => f.field === field)
+
   const handleClickFilterCell = (field: keyof T, value: any) => {
+    if (fieldAlreadyFiltered(field)) {
+      return
+    }
+
     const newFilters = [...filters, { field: field, value: value }]
     setFilters(newFilters)
+  }
+
+  const clearFilter = (field: keyof T): void => {
+    setFilters(filters.filter((f) => f.field !== field))
+  }
+
+  const getRowIndex = (row: T): number => {
+    return rows.findIndex((row2) => row[keyField] === row2[keyField])
   }
 
   const filteredRows = rows.filter((row) =>
@@ -156,6 +173,21 @@ function DataGrid<T>(props: {
                         </span>
                       ) : null}
                     </TableSortLabel>
+                  ) : column.filterable ? (
+                    <span>
+                      {column.label}
+                      {fieldAlreadyFiltered(column.field) ? (
+                        <IconButton
+                          size="small"
+                          color="inherit"
+                          onClick={(e) => {
+                            clearFilter(column.field)
+                          }}
+                        >
+                          <Clear />
+                        </IconButton>
+                      ) : null}
+                    </span>
                   ) : (
                     column.label
                   )}
@@ -167,7 +199,7 @@ function DataGrid<T>(props: {
             {currentPageRows.map((row, index) => (
               <DataGridRow<T>
                 columns={columns}
-                rowIndex={ getDataIndex(row) }
+                rowIndex={getRowIndex(row)}
                 row={row}
                 keyField={keyField}
                 collapseBody={collapseBody}
@@ -201,9 +233,10 @@ function DataGridRow<T>(props: {
   rowIndex: number
   row: T
   keyField: keyof T
-  collapseBody?: (dataIndex: number) => React.ReactNode
+  collapseBody?: (rowIndex: number) => React.ReactNode
   handleClickFilterCell: (field: keyof T, value: any) => void
 }) {
+  const classes = useStyles()
   const {
     columns,
     rowIndex,
@@ -240,7 +273,7 @@ function DataGridRow<T>(props: {
                 handleClickFilterCell(column.field, row[column.field])
               }}
             >
-              {cellItem}
+              <div className={classes.filterable}>{cellItem}</div>
             </TableCell>
           ) : (
             <TableCell key={`${row[keyField]}:${column.field}`}>
