@@ -211,7 +211,11 @@ export const StudyList: FC<{}> = () => {
           <Button onClick={handleCloseNewStudyDialog} color="primary">
             Cancel
           </Button>
-          <Button onClick={handleCreateNewStudy} color="primary">
+          <Button
+            onClick={handleCreateNewStudy}
+            color="primary"
+            disabled={newStudyName === "" || newStudyNameAlreadyUsed}
+          >
             Create
           </Button>
         </DialogActions>
