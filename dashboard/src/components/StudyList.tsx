@@ -21,7 +21,7 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@material-ui/core"
-import { AddBox, Refresh } from "@material-ui/icons"
+import { AddBox, Delete, Refresh } from "@material-ui/icons"
 
 import { actionCreator } from "../action"
 import { DataGrid, DataGridColumn } from "./DataGrid"
@@ -82,6 +82,24 @@ export const StudyList: FC<{}> = () => {
       label: "Best value",
       sortable: false,
       toCellValue: (i) => studies[i].best_trial?.value || null,
+    },
+    {
+      field: "study_name",
+      label: "",
+      sortable: false,
+      padding: "none",
+      toCellValue: (i) => (
+        <IconButton
+          aria-label="delete study"
+          size="small"
+          color="inherit"
+          onClick={(e) => {
+            console.log(e)
+          }}
+        >
+          <Delete />
+        </IconButton>
+      ),
     },
   ]
 
