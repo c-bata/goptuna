@@ -94,7 +94,7 @@ export const StudyList: FC<{}> = () => {
           size="small"
           color="inherit"
           onClick={(e) => {
-            console.log(e)
+            action.deleteStudy(studies[i].study_id)
           }}
         >
           <Delete />

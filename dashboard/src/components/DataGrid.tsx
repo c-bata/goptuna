@@ -255,14 +255,14 @@ function DataGridRow<T>(props: {
             </IconButton>
           </TableCell>
         ) : null}
-        {columns.map((column) => {
+        {columns.map((column, columnIndex) => {
           const cellItem = column.toCellValue
             ? column.toCellValue(rowIndex)
             : row[column.field]
 
           return column.filterable ? (
             <TableCell
-              key={`${row[keyField]}:${column.field}`}
+              key={`${row[keyField]}:${column.field}:${columnIndex}`}
               padding={column.padding || "default"}
               onClick={(e) => {
                 handleClickFilterCell(column.field, row[column.field])
@@ -272,7 +272,7 @@ function DataGridRow<T>(props: {
             </TableCell>
           ) : (
             <TableCell
-              key={`${row[keyField]}:${column.field}`}
+              key={`${row[keyField]}:${column.field}:${columnIndex}`}
               padding={column.padding || "default"}
             >
               {cellItem}
