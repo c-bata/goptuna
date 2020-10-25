@@ -3,7 +3,8 @@ import { useSnackbar } from "notistack"
 import {
   getStudyDetailAPI,
   getStudySummariesAPI,
-  createNewStudyAPI, deleteStudyAPI,
+  createNewStudyAPI,
+  deleteStudyAPI,
 } from "./apiClient"
 import { studyDetailsState, studySummariesState } from "./state"
 
@@ -68,7 +69,7 @@ export const actionCreator = () => {
   const deleteStudy = (studyId: number) => {
     deleteStudyAPI(studyId)
       .then((study) => {
-        setStudySummaries(studySummaries.filter(s => s.study_id !== studyId))
+        setStudySummaries(studySummaries.filter((s) => s.study_id !== studyId))
         enqueueSnackbar(`Success to delete a study (study_name=${studyId})`, {
           variant: "success",
         })

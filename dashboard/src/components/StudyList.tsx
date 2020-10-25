@@ -40,7 +40,11 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export const StudyList: FC<{}> = () => {
   const classes = useStyles()
-  const [openDialog, setOpenDialog] = React.useState(false)
+  const [openNewStudyDialog, setOpenNewStudyDialog] = React.useState(false)
+  const [openDeleteStudyDialog, setOpenDeleteStudyDialog] = React.useState(
+    false
+  )
+  const [deleteStudyID, setDeleteStudyID] = React.useState(-1)
   const [newStudyName, setNewStudyName] = React.useState("")
   const [maximize, setMaximize] = React.useState<boolean>(false)
 
@@ -94,7 +98,8 @@ export const StudyList: FC<{}> = () => {
           size="small"
           color="inherit"
           onClick={(e) => {
-            action.deleteStudy(studies[i].study_id)
+            setDeleteStudyID(studies[i].study_id)
+            setOpenDeleteStudyDialog(true)
           }}
         >
           <Delete />
@@ -110,14 +115,25 @@ export const StudyList: FC<{}> = () => {
 
   const handleCloseNewStudyDialog = () => {
     setNewStudyName("")
-    setOpenDialog(false)
+    setOpenNewStudyDialog(false)
   }
 
   const handleCreateNewStudy = () => {
     const direction = maximize ? "maximize" : "minimize"
     action.createNewStudy(newStudyName, direction)
-    setOpenDialog(false)
+    setOpenNewStudyDialog(false)
     setNewStudyName("")
+  }
+
+  const handleCloseDeleteStudyDialog = () => {
+    setOpenDeleteStudyDialog(false)
+    setDeleteStudyID(-1)
+  }
+
+  const handleDeleteStudy = () => {
+    action.deleteStudy(deleteStudyID)
+    setOpenDeleteStudyDialog(false)
+    setDeleteStudyID(-1)
   }
 
   const collapseBody = (index: number) => {
@@ -178,7 +194,7 @@ export const StudyList: FC<{}> = () => {
               aria-controls="menu-appbar"
               aria-haspopup="true"
               onClick={(e) => {
-                setOpenDialog(true)
+                setOpenNewStudyDialog(true)
               }}
               color="inherit"
             >
@@ -200,11 +216,13 @@ export const StudyList: FC<{}> = () => {
         </Card>
       </Container>
       <Dialog
-        open={openDialog}
-        onClose={(e) => handleCloseNewStudyDialog}
-        aria-labelledby="form-dialog-title"
+        open={openNewStudyDialog}
+        onClose={(e) => {
+          handleCloseNewStudyDialog()
+        }}
+        aria-labelledby="create-study-form-dialog-title"
       >
-        <DialogTitle id="form-dialog-title">New study</DialogTitle>
+        <DialogTitle id="create-study-form-dialog-title">New study</DialogTitle>
         <DialogContent>
           <DialogContentText>
             To create a new study, please enter the study name here.
@@ -245,6 +263,28 @@ export const StudyList: FC<{}> = () => {
             disabled={newStudyName === "" || newStudyNameAlreadyUsed}
           >
             Create
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={openDeleteStudyDialog}
+        onClose={(e) => {
+          handleCloseDeleteStudyDialog()
+        }}
+        aria-labelledby="delete-study-dialog-title"
+      >
+        <DialogTitle id="delete-study-dialog-title">Delete study</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure to delete a study (study_id={deleteStudyID})?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteStudyDialog} color="primary">
+            No
+          </Button>
+          <Button onClick={handleDeleteStudy} color="primary">
+            Yes
           </Button>
         </DialogActions>
       </Dialog>
