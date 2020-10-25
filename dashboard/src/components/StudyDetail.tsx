@@ -129,6 +129,7 @@ const TrialTable: FC<{ trials: Trial[] }> = ({ trials = [] }) => {
     {
       field: "state",
       label: "State",
+      sortable: true,
       filterable: true,
       toCellValue: (i) => trials[i].state.toString(),
     },

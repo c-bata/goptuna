@@ -74,6 +74,11 @@ function DataGrid<T>(props: {
   const [page, setPage] = React.useState(0)
   const [filters, setFilters] = React.useState<RowFilter<T>[]>([])
 
+  const getRowIndex = (row: T): number => {
+    return rows.findIndex((row2) => row[keyField] === row2[keyField])
+  }
+
+  // Pagination
   rowsPerPageOption = rowsPerPageOption || defaultRowsPerPageOption
   initialRowsPerPage = initialRowsPerPage // use first element as default
     ? initialRowsPerPage
@@ -81,20 +86,6 @@ function DataGrid<T>(props: {
     ? rowsPerPageOption[0]
     : rowsPerPageOption[0].value
   const [rowsPerPage, setRowsPerPage] = React.useState(initialRowsPerPage)
-
-  const handleRequestSort = (
-    event: React.MouseEvent<unknown>,
-    property: keyof T
-  ) => {
-    const isAsc = orderBy === property && order === "asc"
-    setOrder(isAsc ? "desc" : "asc")
-    setOrderBy(property)
-  }
-  const createSortHandler = (property: keyof T) => (
-    event: React.MouseEvent<unknown>
-  ) => {
-    handleRequestSort(event, property)
-  }
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage)
@@ -107,6 +98,7 @@ function DataGrid<T>(props: {
     setPage(0)
   }
 
+  // Filtering
   const fieldAlreadyFiltered = (field: keyof T): boolean =>
     filters.some((f) => f.field === field)
 
@@ -114,17 +106,12 @@ function DataGrid<T>(props: {
     if (fieldAlreadyFiltered(field)) {
       return
     }
-
     const newFilters = [...filters, { field: field, value: value }]
     setFilters(newFilters)
   }
 
   const clearFilter = (field: keyof T): void => {
     setFilters(filters.filter((f) => f.field !== field))
-  }
-
-  const getRowIndex = (row: T): number => {
-    return rows.findIndex((row2) => row[keyField] === row2[keyField])
   }
 
   const filteredRows = rows.filter((row) =>
@@ -134,6 +121,15 @@ function DataGrid<T>(props: {
           return row[f.field] === f.value
         })
   )
+
+  // Sorting
+  const createSortHandler = (property: keyof T) => (
+    event: React.MouseEvent<unknown>
+  ) => {
+    const isAsc = orderBy === property && order === "asc"
+    setOrder(isAsc ? "desc" : "asc")
+    setOrderBy(property)
+  }
   const sortedRows = stableSort<T>(filteredRows, getComparator(order, orderBy))
   const currentPageRows =
     rowsPerPage > 0
@@ -173,24 +169,20 @@ function DataGrid<T>(props: {
                         </span>
                       ) : null}
                     </TableSortLabel>
-                  ) : column.filterable ? (
-                    <span>
-                      {column.label}
-                      {fieldAlreadyFiltered(column.field) ? (
-                        <IconButton
-                          size="small"
-                          color="inherit"
-                          onClick={(e) => {
-                            clearFilter(column.field)
-                          }}
-                        >
-                          <Clear />
-                        </IconButton>
-                      ) : null}
-                    </span>
                   ) : (
                     column.label
                   )}
+                  {fieldAlreadyFiltered(column.field) ? (
+                    <IconButton
+                      size={dense ? "small" : "medium"}
+                      color="inherit"
+                      onClick={(e) => {
+                        clearFilter(column.field)
+                      }}
+                    >
+                      <Clear />
+                    </IconButton>
+                  ) : null}
                 </TableCell>
               ))}
             </TableRow>
@@ -203,7 +195,7 @@ function DataGrid<T>(props: {
                 row={row}
                 keyField={keyField}
                 collapseBody={collapseBody}
-                key={`data-grid-row-${row[keyField]}`}
+                key={`${row[keyField]}`}
                 handleClickFilterCell={handleClickFilterCell}
               />
             ))}
