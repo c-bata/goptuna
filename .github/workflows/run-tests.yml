@@ -1,4 +1,4 @@
-name: Run tests and lint checks
+name: tests
 on:
   pull_request:
     paths:
