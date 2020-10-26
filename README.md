@@ -159,7 +159,7 @@ func main() {
 }
 ```
 
-[Shell script to reproduce this](./_examples/simple_rdb/check_mysql.sh) (SQLite3 version is [here](./_examples/simple_rdb/check_sqlite3.sh)).
+Full source code is available [here](./_examples/simple_rdb/main.go).
 
 </details>
 
@@ -167,16 +167,23 @@ func main() {
 
 <summary>Built-in Realtime Web Dashboard</summary>
 
-You can check optimizatioin results by built-in web dashboard.
+You can check optimization results by built-in web dashboard.
+
+SQLite3:
+
+```console
+$ goptuna dashboard --storage sqlite:///example.db
+```
+
+MySQL:
 
 ```console
 $ goptuna dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/yourdb
-...
 ```
 
 ![goptuna dashboard](https://user-images.githubusercontent.com/5564044/96722047-e7aa4180-13e7-11eb-9f56-99a3ca7c6d35.gif)
 
-Due to RDB schema compatibility with Optuna, you can use this dashboard for Optuna's results.
+[Shell script to reproduce this](./_examples/simple_rdb/check_mysql.sh) (SQLite3 version is [here](./_examples/simple_rdb/check_sqlite3.sh)).
 
 </details>
 
