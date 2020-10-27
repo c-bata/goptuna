@@ -89,6 +89,8 @@ func main() {
 }
 ```
 
+Link: [Go Playground](https://play.golang.org/p/y95gek9UTPM)
+
 Furthermore, I recommend you to use RDB storage backend for following purposes.
 
 * Continue from where we stopped in the previous optimizations.
