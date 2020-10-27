@@ -21,4 +21,4 @@ jobs:
       - run: |
           cd dashboard
           npm install
-          npm run build:prd
+          npm run lint
