@@ -1,8 +1,8 @@
-name: tests
+name: lint-typescript
 on:
   pull_request:
     paths:
-      - '.github/workflows/run-tests.yml'
+      - '.github/workflows/run-typescript-lints.yml'
       - '**.ts'
       - '**.tsx'
 jobs:
