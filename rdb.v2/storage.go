@@ -505,7 +505,7 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 			// SQLite3 cannot interpret `FOR UPDATE` clause.
 			result = tx.First(&trial, "trial_id = ?", trialID)
 		} else {
-			result = tx.Set("gorm:query_option", "FOR UPDATE").
+			result = tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 				First(&trial, "trial_id = ?", trialID)
 		}
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
