@@ -2,7 +2,7 @@
 
 export GO111MODULE=on
 DIR=$(cd $(dirname $0); pwd)
-REPOSITORY_ROOT=$(cd $(dirname $(dirname $(dirname $0))); pwd)
+ROOTDIR=$(dirname $(dirname $DIR))
 
 ##################################################################
 echo ""
@@ -42,7 +42,7 @@ go run ${DIR}/main.go mysql "goptuna:password@tcp(localhost:3306)/goptuna?parseT
 echo ""
 echo "3. View the optimization results on Goptuna bulit-in dashboard."
 echo ""
-go run ${DIR}/cmd/main.go dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/goptuna
+go run ${ROOTDIR}/cmd/main.go dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/goptuna
 
 ##################################################################
 echo ""
