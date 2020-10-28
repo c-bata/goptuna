@@ -103,7 +103,7 @@ func (m trialSystemAttributeModel) TableName() string {
 type trialParamModel struct {
 	ID                   int     `gorm:"column:param_id;primaryKey"`
 	TrialParamReferTrial int     `gorm:"column:trial_id;uniqueIndex:idx_trial_param_name"`
-	Name                 string  `gorm:"column:param_name;uniqueIndex:idx_trial_param_name"`
+	Name                 string  `gorm:"column:param_name;uniqueIndex:idx_trial_param_name;type:varchar(512)"`
 	Value                float64 `gorm:"column:param_value"`
 	DistributionJSON     string  `gorm:"column:distribution_json;type:varchar(2048)"`
 }

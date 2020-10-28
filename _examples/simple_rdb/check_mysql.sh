@@ -42,7 +42,7 @@ go run ${DIR}/main.go mysql "goptuna:password@tcp(localhost:3306)/goptuna?parseT
 echo ""
 echo "3. View the optimization results on Goptuna bulit-in dashboard."
 echo ""
-go run ${DIR}/cmd/main.go dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/goptuna
+go run ${DIR}/cmd/main.go dashboard --storage mysql://goptuna:password@127.0.0.1:3306/goptuna
 
 ##################################################################
 echo ""
