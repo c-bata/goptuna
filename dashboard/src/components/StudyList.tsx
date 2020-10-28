@@ -26,7 +26,7 @@ import { AddBox, Delete, Refresh } from "@material-ui/icons"
 import { actionCreator } from "../action"
 import { DataGrid, DataGridColumn } from "./DataGrid"
 import { studySummariesState } from "../state"
-import {formatDate} from "../dateUtil";
+import { formatDate } from "../dateUtil"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
