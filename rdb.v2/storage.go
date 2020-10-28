@@ -312,7 +312,7 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 		tempState := trialStateWaiting
 
 		// Avoid to insert zero-time for `NON_ZERO_DATE` mode on MySQL.
-		// See https://github.com/jinzhu/gorm/issues/595
+		// See https://github.com/go-gorm/gorm/issues/595
 		var datetimeStart, datetimeComplete *time.Time
 		if !baseTrial.DatetimeStart.IsZero() {
 			datetimeStart = &baseTrial.DatetimeStart
