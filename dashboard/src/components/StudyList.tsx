@@ -26,6 +26,7 @@ import { AddBox, Delete, Refresh } from "@material-ui/icons"
 import { actionCreator } from "../action"
 import { DataGrid, DataGridColumn } from "./DataGrid"
 import { studySummariesState } from "../state"
+import { formatDate } from "../dateUtil"
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -86,6 +87,18 @@ export const StudyList: FC<{}> = () => {
       label: "Best value",
       sortable: false,
       toCellValue: (i) => studies[i].best_trial?.value || null,
+    },
+    {
+      field: "datetime_start",
+      label: "Datetime start",
+      sortable: false,
+      toCellValue: (i) => {
+        const datetime_start = studies[i].datetime_start
+        if (datetime_start) {
+          return formatDate(datetime_start)
+        }
+        return null
+      },
     },
     {
       field: "study_name",

@@ -31,7 +31,7 @@ type FrozenTrial struct {
 	Value              float64             `json:"value"`
 	IntermediateValues []IntermediateValue `json:"intermediate_values"`
 	DatetimeStart      string              `json:"datetime_start"`
-	DatetimeComplete   string              `json:"datetime_complete"`
+	DatetimeComplete   string              `json:"datetime_complete,omitempty"`
 	Params             []TrialParam        `json:"params"`
 	UserAttrs          []Attribute         `json:"user_attrs"`
 	SystemAttrs        []Attribute         `json:"system_attrs"`
@@ -77,6 +77,11 @@ func toFrozenTrial(from goptuna.FrozenTrial) FrozenTrial {
 		return params[i].Name < params[j].Name
 	})
 
+	var datetimeComplete string
+	if !from.DatetimeComplete.IsZero() {
+		datetimeComplete = from.DatetimeComplete.UTC().Format(time.RFC3339)
+	}
+
 	return FrozenTrial{
 		ID:                 from.ID,
 		StudyID:            from.StudyID,
@@ -85,7 +90,7 @@ func toFrozenTrial(from goptuna.FrozenTrial) FrozenTrial {
 		Value:              from.Value,
 		IntermediateValues: toIntermediateValues(from.IntermediateValues),
 		DatetimeStart:      from.DatetimeStart.UTC().Format(time.RFC3339),
-		DatetimeComplete:   from.DatetimeComplete.UTC().Format(time.RFC3339),
+		DatetimeComplete:   datetimeComplete,
 		Params:             params,
 		UserAttrs:          toAttrs(from.UserAttrs),
 		SystemAttrs:        toAttrs(from.SystemAttrs),
@@ -108,10 +113,15 @@ type StudySummary struct {
 	BestTrial     FrozenTrial `json:"best_trial"`
 	UserAttrs     []Attribute `json:"user_attrs"`
 	SystemAttrs   []Attribute `json:"system_attrs"`
-	DatetimeStart string      `json:"datetime_start"`
+	DatetimeStart string      `json:"datetime_start,omitempty"`
 }
 
 func toStudySummary(from goptuna.StudySummary) StudySummary {
+	var start string
+	if !from.DatetimeStart.IsZero() {
+		start = from.DatetimeStart.UTC().Format(time.RFC3339)
+	}
+
 	return StudySummary{
 		ID:            from.ID,
 		Name:          from.Name,
@@ -119,7 +129,7 @@ func toStudySummary(from goptuna.StudySummary) StudySummary {
 		BestTrial:     toFrozenTrial(from.BestTrial),
 		UserAttrs:     toAttrs(from.UserAttrs),
 		SystemAttrs:   toAttrs(from.SystemAttrs),
-		DatetimeStart: from.DatetimeStart.UTC().Format(time.RFC3339),
+		DatetimeStart: start,
 	}
 }
 
