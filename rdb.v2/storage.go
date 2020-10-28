@@ -96,7 +96,7 @@ func (s *Storage) SetStudyUserAttr(studyID int, key string, value string) error 
 	}).Assign(&studyUserAttributeModel{
 		UserAttributeReferStudy: studyID,
 		Key:                     key,
-		ValueJSON:               value,
+		Value:                   value,
 	}).FirstOrCreate(&result).Error
 }
 
@@ -109,7 +109,7 @@ func (s *Storage) SetStudySystemAttr(studyID int, key string, value string) erro
 	}).Assign(&studySystemAttributeModel{
 		SystemAttributeReferStudy: studyID,
 		Key:                       key,
-		ValueJSON:                 value,
+		Value:                     value,
 	}).FirstOrCreate(&result).Error
 }
 
@@ -144,7 +144,7 @@ func (s *Storage) GetStudyUserAttrs(studyID int) (map[string]string, error) {
 
 	res := make(map[string]string, len(attrs))
 	for i := range attrs {
-		res[attrs[i].Key] = attrs[i].ValueJSON
+		res[attrs[i].Key] = attrs[i].Value
 	}
 	return res, nil
 }
@@ -159,7 +159,7 @@ func (s *Storage) GetStudySystemAttrs(studyID int) (map[string]string, error) {
 
 	res := make(map[string]string, len(attrs))
 	for i := range attrs {
-		res[attrs[i].Key] = attrs[i].ValueJSON
+		res[attrs[i].Key] = attrs[i].Value
 	}
 	return res, nil
 }
@@ -317,7 +317,7 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 			err := tx.Create(&trialUserAttributeModel{
 				UserAttributeReferTrial: trial.ID,
 				Key:                     key,
-				ValueJSON:               baseTrial.UserAttrs[key],
+				Value:                   baseTrial.UserAttrs[key],
 			}).Error
 			if err != nil {
 				return err
@@ -329,7 +329,7 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 			err := tx.Create(&trialSystemAttributeModel{
 				SystemAttributeReferTrial: trial.ID,
 				Key:                       key,
-				ValueJSON:                 baseTrial.SystemAttrs[key],
+				Value:                     baseTrial.SystemAttrs[key],
 			}).Error
 			if err != nil {
 				return err
@@ -534,7 +534,7 @@ func (s *Storage) SetTrialUserAttr(trialID int, key string, value string) error 
 	}).Assign(&trialUserAttributeModel{
 		UserAttributeReferTrial: trialID,
 		Key:                     key,
-		ValueJSON:               value,
+		Value:                   value,
 	}).FirstOrCreate(&result).Error
 }
 
@@ -547,7 +547,7 @@ func (s *Storage) SetTrialSystemAttr(trialID int, key string, value string) erro
 	}).Assign(&trialSystemAttributeModel{
 		SystemAttributeReferTrial: trialID,
 		Key:                       key,
-		ValueJSON:                 value,
+		Value:                     value,
 	}).FirstOrCreate(&result).Error
 }
 
@@ -589,7 +589,7 @@ func (s *Storage) GetTrialUserAttrs(trialID int) (map[string]string, error) {
 
 	res := make(map[string]string, len(attrs))
 	for i := range attrs {
-		res[attrs[i].Key] = attrs[i].ValueJSON
+		res[attrs[i].Key] = attrs[i].Value
 	}
 	return res, nil
 }
@@ -604,7 +604,7 @@ func (s *Storage) GetTrialSystemAttrs(trialID int) (map[string]string, error) {
 
 	res := make(map[string]string, len(attrs))
 	for i := range attrs {
-		res[attrs[i].Key] = attrs[i].ValueJSON
+		res[attrs[i].Key] = attrs[i].Value
 	}
 	return res, nil
 }

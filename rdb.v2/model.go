@@ -42,7 +42,7 @@ type studyUserAttributeModel struct {
 	ID                      int    `gorm:"column:study_user_attribute_id;primaryKey"`
 	UserAttributeReferStudy int    `gorm:"column:study_id;uniqueIndex:idx_study_user_attr_key"`
 	Key                     string `gorm:"column:key;uniqueIndex:idx_study_user_attr_key;type:varchar(512)"`
-	ValueJSON               string `gorm:"column:value_json;type:varchar(2048)"`
+	Value                   string `gorm:"column:value;type:varchar(2048)"`
 }
 
 func (m studyUserAttributeModel) TableName() string {
@@ -53,7 +53,7 @@ type studySystemAttributeModel struct {
 	ID                        int    `gorm:"column:study_system_attribute_id;primaryKey"`
 	SystemAttributeReferStudy int    `gorm:"column:study_id;uniqueIndex:idx_study_system_attr_key"`
 	Key                       string `gorm:"column:key;uniqueIndex:idx_study_system_attr_key;type:varchar(512)"`
-	ValueJSON                 string `gorm:"column:value_json;type:varchar(2048)"`
+	Value                     string `gorm:"column:value;type:varchar(2048)"`
 }
 
 func (m studySystemAttributeModel) TableName() string {
@@ -84,7 +84,7 @@ type trialUserAttributeModel struct {
 	ID                      int    `gorm:"column:trial_user_attribute_id;primaryKey"`
 	UserAttributeReferTrial int    `gorm:"column:trial_id;uniqueIndex:idx_trial_user_attr_key"`
 	Key                     string `gorm:"column:key;uniqueIndex:idx_trial_user_attr_key;type:varchar(512)"`
-	ValueJSON               string `gorm:"column:value_json;type:varchar(2048)"`
+	Value                   string `gorm:"column:value;type:varchar(2048)"`
 }
 
 func (m trialUserAttributeModel) TableName() string {
@@ -95,7 +95,7 @@ type trialSystemAttributeModel struct {
 	ID                        int    `gorm:"column:trial_system_attribute_id;primaryKey"`
 	SystemAttributeReferTrial int    `gorm:"column:trial_id;uniqueIndex:idx_trial_system_attr_key"`
 	Key                       string `gorm:"column:key;uniqueIndex:idx_trial_system_attr_key;type:varchar(512)"`
-	ValueJSON                 string `gorm:"column:value_json;type:varchar(2048)"`
+	Value                     string `gorm:"column:value;type:varchar(2048)"`
 }
 
 func (m trialSystemAttributeModel) TableName() string {

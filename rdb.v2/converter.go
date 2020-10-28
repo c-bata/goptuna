@@ -11,12 +11,12 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 	var err error
 	userAttrs := make(map[string]string, len(trial.UserAttributes))
 	for i := range trial.UserAttributes {
-		userAttrs[trial.UserAttributes[i].Key] = trial.UserAttributes[i].ValueJSON
+		userAttrs[trial.UserAttributes[i].Key] = trial.UserAttributes[i].Value
 	}
 
 	systemAttrs := make(map[string]string, len(trial.SystemAttributes))
 	for i := range trial.SystemAttributes {
-		systemAttrs[trial.SystemAttributes[i].Key] = trial.SystemAttributes[i].ValueJSON
+		systemAttrs[trial.SystemAttributes[i].Key] = trial.SystemAttributes[i].Value
 	}
 
 	distributions := make(map[string]interface{}, len(trial.TrialParams))
@@ -78,12 +78,12 @@ func toFrozenTrial(trial trialModel) (goptuna.FrozenTrial, error) {
 func toStudySummary(study studyModel, bestTrial goptuna.FrozenTrial, start time.Time) (goptuna.StudySummary, error) {
 	userAttrs := make(map[string]string, len(study.UserAttributes))
 	for i := range study.UserAttributes {
-		userAttrs[study.UserAttributes[i].Key] = study.UserAttributes[i].ValueJSON
+		userAttrs[study.UserAttributes[i].Key] = study.UserAttributes[i].Value
 	}
 
 	systemAttrs := make(map[string]string, len(study.SystemAttributes))
 	for i := range study.SystemAttributes {
-		systemAttrs[study.SystemAttributes[i].Key] = study.SystemAttributes[i].ValueJSON
+		systemAttrs[study.SystemAttributes[i].Key] = study.SystemAttributes[i].Value
 	}
 	return goptuna.StudySummary{
 		ID:            study.ID,
