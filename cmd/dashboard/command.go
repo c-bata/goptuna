@@ -33,6 +33,16 @@ func GetCommand() *cobra.Command {
 				cmd.PrintErrln(err)
 				os.Exit(1)
 			}
+
+			// Enable cascade on delete
+			if db.Dialector.Name() == "sqlite" {
+				err = db.Exec("PRAGMA foreign_keys = ON").Error
+				if err != nil {
+					cmd.PrintErrln(err)
+					os.Exit(1)
+				}
+			}
+
 			storage := rdb.NewStorage(db)
 
 			server, err := dashboard.NewServer(storage)
