@@ -1,8 +1,10 @@
 package rdb_test
 
 import (
+	"fmt"
 	"os"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
@@ -12,8 +14,17 @@ import (
 	"gorm.io/gorm"
 )
 
+var (
+	setupCounter   int
+	setupCounterMu sync.Mutex
+)
+
 func SetupSQLite3Test() (*rdb.Storage, func(), error) {
-	sqlitePath := "goptuna-test.db"
+	setupCounterMu.Lock()
+	defer setupCounterMu.Unlock()
+	setupCounter += 1
+	sqlitePath := fmt.Sprintf("goptuna-test-%d.db", setupCounter)
+
 	db, err := gorm.Open(sqlite.Open(sqlitePath), &gorm.Config{})
 	if err != nil {
 		return nil, nil, err
