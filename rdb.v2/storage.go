@@ -64,7 +64,7 @@ func (s *Storage) CreateNewStudy(name string) (int, error) {
 	}
 	study := &studyModel{
 		Name:      name,
-		Direction: directionNotSet,
+		Direction: directionMinimize,
 	}
 	err := s.db.Create(study).Error
 	return study.ID, err

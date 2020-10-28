@@ -134,8 +134,6 @@ func toGoptunaStudyDirection(direction string) goptuna.StudyDirection {
 	switch direction {
 	case directionMaximize:
 		return goptuna.StudyDirectionMaximize
-	case directionNotSet:
-		fallthrough
 	case directionMinimize:
 		return goptuna.StudyDirectionMinimize
 	default:

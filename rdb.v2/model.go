@@ -7,7 +7,6 @@ import (
 )
 
 const (
-	directionNotSet   = "NOT_SET"
 	directionMinimize = "MINIMIZE"
 	directionMaximize = "MAXIMIZE"
 )
