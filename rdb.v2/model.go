@@ -27,9 +27,9 @@ type studyModel struct {
 	Direction string `gorm:"column:direction;not null"`
 
 	// Associations
-	UserAttributes   []studyUserAttributeModel   `gorm:"foreignkey:UserAttributeReferStudy;association_foreignkey:ID"`
-	SystemAttributes []studySystemAttributeModel `gorm:"foreignkey:SystemAttributeReferStudy;association_foreignkey:ID"`
-	Trials           []trialModel                `gorm:"foreignkey:TrialReferStudy;association_foreignkey:ID"`
+	UserAttributes   []studyUserAttributeModel   `gorm:"Constraint:OnDelete:CASCADE;foreignkey:UserAttributeReferStudy;association_foreignkey:ID"`
+	SystemAttributes []studySystemAttributeModel `gorm:"Constraint:OnDelete:CASCADE;foreignkey:SystemAttributeReferStudy;association_foreignkey:ID"`
+	Trials           []trialModel                `gorm:"Constraint:OnDelete:CASCADE;foreignkey:TrialReferStudy;association_foreignkey:ID"`
 }
 
 func (m studyModel) TableName() string {
@@ -68,10 +68,10 @@ type trialModel struct {
 	DatetimeComplete *time.Time `gorm:"column:datetime_complete"`
 
 	// Associations
-	UserAttributes   []trialUserAttributeModel   `gorm:"foreignkey:UserAttributeReferTrial;association_foreignkey:ID"`
-	SystemAttributes []trialSystemAttributeModel `gorm:"foreignkey:SystemAttributeReferTrial;association_foreignkey:ID"`
-	TrialParams      []trialParamModel           `gorm:"foreignkey:TrialParamReferTrial;association_foreignkey:ID"`
-	TrialValues      []trialValueModel           `gorm:"foreignkey:TrialValueReferTrial;association_foreignkey:ID"`
+	UserAttributes   []trialUserAttributeModel   `gorm:"Constraint:OnDelete:CASCADE;foreignkey:UserAttributeReferTrial;association_foreignkey:ID"`
+	SystemAttributes []trialSystemAttributeModel `gorm:"Constraint:OnDelete:CASCADE;foreignkey:SystemAttributeReferTrial;association_foreignkey:ID"`
+	TrialParams      []trialParamModel           `gorm:"Constraint:OnDelete:CASCADE;foreignkey:TrialParamReferTrial;association_foreignkey:ID"`
+	TrialValues      []trialValueModel           `gorm:"Constraint:OnDelete:CASCADE;foreignkey:TrialValueReferTrial;association_foreignkey:ID"`
 }
 
 func (m trialModel) TableName() string {
