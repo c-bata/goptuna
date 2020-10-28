@@ -35,7 +35,10 @@ func NewStorage(dialect string, dsn string, automigrate bool) (*Storage, error) 
 	}
 
 	if automigrate {
-		RunAutoMigrate(db)
+		err = RunAutoMigrate(db)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &Storage{

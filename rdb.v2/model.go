@@ -21,7 +21,6 @@ const (
 )
 
 // https://gorm.io/docs/models.html
-// ついでにOptunaの互換性も削除
 
 type studyModel struct {
 	ID        int    `gorm:"column:study_id;primaryKey"`
@@ -128,13 +127,39 @@ func (m trialValueModel) TableName() string {
 // RunAutoMigrate runs Auto-Migration. This will ONLY create tables,
 // missing columns and missing indexes, and WON’T change existing
 // column’s type or delete unused columns to protect your data.
-func RunAutoMigrate(db *gorm.DB) {
-	db.AutoMigrate(&studyModel{})
-	db.AutoMigrate(&studyUserAttributeModel{})
-	db.AutoMigrate(&studySystemAttributeModel{})
-	db.AutoMigrate(&trialModel{})
-	db.AutoMigrate(&trialUserAttributeModel{})
-	db.AutoMigrate(&trialSystemAttributeModel{})
-	db.AutoMigrate(&trialParamModel{})
-	db.AutoMigrate(&trialValueModel{})
+func RunAutoMigrate(db *gorm.DB) error {
+	var err error
+	err = db.AutoMigrate(&studyModel{})
+	if err != nil {
+		return err
+	}
+	err = db.AutoMigrate(&studyUserAttributeModel{})
+	if err != nil {
+		return err
+	}
+	err = db.AutoMigrate(&studySystemAttributeModel{})
+	if err != nil {
+		return err
+	}
+	err = db.AutoMigrate(&trialModel{})
+	if err != nil {
+		return err
+	}
+	err = db.AutoMigrate(&trialUserAttributeModel{})
+	if err != nil {
+		return err
+	}
+	err = db.AutoMigrate(&trialSystemAttributeModel{})
+	if err != nil {
+		return err
+	}
+	err = db.AutoMigrate(&trialParamModel{})
+	if err != nil {
+		return err
+	}
+	err = db.AutoMigrate(&trialValueModel{})
+	if err != nil {
+		return err
+	}
+	return nil
 }
