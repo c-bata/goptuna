@@ -227,271 +227,226 @@ func (s *Storage) GetAllStudySummaries() ([]goptuna.StudySummary, error) {
 
 // CreateNewTrial creates trial and returns trialID.
 func (s *Storage) CreateNewTrial(studyID int) (int, error) {
-	tx := s.db.Begin()
-	if tx.Error != nil {
-		return -1, tx.Error
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
+	var trialID int
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// Create a new trial
+		start := time.Now()
+		trial := &trialModel{
+			TrialReferStudy: studyID,
+			State:           trialStateRunning,
+			DatetimeStart:   &start,
 		}
-	}()
+		if err := tx.Create(trial).Error; err != nil {
+			return err
+		}
 
-	// Create a new trial
-	start := time.Now()
-	trial := &trialModel{
-		TrialReferStudy: studyID,
-		State:           trialStateRunning,
-		DatetimeStart:   &start,
-	}
-	if err := tx.Create(trial).Error; err != nil {
-		tx.Rollback()
-		return -1, err
-	}
+		// Calculate the trial number
+		var number int64
+		err := tx.Model(&trialModel{}).
+			Where("study_id = ?", studyID).
+			Where("trial_id < ?", trial.ID).
+			Count(&number).Error
+		if err != nil {
+			return err
+		}
 
-	// Calculate the trial number
-	var number int64
-	err := tx.Model(&trialModel{}).
-		Where("study_id = ?", studyID).
-		Where("trial_id < ?", trial.ID).
-		Count(&number).Error
-	if err != nil {
-		tx.Rollback()
-		return -1, err
-	}
-
-	err = tx.Model(&trialModel{}).
-		Where("trial_id = ?", trial.ID).
-		Update("number", number).Error
-	if err != nil {
-		tx.Rollback()
-		return -1, err
-	}
-	err = tx.Commit().Error
-	return trial.ID, err
+		err = tx.Model(&trialModel{}).
+			Where("trial_id = ?", trial.ID).
+			Update("number", number).Error
+		if err != nil {
+			return err
+		}
+		trialID = trial.ID
+		return nil
+	})
+	return trialID, err
 }
 
 // CloneTrial creates new Trial from the given base Trial.
 func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, error) {
-	tx := s.db.Begin()
-	if tx.Error != nil {
-		return -1, tx.Error
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
+	var trialID int
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// Because only `RUNNING` trials can be updated,
+		// we temporarily set the state of the new trial to `RUNNING`.
+		// After all fields of the trial have been updated,
+		// the state is set to `template_trial.state`.
+		tempState := trialStateWaiting
+
+		// Avoid to insert zero-time for `NON_ZERO_DATE` mode on MySQL.
+		// See https://github.com/jinzhu/gorm/issues/595
+		var datetimeStart, datetimeComplete *time.Time
+		if !baseTrial.DatetimeStart.IsZero() {
+			datetimeStart = &baseTrial.DatetimeStart
 		}
-	}()
-
-	// Because only `RUNNING` trials can be updated,
-	// we temporarily set the state of the new trial to `RUNNING`.
-	// After all fields of the trial have been updated,
-	// the state is set to `template_trial.state`.
-	tempState := trialStateWaiting
-
-	// Avoid to insert zero-time for `NON_ZERO_DATE` mode on MySQL.
-	// See https://github.com/jinzhu/gorm/issues/595
-	var datetimeStart, datetimeComplete *time.Time
-	if !baseTrial.DatetimeStart.IsZero() {
-		datetimeStart = &baseTrial.DatetimeStart
-	}
-	if !baseTrial.DatetimeComplete.IsZero() {
-		datetimeComplete = &baseTrial.DatetimeComplete
-	}
-
-	trial := &trialModel{
-		TrialReferStudy:  studyID,
-		State:            tempState,
-		Value:            baseTrial.Value,
-		DatetimeStart:    datetimeStart,
-		DatetimeComplete: datetimeComplete,
-	}
-	if err := tx.Create(trial).Error; err != nil {
-		tx.Rollback()
-		return -1, err
-	}
-
-	// params
-	for name := range baseTrial.InternalParams {
-		d, ok := baseTrial.Distributions[name]
-		if !ok {
-			tx.Rollback()
-			return -1, fmt.Errorf("'%s' distribution is not found", name)
+		if !baseTrial.DatetimeComplete.IsZero() {
+			datetimeComplete = &baseTrial.DatetimeComplete
 		}
-		jsonBytes, err := goptuna.DistributionToJSON(d)
+
+		trial := &trialModel{
+			TrialReferStudy:  studyID,
+			State:            tempState,
+			Value:            baseTrial.Value,
+			DatetimeStart:    datetimeStart,
+			DatetimeComplete: datetimeComplete,
+		}
+
+		if err := tx.Create(trial).Error; err != nil {
+			return err
+		}
+
+		// params
+		for name := range baseTrial.InternalParams {
+			d, ok := baseTrial.Distributions[name]
+			if !ok {
+				return fmt.Errorf("'%s' distribution is not found", name)
+			}
+			jsonBytes, err := goptuna.DistributionToJSON(d)
+			if err != nil {
+				return err
+			}
+			err = tx.Create(&trialParamModel{
+				TrialParamReferTrial: trial.ID,
+				Name:                 name,
+				Value:                baseTrial.InternalParams[name],
+				DistributionJSON:     string(jsonBytes),
+			}).Error
+		}
+
+		// user attrs
+		for key := range baseTrial.UserAttrs {
+			err := tx.Create(&trialUserAttributeModel{
+				UserAttributeReferTrial: trial.ID,
+				Key:                     key,
+				ValueJSON:               baseTrial.UserAttrs[key],
+			}).Error
+			if err != nil {
+				return err
+			}
+		}
+
+		// system attrs
+		for key := range baseTrial.SystemAttrs {
+			err := tx.Create(&trialSystemAttributeModel{
+				SystemAttributeReferTrial: trial.ID,
+				Key:                       key,
+				ValueJSON:                 baseTrial.SystemAttrs[key],
+			}).Error
+			if err != nil {
+				return err
+			}
+		}
+
+		// intermediate values
+		for step := range baseTrial.IntermediateValues {
+			err := tx.Create(&trialValueModel{
+				TrialValueReferTrial: trial.ID,
+				Step:                 step,
+				Value:                baseTrial.IntermediateValues[step],
+			}).Error
+			if err != nil {
+				return err
+			}
+		}
+
+		// state
+		state, err := toStateInternalRepresentation(baseTrial.State)
 		if err != nil {
-			tx.Rollback()
-			return -1, err
+			return err
 		}
-		err = tx.Create(&trialParamModel{
-			TrialParamReferTrial: trial.ID,
-			Name:                 name,
-			Value:                baseTrial.InternalParams[name],
-			DistributionJSON:     string(jsonBytes),
-		}).Error
-	}
-
-	// user attrs
-	for key := range baseTrial.UserAttrs {
-		err := tx.Create(&trialUserAttributeModel{
-			UserAttributeReferTrial: trial.ID,
-			Key:                     key,
-			ValueJSON:               baseTrial.UserAttrs[key],
-		}).Error
+		err = tx.Model(&trialModel{}).
+			Where("trial_id = ?", trial.ID).
+			Update("state", state).Error
 		if err != nil {
-			tx.Rollback()
-			return -1, err
+			return err
 		}
-	}
 
-	// system attrs
-	for key := range baseTrial.SystemAttrs {
-		err := tx.Create(&trialSystemAttributeModel{
-			SystemAttributeReferTrial: trial.ID,
-			Key:                       key,
-			ValueJSON:                 baseTrial.SystemAttrs[key],
-		}).Error
+		// trial number
+		var number int64
+		err = tx.Model(&trialModel{}).
+			Where("study_id = ?", studyID).
+			Where("trial_id < ?", trial.ID).
+			Count(&number).Error
 		if err != nil {
-			tx.Rollback()
-			return -1, err
+			return err
 		}
-	}
 
-	// intermediate values
-	for step := range baseTrial.IntermediateValues {
-		err := tx.Create(&trialValueModel{
-			TrialValueReferTrial: trial.ID,
-			Step:                 step,
-			Value:                baseTrial.IntermediateValues[step],
-		}).Error
+		err = tx.Model(&trialModel{}).
+			Where("trial_id = ?", trial.ID).
+			Update("number", number).Error
 		if err != nil {
-			tx.Rollback()
-			return -1, err
+			return err
 		}
-	}
 
-	// state
-	state, err := toStateInternalRepresentation(baseTrial.State)
-	if err != nil {
-		tx.Rollback()
-		return -1, err
-	}
-	err = tx.Model(&trialModel{}).
-		Where("trial_id = ?", trial.ID).
-		Update("state", state).Error
-	if err != nil {
-		tx.Rollback()
-		return -1, err
-	}
+		trialID = trial.ID
+		return nil
+	})
 
-	// trial number
-	var number int64
-	err = tx.Model(&trialModel{}).
-		Where("study_id = ?", studyID).
-		Where("trial_id < ?", trial.ID).
-		Count(&number).Error
-	if err != nil {
-		tx.Rollback()
-		return -1, err
-	}
-
-	err = tx.Model(&trialModel{}).
-		Where("trial_id = ?", trial.ID).
-		Update("number", number).Error
-	if err != nil {
-		tx.Rollback()
-		return -1, err
-	}
-
-	err = tx.Commit().Error
-	return trial.ID, err
+	return trialID, err
 }
 
 // SetTrialValue sets the value of trial.
 func (s *Storage) SetTrialValue(trialID int, value float64) error {
-	tx := s.db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		var trial trialModel
+		err := tx.First(&trial, "trial_id = ?", trialID).Error
+		if err != nil {
+			return err
 		}
-	}()
-	if tx.Error != nil {
-		return tx.Error
-	}
-	var trial trialModel
-	err := tx.First(&trial, "trial_id = ?", trialID).Error
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	state, err := toStateExternalRepresentation(trial.State)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	if state.IsFinished() {
-		tx.Rollback()
-		return goptuna.ErrTrialCannotBeUpdated
-	}
 
-	err = tx.Model(&trialModel{}).
-		Where("trial_id = ?", trialID).
-		Update("value", value).Error
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	return tx.Commit().Error
+		state, err := toStateExternalRepresentation(trial.State)
+		if err != nil {
+			return err
+		}
+
+		if state.IsFinished() {
+			return goptuna.ErrTrialCannotBeUpdated
+		}
+
+		err = tx.Model(&trialModel{}).
+			Where("trial_id = ?", trialID).
+			Update("value", value).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 // SetTrialIntermediateValue sets the intermediate value of trial.
 // While sets the intermediate value, trial.value is also updated.
 func (s *Storage) SetTrialIntermediateValue(trialID int, step int, value float64) error {
-	tx := s.db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		// Check whether trial is finished.
+		var trial trialModel
+		err := tx.First(&trial, "trial_id = ?", trialID).Error
+		if err != nil {
+			return err
 		}
-	}()
-	if tx.Error != nil {
-		return tx.Error
-	}
+		state, err := toStateExternalRepresentation(trial.State)
+		if err != nil {
+			return err
+		}
+		if state.IsFinished() {
+			return goptuna.ErrTrialCannotBeUpdated
+		}
 
-	// Check whether trial is finished.
-	var trial trialModel
-	err := tx.First(&trial, "trial_id = ?", trialID).Error
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	state, err := toStateExternalRepresentation(trial.State)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	if state.IsFinished() {
-		tx.Rollback()
-		return goptuna.ErrTrialCannotBeUpdated
-	}
+		// If trial value is already exist, then do rollback.
+		err = tx.First(&trialValueModel{}, "trial_id = ? AND step = ?", trialID, step).Error
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
 
-	// If trial value is already exist, then do rollback.
-	err = tx.First(&trialValueModel{}, "trial_id = ? AND step = ?", trialID, step).Error
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		tx.Rollback()
-		return err
-	}
-
-	// Set trial intermediate value
-	err = tx.Create(&trialValueModel{
-		TrialValueReferTrial: trialID,
-		Step:                 step,
-		Value:                value,
-	}).Error
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	return tx.Commit().Error
+		// Set trial intermediate value
+		err = tx.Create(&trialValueModel{
+			TrialValueReferTrial: trialID,
+			Step:                 step,
+			Value:                value,
+		}).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 // SetTrialParam sets the sampled parameters of trial.
