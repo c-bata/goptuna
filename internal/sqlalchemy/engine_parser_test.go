@@ -60,6 +60,13 @@ func TestParseDatabaseURL(t *testing.T) {
 			wantDialect: "mysql",
 			wantDsn:     "user:pass@tcp(localhost:6000)/bar?parseTime=true",
 		},
+		// Postgres
+		{
+			name:        "postgres",
+			url:         "postgresql://scott:tiger@localhost/mydatabase",
+			wantDialect: "postgres",
+			wantDsn:     "user=scott password=tiger dbname=mydatabase",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

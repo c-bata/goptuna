@@ -81,7 +81,6 @@ func ParseDatabaseURL(url string, opt *EngineOption) (string, string, error) {
 	var dsn string
 	var err error
 
-	// TODO(c-bata): Support postgres
 	switch parsed["dialect"] {
 	case "sqlite":
 		godialect = "sqlite3"
@@ -89,6 +88,9 @@ func ParseDatabaseURL(url string, opt *EngineOption) (string, string, error) {
 	case "mysql":
 		godialect = "mysql"
 		dsn, err = buildMySQLArgs(parsed, opt)
+	case "postgresql":
+		godialect = "postgres"
+		dsn = buildPostgresArgs(parsed)
 	default:
 		return "", "", ErrUnsupportedDialect
 	}
@@ -141,4 +143,18 @@ func buildMySQLArgs(parsed map[string]string, opt *EngineOption) (string, error)
 	}
 
 	return dsn, nil
+}
+
+func buildPostgresArgs(parsed map[string]string) string {
+	dsn := fmt.Sprintf("user=%s", parsed["username"])
+
+	if parsed["password"] != "" {
+		dsn += fmt.Sprintf(" password=%s", parsed["password"])
+	}
+	dsn += fmt.Sprintf(" dbname=%s", parsed["database"])
+
+	if parsed["port"] != "" {
+		dsn += fmt.Sprintf(" port=%s", parsed["port"])
+	}
+	return dsn
 }

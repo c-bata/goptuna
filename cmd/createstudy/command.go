@@ -28,12 +28,6 @@ func GetCommand() *cobra.Command {
 				os.Exit(1)
 			}
 
-			dialect, dsn, err := sqlalchemy.ParseDatabaseURL(storageURL, nil)
-			if err != nil {
-				cmd.PrintErrln(err)
-				os.Exit(1)
-			}
-
 			withoutMigrate, err := cmd.Flags().GetBool("without-migration")
 			if err != nil {
 				cmd.PrintErrln(err)
