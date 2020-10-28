@@ -16,7 +16,7 @@ func TestParseDatabaseURL(t *testing.T) {
 		// Go DSN (Data Source Name)
 		// [username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]
 		wantDialect string
-		wantArgs    []interface{}
+		wantDsn     string
 	}{
 		// SQLite3
 		// sqlite://<nohostname>/<path>
@@ -24,42 +24,32 @@ func TestParseDatabaseURL(t *testing.T) {
 			name:        "sqlite3 simple",
 			url:         "sqlite:///example.db",
 			wantDialect: "sqlite3",
-			wantArgs: []interface{}{
-				"example.db",
-			},
+			wantDsn:     "example.db",
 		},
 		{
 			name:        "sqlite3 simple2",
 			url:         "sqlite:///db.sqlite3",
 			wantDialect: "sqlite3",
-			wantArgs: []interface{}{
-				"db.sqlite3",
-			},
+			wantDsn:     "db.sqlite3",
 		},
 		// MySQL
 		{
 			name:        "mysql",
 			url:         "mysql://scott:tiger@localhost/foo",
 			wantDialect: "mysql",
-			wantArgs: []interface{}{
-				"scott:tiger@tcp(localhost)/foo",
-			},
+			wantDsn:     "scott:tiger@tcp(localhost)/foo",
 		},
 		{
 			name:        "mysql (with driver)",
 			url:         "mysql+pymysql://user:pass@localhost:6000/bar",
 			wantDialect: "mysql",
-			wantArgs: []interface{}{
-				"user:pass@tcp(localhost:6000)/bar",
-			},
+			wantDsn:     "user:pass@tcp(localhost:6000)/bar",
 		},
 		{
 			name:        "mysql (with unix domain socket)",
 			url:         "mysql+pymysql://username:password@localhost/foo?unix_socket=/var/lib/mysql/mysql.sock",
 			wantDialect: "mysql",
-			wantArgs: []interface{}{
-				"username:password@unix(/var/lib/mysql/mysql.sock)/foo",
-			},
+			wantDsn:     "username:password@unix(/var/lib/mysql/mysql.sock)/foo",
 		},
 		{
 			name: "mysql (with parsetime option)",
@@ -68,9 +58,14 @@ func TestParseDatabaseURL(t *testing.T) {
 				ParseTime: true,
 			},
 			wantDialect: "mysql",
-			wantArgs: []interface{}{
-				"user:pass@tcp(localhost:6000)/bar?parseTime=true",
-			},
+			wantDsn:     "user:pass@tcp(localhost:6000)/bar?parseTime=true",
+		},
+		// Postgres
+		{
+			name:        "postgres",
+			url:         "postgresql://scott:tiger@localhost/mydatabase",
+			wantDialect: "postgres",
+			wantDsn:     "user=scott password=tiger dbname=mydatabase",
 		},
 	}
 	for _, tt := range tests {
@@ -82,8 +77,8 @@ func TestParseDatabaseURL(t *testing.T) {
 			if gotDialect != tt.wantDialect {
 				t.Errorf("ParseDatabaseURL() gotDialect = %v, want %v", gotDialect, tt.wantDialect)
 			}
-			if !reflect.DeepEqual(gotArgs, tt.wantArgs) {
-				t.Errorf("ParseDatabaseURL() gotArgs = %v, want %v", gotArgs, tt.wantArgs)
+			if !reflect.DeepEqual(gotArgs, tt.wantDsn) {
+				t.Errorf("ParseDatabaseURL() gotArgs = %v, want %v", gotArgs, tt.wantDsn)
 			}
 		})
 	}

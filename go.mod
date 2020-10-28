@@ -1,6 +1,6 @@
 module github.com/c-bata/goptuna
 
-go 1.13
+go 1.14
 
 require (
 	github.com/go-gota/gota v0.10.1
@@ -13,4 +13,8 @@ require (
 	gonum.org/v1/gonum v0.7.0
 	gorgonia.org/gorgonia v0.9.10
 	gorgonia.org/tensor v0.9.6
+	gorm.io/driver/mysql v1.0.3
+	gorm.io/driver/postgres v1.0.5
+	gorm.io/driver/sqlite v1.1.3
+	gorm.io/gorm v1.20.5
 )

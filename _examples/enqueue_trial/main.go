@@ -5,11 +5,10 @@ import (
 	"math"
 
 	"github.com/c-bata/goptuna"
-	"github.com/c-bata/goptuna/rdb"
+	"github.com/c-bata/goptuna/rdb.v2"
 	"github.com/c-bata/goptuna/tpe"
-	"github.com/jinzhu/gorm"
-
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func objective(trial goptuna.Trial) (float64, error) {
@@ -19,12 +18,14 @@ func objective(trial goptuna.Trial) (float64, error) {
 }
 
 func main() {
-	db, err := gorm.Open("sqlite3", "db.sqlite3")
+	db, err := gorm.Open(sqlite.Open("db.sqlite3"), &gorm.Config{})
 	if err != nil {
 		log.Fatal("failed to open db:", err)
 	}
-	defer db.Close()
-	rdb.RunAutoMigrate(db)
+	err = rdb.RunAutoMigrate(db)
+	if err != nil {
+		log.Fatal("failed to run auto migrate:", err)
+	}
 	storage := rdb.NewStorage(db)
 
 	study, err := goptuna.CreateStudy(

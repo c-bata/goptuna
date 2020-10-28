@@ -8,17 +8,16 @@ import (
 	"os"
 
 	"github.com/c-bata/goptuna"
-	"github.com/c-bata/goptuna/rdb"
+	"github.com/c-bata/goptuna/rdb.v2"
 	"github.com/c-bata/goptuna/successivehalving"
 	"github.com/c-bata/goptuna/tpe"
 	"github.com/go-gota/gota/dataframe"
 	"github.com/go-gota/gota/series"
-	"github.com/jinzhu/gorm"
 	"gonum.org/v1/gonum/mat"
 	"gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
-
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 var (
@@ -31,11 +30,14 @@ func init() {
 }
 
 func main() {
-	db, err := gorm.Open("sqlite3", "db.sqlite3")
+	db, err := gorm.Open(sqlite.Open("db.sqlite3"), &gorm.Config{})
 	if err != nil {
 		log.Fatal("failed to open db:", err)
 	}
-	rdb.RunAutoMigrate(db)
+	err = rdb.RunAutoMigrate(db)
+	if err != nil {
+		log.Fatal("failed to run auto migrate:", err)
+	}
 	storage := rdb.NewStorage(db)
 
 	pruner, _ := successivehalving.NewPruner(

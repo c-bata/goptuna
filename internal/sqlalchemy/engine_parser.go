@@ -5,6 +5,11 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 var (
@@ -38,13 +43,34 @@ type EngineOption struct {
 	ParseTime bool
 }
 
+// GetGormDBFromURL parse SQLAlchemy's Engine URL format and returns GORM v2 DB object.
+func GetGormDBFromURL(url string, opt *EngineOption) (*gorm.DB, error) {
+	if opt == nil {
+		opt = &EngineOption{ParseTime: true}
+	}
+	dialect, dsn, err := ParseDatabaseURL(url, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	if dialect == "sqlite3" {
+		return gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	} else if dialect == "mysql" {
+		return gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	} else if dialect == "postgres" {
+		return gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	} else {
+		return nil, errors.New("unsupported dialect")
+	}
+}
+
 // ParseDatabaseURL parse SQLAlchemy's Engine URL format and returns Go's dialect and args.
-func ParseDatabaseURL(url string, opt *EngineOption) (string, []interface{}, error) {
+func ParseDatabaseURL(url string, opt *EngineOption) (string, string, error) {
 	// https://docs.sqlalchemy.org/en/13/core/engines.html
 	// dialect+driver://username:password@host:port/database
 	submatch := engineURLPattern.FindStringSubmatch(url)
 	if submatch == nil {
-		return "", nil, ErrInvalidDatabaseURL
+		return "", "", ErrInvalidDatabaseURL
 	}
 	parsed := make(map[string]string, 8)
 	for i, name := range engineURLPattern.SubexpNames() {
@@ -55,36 +81,38 @@ func ParseDatabaseURL(url string, opt *EngineOption) (string, []interface{}, err
 	}
 
 	var godialect string
-	var dbargs []interface{}
+	var dsn string
 	var err error
+
 	switch parsed["dialect"] {
 	case "sqlite":
 		godialect = "sqlite3"
-		dbargs = []interface{}{
-			parsed["database"],
-		}
+		dsn = parsed["database"]
 	case "mysql":
 		godialect = "mysql"
-		dbargs, err = buildMySQLArgs(parsed, opt)
+		dsn, err = buildMySQLArgs(parsed, opt)
+	case "postgresql":
+		godialect = "postgres"
+		dsn = buildPostgresArgs(parsed)
 	default:
-		return "", nil, ErrUnsupportedDialect
+		return "", "", ErrUnsupportedDialect
 	}
 	if err != nil {
-		return "", nil, err
+		return "", "", err
 	}
 
-	return godialect, dbargs, nil
+	return godialect, dsn, nil
 }
 
-func buildMySQLArgs(parsed map[string]string, opt *EngineOption) ([]interface{}, error) {
-	var godsn, unixpass, dbname string
+func buildMySQLArgs(parsed map[string]string, opt *EngineOption) (string, error) {
+	var dsn, unixpass, dbname string
 	var query url.Values
 	var err error
 
 	dbname = parsed["database"]
 	query, err = url.ParseQuery(parsed["query"])
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	protocol := "tcp"
@@ -93,31 +121,43 @@ func buildMySQLArgs(parsed map[string]string, opt *EngineOption) ([]interface{},
 		unixpass = query.Get("unix_socket")
 	}
 
-	godsn = parsed["username"]
+	dsn = parsed["username"]
 	if parsed["password"] != "" {
-		godsn += ":" + parsed["password"]
+		dsn += ":" + parsed["password"]
 	}
 
 	switch protocol {
 	case "tcp":
 		if parsed["port"] == "" {
-			godsn += fmt.Sprintf("@tcp(%s)", parsed["ipv4host"])
+			dsn += fmt.Sprintf("@tcp(%s)", parsed["ipv4host"])
 		} else {
-			godsn += fmt.Sprintf("@tcp(%s:%s)",
+			dsn += fmt.Sprintf("@tcp(%s:%s)",
 				parsed["ipv4host"], parsed["port"])
 		}
 	case "unix":
-		godsn += fmt.Sprintf("@unix(%s)", unixpass)
+		dsn += fmt.Sprintf("@unix(%s)", unixpass)
 	}
-	godsn += "/" + dbname
+	dsn += "/" + dbname
 
 	if opt != nil {
 		if opt.ParseTime {
-			godsn += "?parseTime=true"
+			dsn += "?parseTime=true"
 		}
 	}
 
-	return []interface{}{
-		godsn,
-	}, nil
+	return dsn, nil
+}
+
+func buildPostgresArgs(parsed map[string]string) string {
+	dsn := fmt.Sprintf("user=%s", parsed["username"])
+
+	if parsed["password"] != "" {
+		dsn += fmt.Sprintf(" password=%s", parsed["password"])
+	}
+	dsn += fmt.Sprintf(" dbname=%s", parsed["database"])
+
+	if parsed["port"] != "" {
+		dsn += fmt.Sprintf(" port=%s", parsed["port"])
+	}
+	return dsn
 }

@@ -11,10 +11,11 @@ import (
 	"sync"
 	"syscall"
 
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+
 	"github.com/c-bata/goptuna"
-	"github.com/c-bata/goptuna/rdb"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/c-bata/goptuna/rdb.v2"
 )
 
 func objective(trial goptuna.Trial) (float64, error) {
@@ -32,13 +33,19 @@ func objective(trial goptuna.Trial) (float64, error) {
 }
 
 func main() {
-	db, err := gorm.Open("sqlite3", "db.sqlite3")
+	db, err := gorm.Open(sqlite.Open("db.sqlite3"), &gorm.Config{})
 	if err != nil {
 		log.Fatal("failed to open database:", err)
 	}
-	defer db.Close()
-	db.DB().SetMaxOpenConns(1)
-	rdb.RunAutoMigrate(db)
+	if sqlDB, err := db.DB(); err != nil {
+		log.Fatal("failed to get sql.DB:", err)
+	} else {
+		sqlDB.SetMaxOpenConns(1)
+	}
+	err = rdb.RunAutoMigrate(db)
+	if err != nil {
+		log.Fatal("failed to run auto migrate:", err)
+	}
 
 	// create a study
 	study, err := goptuna.CreateStudy(

@@ -5,12 +5,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/c-bata/goptuna/rdb"
-	"github.com/jinzhu/gorm"
-
 	"github.com/c-bata/goptuna/dashboard"
-
 	"github.com/c-bata/goptuna/internal/sqlalchemy"
+	"github.com/c-bata/goptuna/rdb.v2"
 	"github.com/spf13/cobra"
 )
 
@@ -31,20 +28,13 @@ func GetCommand() *cobra.Command {
 				os.Exit(1)
 			}
 
-			dialect, dbargs, err := sqlalchemy.ParseDatabaseURL(storageURL, nil)
+			db, err := sqlalchemy.GetGormDBFromURL(storageURL, nil)
 			if err != nil {
 				cmd.PrintErrln(err)
 				os.Exit(1)
 			}
-
-			db, err := gorm.Open(dialect, dbargs...)
-			if err != nil {
-				cmd.PrintErrln(err)
-				os.Exit(1)
-			}
-			defer db.Close()
-
 			storage := rdb.NewStorage(db)
+
 			server, err := dashboard.NewServer(storage)
 			if err != nil {
 				cmd.PrintErrln(err)
