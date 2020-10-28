@@ -12,6 +12,7 @@ import (
 var _ goptuna.Storage = &Storage{}
 
 // NewStorage returns new RDB storage.
+// Deprecated: Please use `github.com/c-bata/goptuna/rdb.v2` package.
 func NewStorage(db *gorm.DB) *Storage {
 	return &Storage{
 		db: db,
@@ -19,6 +20,7 @@ func NewStorage(db *gorm.DB) *Storage {
 }
 
 // Storage stores data in your relational databases.
+// Deprecated: Please use `github.com/c-bata/goptuna/rdb.v2` package.
 type Storage struct {
 	db *gorm.DB
 }
