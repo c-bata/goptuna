@@ -8,6 +8,9 @@ import (
 	"github.com/c-bata/goptuna"
 	"github.com/c-bata/goptuna/rdb.v2"
 	"github.com/c-bata/goptuna/tpe"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func objective(trial goptuna.Trial) (float64, error) {
@@ -24,14 +27,26 @@ func main() {
 	dialect := flag.Arg(0)
 	dsn := flag.Arg(1)
 
-	storage, err := rdb.NewStorage(dialect, dsn, true)
+	var db *gorm.DB
+	var err error
+	if dialect == "sqlite3" {
+		db, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	} else if dialect == "mysql" {
+		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	} else {
+		log.Fatal("unsupported dialect")
+	}
 	if err != nil {
-		log.Fatal("failed to open db", err)
+		log.Fatal("failed to open db:", err)
+	}
+	err = rdb.RunAutoMigrate(db)
+	if err != nil {
+		log.Fatal("failed to run auto migrate:", err)
 	}
 
 	study, err := goptuna.CreateStudy(
 		"rdb",
-		goptuna.StudyOptionStorage(storage),
+		goptuna.StudyOptionStorage(rdb.NewStorage(db)),
 		goptuna.StudyOptionSampler(tpe.NewSampler()),
 		goptuna.StudyOptionDirection(goptuna.StudyDirectionMinimize),
 		goptuna.StudyOptionLoadIfExists(true),

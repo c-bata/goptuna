@@ -7,9 +7,12 @@ import (
 
 	"github.com/c-bata/goptuna"
 	"github.com/c-bata/goptuna/internal/sqlalchemy"
-	"github.com/c-bata/goptuna/rdb"
-	"github.com/jinzhu/gorm"
+	"github.com/c-bata/goptuna/rdb.v2"
 	"github.com/spf13/cobra"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 // GetCommand returns the cobra's command for create-study sub-command.
@@ -29,26 +32,16 @@ func GetCommand() *cobra.Command {
 				os.Exit(1)
 			}
 
-			dialect, dbargs, err := sqlalchemy.ParseDatabaseURL(storageURL, nil)
+			dialect, dsn, err := sqlalchemy.ParseDatabaseURL(storageURL, nil)
 			if err != nil {
 				cmd.PrintErrln(err)
 				os.Exit(1)
 			}
-
-			db, err := gorm.Open(dialect, dbargs...)
-			if err != nil {
-				cmd.PrintErrln(err)
-				os.Exit(1)
-			}
-			defer db.Close()
 
 			withoutMigrate, err := cmd.Flags().GetBool("without-migration")
 			if err != nil {
 				cmd.PrintErrln(err)
 				os.Exit(1)
-			}
-			if !withoutMigrate {
-				rdb.RunAutoMigrate(db)
 			}
 
 			studyName, err := cmd.Flags().GetString("study")
@@ -65,6 +58,29 @@ func GetCommand() *cobra.Command {
 			}
 			if strings.ToLower(directionStr) == "maximize" {
 				direction = goptuna.StudyDirectionMaximize
+			}
+
+			var db *gorm.DB
+			if dialect == "sqlite3" {
+				db, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+			} else if dialect == "mysql" {
+				db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+			} else if dialect == "postgres" {
+				db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+			} else {
+				cmd.Println("unsupported dialect")
+				os.Exit(1)
+			}
+			if err != nil {
+				cmd.PrintErrln(err)
+				os.Exit(1)
+			}
+			if !withoutMigrate {
+				err = rdb.RunAutoMigrate(db)
+				if err != nil {
+					cmd.PrintErrln(err)
+					os.Exit(1)
+				}
 			}
 
 			storage := rdb.NewStorage(db)

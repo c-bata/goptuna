@@ -1,56 +1,33 @@
 package rdb
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/c-bata/goptuna"
 	"github.com/google/uuid"
-	"gorm.io/driver/mysql"
-	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 var _ goptuna.Storage = &Storage{}
 
 // NewStorage returns new RDB storage.
-func NewStorage(dialect string, dsn string, automigrate bool) (*Storage, error) {
-	var db *gorm.DB
-	var err error
-	config := &gorm.Config{}
-
-	if dialect == "sqlite" {
-		db, err = gorm.Open(sqlite.Open(dsn), config)
-	} else if dialect == "mysql" {
-		db, err = gorm.Open(mysql.Open(dsn), config)
-	} else if dialect == "postgres" {
-		db, err = gorm.Open(postgres.Open(dsn), config)
-	} else {
-		return nil, errors.New("unsupported dialect")
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if automigrate {
-		err = RunAutoMigrate(db)
-		if err != nil {
-			return nil, err
-		}
-	}
-
+func NewStorage(db *gorm.DB) *Storage {
 	return &Storage{
-		db:     db,
-		config: config,
-	}, nil
+		db: db,
+	}
 }
 
 // Storage stores data in your relational databases.
 type Storage struct {
-	config *gorm.Config
-	db     *gorm.DB
+	db *gorm.DB
+}
+
+// DB returns sql.DB instance.
+func (s *Storage) DB() (*sql.DB, error) {
+	return s.db.DB()
 }
 
 // CreateNewStudy creates study and returns studyID.
@@ -234,7 +211,7 @@ func (s *Storage) CreateNewTrial(studyID int) (int, error) {
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		var study studyModel
 		var result *gorm.DB
-		if s.config.Dialector.Name() == "sqlite3" {
+		if s.db.Dialector.Name() == "sqlite3" {
 			// TODO(c-bata): Fix concurrency problem on SQLite3.
 			// SQLite3 cannot interpret `FOR UPDATE` clause.
 			result = tx.First(&study, "study_id = ?", studyID)
@@ -289,7 +266,7 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		var study studyModel
 		var result *gorm.DB
-		if s.config.Dialector.Name() == "sqlite3" {
+		if s.db.Dialector.Name() == "sqlite3" {
 			// TODO(c-bata): Fix concurrency problem on SQLite3.
 			// SQLite3 cannot interpret `FOR UPDATE` clause.
 			result = tx.First(&study, "study_id = ?", studyID)
@@ -521,7 +498,7 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		var trial trialModel
 		var result *gorm.DB
-		if s.config.Dialector.Name() == "sqlite3" {
+		if s.db.Dialector.Name() == "sqlite3" {
 			// TODO(c-bata): Fix concurrency problem on SQLite3.
 			// SQLite3 cannot interpret `FOR UPDATE` clause.
 			result = tx.First(&trial, "trial_id = ?", trialID)

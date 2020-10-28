@@ -8,16 +8,34 @@ import (
 
 	"github.com/c-bata/goptuna"
 	"github.com/c-bata/goptuna/rdb.v2"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
-func TestStorage_CreateNewStudy(t *testing.T) {
+func SetupSQLite3Test() (*rdb.Storage, func(), error) {
 	sqlitePath := "goptuna-test.db"
-	s, err := rdb.NewStorage("sqlite", sqlitePath, true)
-	defer os.Remove(sqlitePath)
+	db, err := gorm.Open(sqlite.Open(sqlitePath), &gorm.Config{})
+	if err != nil {
+		return nil, nil, err
+	}
+	err = rdb.RunAutoMigrate(db)
+	if err != nil {
+		return nil, nil, err
+	}
+	storage := rdb.NewStorage(db)
+
+	return storage, func() {
+		os.Remove(sqlitePath)
+	}, nil
+}
+
+func TestStorage_CreateNewStudy(t *testing.T) {
+	s, teardown, err := SetupSQLite3Test()
 	if err != nil {
 		t.Errorf("failed to setup tests with %s", err)
 		return
 	}
+	defer teardown()
 	got, err := s.CreateNewStudy("study1")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
@@ -46,13 +64,12 @@ func TestStorage_CreateNewStudy(t *testing.T) {
 }
 
 func TestStorage_DeleteStudy(t *testing.T) {
-	sqlitePath := "goptuna-test.db"
-	s, err := rdb.NewStorage("sqlite", sqlitePath, true)
-	defer os.Remove(sqlitePath)
+	s, teardown, err := SetupSQLite3Test()
 	if err != nil {
 		t.Errorf("failed to setup tests with %s", err)
 		return
 	}
+	defer teardown()
 
 	got, err := s.CreateNewStudy("study1")
 	if err != nil {
@@ -98,13 +115,12 @@ func TestStorage_DeleteStudy(t *testing.T) {
 }
 
 func TestStorage_StudyDirection(t *testing.T) {
-	sqlitePath := "goptuna-test.db"
-	s, err := rdb.NewStorage("sqlite", sqlitePath, true)
-	defer os.Remove(sqlitePath)
+	s, teardown, err := SetupSQLite3Test()
 	if err != nil {
 		t.Errorf("failed to setup tests with %s", err)
 		return
 	}
+	defer teardown()
 
 	studyID, err := s.CreateNewStudy("study")
 	if err != nil {
@@ -141,13 +157,12 @@ func TestStorage_StudyDirection(t *testing.T) {
 }
 
 func TestStorage_StudyUserAttrs(t *testing.T) {
-	sqlitePath := "goptuna-test.db"
-	s, err := rdb.NewStorage("sqlite", sqlitePath, true)
-	defer os.Remove(sqlitePath)
+	s, teardown, err := SetupSQLite3Test()
 	if err != nil {
 		t.Errorf("failed to setup tests with %s", err)
 		return
 	}
+	defer teardown()
 
 	studyID, err := s.CreateNewStudy("")
 	if err != nil {
@@ -173,13 +188,12 @@ func TestStorage_StudyUserAttrs(t *testing.T) {
 }
 
 func TestStorage_StudySystemAttrs(t *testing.T) {
-	sqlitePath := "goptuna-test.db"
-	s, err := rdb.NewStorage("sqlite", sqlitePath, true)
-	defer os.Remove(sqlitePath)
+	s, teardown, err := SetupSQLite3Test()
 	if err != nil {
 		t.Errorf("failed to setup tests with %s", err)
 		return
 	}
+	defer teardown()
 
 	studyID, err := s.CreateNewStudy("")
 	if err != nil {
@@ -205,13 +219,12 @@ func TestStorage_StudySystemAttrs(t *testing.T) {
 }
 
 func TestStorage_TrialUserAttrs(t *testing.T) {
-	sqlitePath := "goptuna-test.db"
-	s, err := rdb.NewStorage("sqlite", sqlitePath, true)
-	defer os.Remove(sqlitePath)
+	s, teardown, err := SetupSQLite3Test()
 	if err != nil {
 		t.Errorf("failed to setup tests with %s", err)
 		return
 	}
+	defer teardown()
 
 	studyID, err := s.CreateNewStudy("")
 	if err != nil {
@@ -248,15 +261,14 @@ func TestStorage_TrialUserAttrs(t *testing.T) {
 }
 
 func TestStorage_TrialSystemAttrs(t *testing.T) {
-	sqlitePath := "goptuna-test.db"
-	s, err := rdb.NewStorage("sqlite", sqlitePath, true)
-	defer os.Remove(sqlitePath)
+	s, teardown, err := SetupSQLite3Test()
 	if err != nil {
 		t.Errorf("failed to setup tests with %s", err)
 		return
 	}
-	studyID, err := s.CreateNewStudy("")
+	defer teardown()
 
+	studyID, err := s.CreateNewStudy("")
 	if err != nil {
 		t.Errorf("error: %v != nil", err)
 		return
@@ -290,13 +302,12 @@ func TestStorage_TrialSystemAttrs(t *testing.T) {
 }
 
 func TestStorage_GetAllTrials(t *testing.T) {
-	sqlitePath := "goptuna-test.db"
-	s, err := rdb.NewStorage("sqlite", sqlitePath, true)
-	defer os.Remove(sqlitePath)
+	s, teardown, err := SetupSQLite3Test()
 	if err != nil {
 		t.Errorf("failed to setup tests with %s", err)
 		return
 	}
+	defer teardown()
 
 	studyID, err := s.CreateNewStudy("")
 	if err != nil {
@@ -347,13 +358,12 @@ func TestStorage_GetAllTrials(t *testing.T) {
 }
 
 func TestStorage_SetTrialState(t *testing.T) {
-	sqlitePath := "goptuna-test.db"
-	s, err := rdb.NewStorage("sqlite", sqlitePath, true)
-	defer os.Remove(sqlitePath)
+	s, teardown, err := SetupSQLite3Test()
 	if err != nil {
 		t.Errorf("failed to setup tests with %s", err)
 		return
 	}
+	defer teardown()
 
 	studyID, err := s.CreateNewStudy("")
 	if err != nil {
@@ -396,13 +406,12 @@ func TestStorage_SetTrialState(t *testing.T) {
 }
 
 func TestStorage_GetTrial(t *testing.T) {
-	sqlitePath := "goptuna-test.db"
-	s, err := rdb.NewStorage("sqlite", sqlitePath, true)
-	defer os.Remove(sqlitePath)
+	s, teardown, err := SetupSQLite3Test()
 	if err != nil {
 		t.Errorf("failed to setup tests with %s", err)
 		return
 	}
+	defer teardown()
 
 	studyID, err := s.CreateNewStudy("")
 	if err != nil {
@@ -460,13 +469,12 @@ func TestStorage_GetTrial(t *testing.T) {
 }
 
 func TestStorage_GetAllStudySummaries(t *testing.T) {
-	sqlitePath := "goptuna-test.db"
-	s, err := rdb.NewStorage("sqlite", sqlitePath, true)
-	defer os.Remove(sqlitePath)
+	s, teardown, err := SetupSQLite3Test()
 	if err != nil {
 		t.Errorf("failed to setup tests with %s", err)
 		return
 	}
+	defer teardown()
 
 	studyID, err := s.CreateNewStudy("")
 	if err != nil {
@@ -501,13 +509,12 @@ func TestStorage_GetAllStudySummaries(t *testing.T) {
 }
 
 func TestStorage_GetBestTrial(t *testing.T) {
-	sqlitePath := "goptuna-test.db"
-	s, err := rdb.NewStorage("sqlite", sqlitePath, true)
-	defer os.Remove(sqlitePath)
+	s, teardown, err := SetupSQLite3Test()
 	if err != nil {
 		t.Errorf("failed to setup tests with %s", err)
 		return
 	}
+	defer teardown()
 
 	studyID, err := s.CreateNewStudy("")
 	if err != nil {
@@ -571,13 +578,12 @@ func TestStorage_GetBestTrial(t *testing.T) {
 }
 
 func TestStorage_SetTrialIntermediateValue(t *testing.T) {
-	sqlitePath := "goptuna-test.db"
-	s, err := rdb.NewStorage("sqlite", sqlitePath, true)
-	defer os.Remove(sqlitePath)
+	s, teardown, err := SetupSQLite3Test()
 	if err != nil {
 		t.Errorf("failed to setup tests with %s", err)
 		return
 	}
+	defer teardown()
 
 	studyID, err := s.CreateNewStudy("")
 	if err != nil {
@@ -613,13 +619,12 @@ func TestStorage_SetTrialIntermediateValue(t *testing.T) {
 }
 
 func TestStorage_CloneTrial(t *testing.T) {
-	sqlitePath := "goptuna-test.db"
-	s, err := rdb.NewStorage("sqlite", sqlitePath, true)
-	defer os.Remove(sqlitePath)
+	s, teardown, err := SetupSQLite3Test()
 	if err != nil {
 		t.Errorf("failed to setup tests with %s", err)
 		return
 	}
+	defer teardown()
 
 	now := time.Now()
 
