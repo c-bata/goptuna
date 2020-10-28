@@ -45,6 +45,9 @@ type EngineOption struct {
 
 // GetGormDBFromURL parse SQLAlchemy's Engine URL format and returns GORM v2 DB object.
 func GetGormDBFromURL(url string, opt *EngineOption) (*gorm.DB, error) {
+	if opt == nil {
+		opt = &EngineOption{ParseTime: true}
+	}
 	dialect, dsn, err := ParseDatabaseURL(url, opt)
 	if err != nil {
 		return nil, err

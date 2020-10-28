@@ -223,6 +223,7 @@ func (s *Storage) CreateNewTrial(studyID int) (int, error) {
 		}
 		// TODO(c-bata): Catch deadlock error and retry.
 		// https://dev.mysql.com/doc/refman/5.7/en/innodb-deadlocks-handling.html
+		// https://github.com/optuna/optuna/pull/1490#discussion_r451297057
 		if result.Error != nil {
 			return result.Error
 		}
@@ -278,6 +279,7 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 		}
 		// TODO(c-bata): Catch deadlock error and retry.
 		// https://dev.mysql.com/doc/refman/5.7/en/innodb-deadlocks-handling.html
+		// https://github.com/optuna/optuna/pull/1490#discussion_r451297057
 		if result.Error != nil {
 			return result.Error
 		}
