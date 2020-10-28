@@ -22,7 +22,7 @@ var (
 func SetupSQLite3Test() (*rdb.Storage, func(), error) {
 	setupCounterMu.Lock()
 	defer setupCounterMu.Unlock()
-	setupCounter += 1
+	setupCounter++
 	sqlitePath := fmt.Sprintf("goptuna-test-%d.db", setupCounter)
 
 	db, err := gorm.Open(sqlite.Open(sqlitePath), &gorm.Config{})
