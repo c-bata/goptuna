@@ -213,7 +213,7 @@ func (s *Storage) CreateNewTrial(studyID int) (int, error) {
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		var study studyModel
 		var result *gorm.DB
-		if s.db.Dialector.Name() == "sqlite3" {
+		if s.db.Dialector.Name() == "sqlite" {
 			// TODO(c-bata): Fix concurrency problem on SQLite3.
 			// SQLite3 cannot interpret `FOR UPDATE` clause.
 			result = tx.First(&study, "study_id = ?", studyID)
@@ -268,7 +268,7 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		var study studyModel
 		var result *gorm.DB
-		if s.db.Dialector.Name() == "sqlite3" {
+		if s.db.Dialector.Name() == "sqlite" {
 			// TODO(c-bata): Fix concurrency problem on SQLite3.
 			// SQLite3 cannot interpret `FOR UPDATE` clause.
 			result = tx.First(&study, "study_id = ?", studyID)
@@ -500,7 +500,7 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		var trial trialModel
 		var result *gorm.DB
-		if s.db.Dialector.Name() == "sqlite3" {
+		if s.db.Dialector.Name() == "sqlite" {
 			// TODO(c-bata): Fix concurrency problem on SQLite3.
 			// SQLite3 cannot interpret `FOR UPDATE` clause.
 			result = tx.First(&trial, "trial_id = ?", trialID)
