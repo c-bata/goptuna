@@ -229,6 +229,24 @@ func (s *Storage) GetAllStudySummaries() ([]goptuna.StudySummary, error) {
 func (s *Storage) CreateNewTrial(studyID int) (int, error) {
 	var trialID int
 	err := s.db.Transaction(func(tx *gorm.DB) error {
+		var study studyModel
+		var result *gorm.DB
+		if s.config.Dialector.Name() == "sqlite3" {
+			// TODO(c-bata): Fix concurrency problem on SQLite3.
+			// SQLite3 cannot interpret `FOR UPDATE` clause.
+			result = tx.First(&study, "study_id = ?", studyID)
+		} else {
+			// Locking within a study is necessary since the creation of a trial is not an
+			// atomic operation. More precisely, the trial number computed in
+			result = tx.Set("gorm:query_option", "FOR UPDATE").
+				First(&study, "study_id = ?", studyID)
+		}
+		// TODO(c-bata): Catch deadlock error and retry.
+		// https://dev.mysql.com/doc/refman/5.7/en/innodb-deadlocks-handling.html
+		if result.Error != nil {
+			return result.Error
+		}
+
 		// Create a new trial
 		start := time.Now()
 		trial := &trialModel{
