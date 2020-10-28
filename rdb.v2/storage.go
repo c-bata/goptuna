@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"gorm.io/gorm/clause"
+
 	"github.com/c-bata/goptuna"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -218,8 +220,7 @@ func (s *Storage) CreateNewTrial(studyID int) (int, error) {
 		} else {
 			// Locking within a study is necessary since the creation of a trial is not an
 			// atomic operation. More precisely, the trial number computed in
-			result = tx.Set("gorm:query_option", "FOR UPDATE").
-				First(&study, "study_id = ?", studyID)
+			result = tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&study, "study_id = ?", studyID)
 		}
 		// TODO(c-bata): Catch deadlock error and retry.
 		// https://dev.mysql.com/doc/refman/5.7/en/innodb-deadlocks-handling.html
@@ -274,8 +275,7 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 		} else {
 			// Locking within a study is necessary since the creation of a trial is not an
 			// atomic operation. More precisely, the trial number computed in
-			result = tx.Set("gorm:query_option", "FOR UPDATE").
-				First(&study, "study_id = ?", studyID)
+			result = tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&study, "study_id = ?", studyID)
 		}
 		// TODO(c-bata): Catch deadlock error and retry.
 		// https://dev.mysql.com/doc/refman/5.7/en/innodb-deadlocks-handling.html
