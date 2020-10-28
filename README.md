@@ -9,12 +9,6 @@ Distributed hyperparameter optimization framework, inspired by [Optuna](https://
 This library is particularly designed for machine learning, but everything will be able to optimize if you can define the objective function
 (e.g. Optimizing the number of goroutines of your server and the memory buffer size of the caching systems).
 
-**Key features:**
-
-| State-of-the-art algorithms | Optuna compatible RDB backend |
-| --------------------------- | ----------------------------- |
-| <img width="750" alt="state-of-the-art-algorithms" src="https://user-images.githubusercontent.com/5564044/88860180-2d66cc00-d236-11ea-9a2f-de731c54a870.png"> | <img width="750" alt="optuna-compatibility" src="https://user-images.githubusercontent.com/5564044/88843168-a3aa0500-d21b-11ea-8fc1-d1cdca890a3f.png"> |
-
 **Supported algorithms:**
 
 Goptuna supports various state-of-the-art Bayesian optimization, Evolution strategy and Multi-armed bandit algorithms.
@@ -27,6 +21,12 @@ These algorithms are implemented in pure Go and continuously benchmarked on GitH
 * BIPOP-CMA-ES: BI-population CMA-ES [5]
 * Median Stopping Rule [6]
 * ASHA: Asynchronous Successive Halving Algorithm (Optuna flavored version) [1,7,8]
+
+**Built-in dashboard:**
+
+| Manage optimization results | Interactive live-updating graphs |
+| --------------------------- | -------------------------------- |
+| <img width="750" alt="state-of-the-art-algorithms" src="https://user-images.githubusercontent.com/5564044/97099702-4107be80-16cf-11eb-9d97-f5ceec98ce52.gif"> | <img width="750" alt="visualization" src="https://user-images.githubusercontent.com/5564044/97099797-66e19300-16d0-11eb-826c-6977e3941fb0.gif"> |
 
 **Projects using Goptuna:**
 
@@ -96,7 +96,6 @@ Furthermore, I recommend you to use RDB storage backend for following purposes.
 * Continue from where we stopped in the previous optimizations.
 * Scale studies to tens of workers that connecting to the same RDB storage.
 * Check optimization results via built-in dashboard.
-* Visualize parameters on Jupyter notebook using Optuna.
 
 ### Advanced usage
 
@@ -204,6 +203,10 @@ References:
 * [7] [Kevin G. Jamieson and Ameet S. Talwalkar. Non-stochastic best arm identification and hyperparameter optimization. In AISTATS, 2016.](http://proceedings.mlr.press/v51/jamieson16.pdf)
 * [8] [Liam Li, Kevin Jamieson, Afshin Rostamizadeh, Ekaterina Gonina, Moritz Hardt, Benjamin Recht, and Ameet Talwalkar. Massively parallel hyperparameter tuning. arXiv preprint arXiv:1810.05934, 2018.](https://arxiv.org/abs/1810.05934)
 * [9] [J. Snoek, H. Larochelle, and R. Adams. Practical Bayesian optimization of machine learning algorithms. In Advances in Neural Information Processing Systems 25, pages 2960–2968, 2012.](https://arxiv.org/abs/1206.2944)
+
+Presentations:
+
+* :jp: [Goptuna Distributed Bayesian Optimization Framework at Go Conference 2019 Autumn](https://www.slideshare.net/c-bata/goptuna-distributed-bayesian-optimization-framework-at-go-conference-2019-autumn-187538495)
 
 Blog posts:
 
