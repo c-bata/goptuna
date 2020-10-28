@@ -5,6 +5,11 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 var (
@@ -36,6 +41,24 @@ var engineURLPattern = regexp.MustCompile(
 // EngineOption to set the DSN option
 type EngineOption struct {
 	ParseTime bool
+}
+
+// GetGormDBFromURL parse SQLAlchemy's Engine URL format and returns GORM v2 DB object.
+func GetGormDBFromURL(url string, opt *EngineOption) (*gorm.DB, error) {
+	dialect, dsn, err := ParseDatabaseURL(url, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	if dialect == "sqlite3" {
+		return gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	} else if dialect == "mysql" {
+		return gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	} else if dialect == "postgres" {
+		return gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	} else {
+		return nil, errors.New("unsupported dialect")
+	}
 }
 
 // ParseDatabaseURL parse SQLAlchemy's Engine URL format and returns Go's dialect and args.
