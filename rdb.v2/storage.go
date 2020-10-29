@@ -212,16 +212,12 @@ func (s *Storage) CreateNewTrial(studyID int) (int, error) {
 	var trialID int
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		var study studyModel
-		var result *gorm.DB
-		if s.db.Dialector.Name() == "sqlite" {
-			// TODO(c-bata): Fix concurrency problem on SQLite3.
-			// SQLite3 cannot interpret `FOR UPDATE` clause.
-			result = tx.First(&study, "study_id = ?", studyID)
-		} else {
-			// Locking within a study is necessary since the creation of a trial is not an
-			// atomic operation. More precisely, the trial number computed in
-			result = tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&study, "study_id = ?", studyID)
-		}
+
+		// Locking within a study is necessary since the creation of a trial is not an atomic operation.
+		// More precisely, the trial number computation is prone to race conditions without this lock.
+		// Note that SQLite3 cannot interpret `FOR UPDATE` clause.
+		result := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&study, "study_id = ?", studyID)
+
 		// TODO(c-bata): Catch deadlock error and retry.
 		// https://dev.mysql.com/doc/refman/5.7/en/innodb-deadlocks-handling.html
 		// https://github.com/optuna/optuna/pull/1490#discussion_r451297057
@@ -267,16 +263,12 @@ func (s *Storage) CloneTrial(studyID int, baseTrial goptuna.FrozenTrial) (int, e
 	var trialID int
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 		var study studyModel
-		var result *gorm.DB
-		if s.db.Dialector.Name() == "sqlite" {
-			// TODO(c-bata): Fix concurrency problem on SQLite3.
-			// SQLite3 cannot interpret `FOR UPDATE` clause.
-			result = tx.First(&study, "study_id = ?", studyID)
-		} else {
-			// Locking within a study is necessary since the creation of a trial is not an
-			// atomic operation. More precisely, the trial number computed in
-			result = tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&study, "study_id = ?", studyID)
-		}
+
+		// Locking within a study is necessary since the creation of a trial is not an atomic operation.
+		// More precisely, the trial number computation is prone to race conditions without this lock.
+		// Note that SQLite3 cannot interpret `FOR UPDATE` clause.
+		result := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&study, "study_id = ?", studyID)
+
 		// TODO(c-bata): Catch deadlock error and retry.
 		// https://dev.mysql.com/doc/refman/5.7/en/innodb-deadlocks-handling.html
 		// https://github.com/optuna/optuna/pull/1490#discussion_r451297057
@@ -499,15 +491,11 @@ func (s *Storage) SetTrialState(trialID int, state goptuna.TrialState) error {
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		var trial trialModel
-		var result *gorm.DB
-		if s.db.Dialector.Name() == "sqlite" {
-			// TODO(c-bata): Fix concurrency problem on SQLite3.
-			// SQLite3 cannot interpret `FOR UPDATE` clause.
-			result = tx.First(&trial, "trial_id = ?", trialID)
-		} else {
-			result = tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-				First(&trial, "trial_id = ?", trialID)
-		}
+
+		// Note that SQLite3 cannot interpret `FOR UPDATE` clause.
+		result := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			First(&trial, "trial_id = ?", trialID)
+
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return goptuna.ErrInvalidTrialID
 		}
