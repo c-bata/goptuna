@@ -2,8 +2,6 @@ module github.com/c-bata/goptuna
 
 go 1.14
 
-replace gorm.io/driver/sqlite => github.com/c-bata/sqlite v1.1.4-0.20201029024911-2895126f7eec
-
 require (
 	github.com/go-gota/gota v0.10.1
 	github.com/google/uuid v1.1.1
@@ -17,6 +15,6 @@ require (
 	gorgonia.org/tensor v0.9.6
 	gorm.io/driver/mysql v1.0.3
 	gorm.io/driver/postgres v1.0.5
-	gorm.io/driver/sqlite v1.1.3
+	gorm.io/driver/sqlite v1.1.4-0.20201029040614-e1caf3738eb9
 	gorm.io/gorm v1.20.5
 )
