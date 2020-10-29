@@ -16,6 +16,10 @@ github.com/awalterschulze/gographviz v0.0.0-20190221210632-1e9ccb565bca/go.mod h
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/c-bata/goptuna v0.1.1-0.20191228081229-689071991c89/go.mod h1:oFGcPHSv7ChMD/L1PxWtHuXKvgpHfcPpTZEDiznEexg=
 github.com/c-bata/goptuna v0.3.0/go.mod h1:Qs8/vk1a6Tqk3roNAJ9Kj+7LrI4z8jw46oP0BVjx63U=
+github.com/c-bata/sqlite v1.1.4-0.20201023060444-7441b8e3f837 h1:4GIH8Nx1yZKvx0t39Da0g5tp/ijYGfacOGtVOd+nBog=
+github.com/c-bata/sqlite v1.1.4-0.20201023060444-7441b8e3f837/go.mod h1:UVVgiOxsQDg6fNiHcNA1fnvw4EFmq98C6c2GNcEkj78=
+github.com/c-bata/sqlite v1.1.4-0.20201029024911-2895126f7eec h1:Rpi4Hh+p++R4G9o/NdsDyQfOer2E/ttpR5818W5Ez6o=
+github.com/c-bata/sqlite v1.1.4-0.20201029024911-2895126f7eec/go.mod h1:UVVgiOxsQDg6fNiHcNA1fnvw4EFmq98C6c2GNcEkj78=
 github.com/chewxy/hm v1.0.0 h1:zy/TSv3LV2nD3dwUEQL2VhXeoXbb9QkpmdRAVUFiA6k=
 github.com/chewxy/hm v1.0.0/go.mod h1:qg9YI4q6Fkj/whwHR1D+bOGeF7SniIP40VweVepLjg0=
 github.com/chewxy/math32 v1.0.0/go.mod h1:Miac6hA1ohdDUTagnvJy/q+aNnEk16qWUdb8ZVhvCN0=
@@ -202,6 +206,8 @@ github.com/mattn/go-sqlite3 v1.10.0 h1:jbhqpg7tQe4SupckyijYiy0mJJ/pRyHvXf7JdWK86
 github.com/mattn/go-sqlite3 v1.10.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/mattn/go-sqlite3 v1.14.3 h1:j7a/xn1U6TKA/PHHxqZuzh64CdtRc7rU9M+AvkOl5bA=
 github.com/mattn/go-sqlite3 v1.14.3/go.mod h1:WVKg1VTActs4Qso6iwGbiFih2UIHo0ENGwNd0Lj+XmI=
+github.com/mattn/go-sqlite3 v1.14.4 h1:4rQjbDxdu9fSgI/r3KN72G3c2goxknAqHHgPWWs8UlI=
+github.com/mattn/go-sqlite3 v1.14.4/go.mod h1:WVKg1VTActs4Qso6iwGbiFih2UIHo0ENGwNd0Lj+XmI=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
