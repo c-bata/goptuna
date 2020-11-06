@@ -180,7 +180,7 @@ $ goptuna dashboard --storage sqlite:///example.db
 MySQL:
 
 ```console
-$ goptuna dashboard --storage mysql+mysqldb://goptuna:password@127.0.0.1:3306/yourdb
+$ goptuna dashboard --storage mysql://goptuna:password@127.0.0.1:3306/yourdb
 ```
 
 ![goptuna dashboard](https://user-images.githubusercontent.com/5564044/96722047-e7aa4180-13e7-11eb-9f56-99a3ca7c6d35.gif)
