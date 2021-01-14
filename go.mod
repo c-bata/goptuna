@@ -1,6 +1,6 @@
 module github.com/c-bata/goptuna
 
-go 1.14
+go 1.15
 
 require (
 	github.com/go-gota/gota v0.10.1
