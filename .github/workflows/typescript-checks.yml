@@ -35,6 +35,7 @@ jobs:
         with:
           node-version: '14'
       - run: |
+          cd dashboard
           npm install
           npm run build:dev
           npm run build:prd
