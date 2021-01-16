@@ -18,6 +18,7 @@ import (
 	"gorgonia.org/tensor"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var (
@@ -30,7 +31,9 @@ func init() {
 }
 
 func main() {
-	db, err := gorm.Open(sqlite.Open("db.sqlite3"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open("db.sqlite3"), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
 	if err != nil {
 		log.Fatal("failed to open db:", err)
 	}
