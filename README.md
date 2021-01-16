@@ -147,7 +147,9 @@ package main
 import ...
 
 func main() {
-    db, _ := gorm.Open("mysql", "goptuna:password@tcp(localhost:3306)/yourdb?parseTime=true")
+    db, _ := gorm.Open(mysql.Open("goptuna:password@tcp(localhost:3306)/yourdb?parseTime=true"), &gorm.Config{
+        Logger: logger.Default.LogMode(logger.Silent),
+    })
     storage := rdb.NewStorage(db)
     defer db.Close()
 
