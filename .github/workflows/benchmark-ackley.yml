@@ -47,7 +47,7 @@ jobs:
           SOLVERS: all
         run: ./_benchmarks/runner.sh ackley ./kurobako-report.json
       - name: Plot kurobako result
-        uses: c-bata/github-actions-kurobako/plot@v3
+        uses: c-bata/github-actions-kurobako/plot@v4
         id: kurobako-plot
         with:
           report-json-path: './kurobako-report.json'
@@ -80,7 +80,7 @@ jobs:
         if: ${{ env.HAS_SECRET == 1 }}
       - name: Comment to a pull request
         if: ${{ env.HAS_SECRET == 1 }}
-        uses: c-bata/github-actions-kurobako@v2
+        uses: c-bata/github-actions-kurobako@v4
         with:
           report-md-path: './kurobako-report.md'
           public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/ackley-${{ github.sha }}.png

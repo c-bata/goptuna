@@ -59,7 +59,7 @@ jobs:
           SOLVERS: pruner
         run: ./_benchmarks/runner.sh hpobench-naval ./kurobako-report.json
       - name: Plot kurobako result
-        uses: c-bata/github-actions-kurobako/plot@v3
+        uses: c-bata/github-actions-kurobako/plot@v4
         id: kurobako-plot
         with:
           report-json-path: './kurobako-report.json'
@@ -90,7 +90,7 @@ jobs:
         run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/hpobench-naval-${{ github.sha }}.png
       - name: Comment to Pull Request
         if: ${{ env.HAS_SECRET == 1 }}
-        uses: c-bata/github-actions-kurobako@v2
+        uses: c-bata/github-actions-kurobako@v4
         with:
           report-md-path: './kurobako-report.md'
           public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/hpobench-naval-${{ github.sha }}.png
