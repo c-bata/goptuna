@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/go-gota/gota v0.10.1 // indirect
-	github.com/google/uuid v1.1.5
+	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/jinzhu/gorm v1.9.10
 	github.com/pkg/errors v0.9.1 // indirect
