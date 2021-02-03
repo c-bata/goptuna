@@ -6,7 +6,7 @@ require (
 	github.com/go-gota/gota v0.10.1 // indirect
 	github.com/google/uuid v1.1.5
 	github.com/gorilla/mux v1.8.0
-	github.com/jinzhu/gorm v1.9.10
+	github.com/jinzhu/gorm v1.9.16
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cobra v1.1.1
