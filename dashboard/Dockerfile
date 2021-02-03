@@ -1,4 +1,4 @@
-FROM node:14.14.0 AS front-builder
+FROM node:14.15.4 AS front-builder
 
 RUN mkdir -p /usr/src/
 WORKDIR /usr/src
