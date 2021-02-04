@@ -2,5 +2,13 @@
   "extends": [
     "config:base"
   ],
-  "schedule": ["before 3am on the first day of the month"]
+  "packageRules": [
+    {
+      "matchPaths": ["dashboard/**"],
+      "groupName": "dashboard-js-dependencies",
+      "schedule": ["before 3am on the first day of the month"],
+      "automerge": true,
+      "automergeType": "branch"
+    }
+  ]
 }
