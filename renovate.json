@@ -5,7 +5,21 @@
   "packageRules": [
     {
       "matchPaths": ["dashboard/**"],
-      "groupName": "dashboard-js-dependencies",
+      "groupName": "dashboard-js",
+      "schedule": ["before 3am on the first day of the month"],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "matchPaths": ["go.mod"],
+      "groupName": "go-mod",
+      "schedule": ["before 3am on the first day of the month"],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "matchPaths": [".github/**"],
+      "groupName": "github-actions",
       "schedule": ["before 3am on the first day of the month"],
       "automerge": true,
       "automergeType": "branch"
