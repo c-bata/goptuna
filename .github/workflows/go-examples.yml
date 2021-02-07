@@ -28,6 +28,7 @@ jobs:
       run: |
         make build
         ./bin/cmaes
+        ./bin/sobol
         ./bin/cmaes_blackhole
         ./bin/simple_tpe
         ./bin/concurrency
