@@ -251,6 +251,12 @@ func TestDistributionContains(t *testing.T) {
 			want:         true,
 		},
 		{
+			name:         "uniform distribution upper bound",
+			distribution: &goptuna.UniformDistribution{Low: 0.5, High: 5.5},
+			args:         5.5,
+			want:         true,
+		},
+		{
 			name:         "uniform distribution lower",
 			distribution: &goptuna.UniformDistribution{Low: 0.5, High: 5.5},
 			args:         -0.5,
@@ -265,7 +271,13 @@ func TestDistributionContains(t *testing.T) {
 		{
 			name:         "log uniform distribution true",
 			distribution: &goptuna.LogUniformDistribution{Low: 1e-1, High: 1e3},
-			args:         float64(1e2),
+			args:         1e2,
+			want:         true,
+		},
+		{
+			name:         "log uniform distribution upper bound",
+			distribution: &goptuna.LogUniformDistribution{Low: 1e-1, High: 1e3},
+			args:         1e2,
 			want:         true,
 		},
 		{

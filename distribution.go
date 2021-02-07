@@ -49,7 +49,7 @@ func (d *UniformDistribution) Contains(ir float64) bool {
 	if d.Single() {
 		return ir == d.Low
 	}
-	return d.Low <= ir && ir < d.High
+	return d.Low <= ir && ir <= d.High
 }
 
 var _ Distribution = &LogUniformDistribution{}
@@ -80,7 +80,7 @@ func (d *LogUniformDistribution) Contains(ir float64) bool {
 	if d.Single() {
 		return ir == d.Low
 	}
-	return d.Low <= ir && ir < d.High
+	return d.Low <= ir && ir <= d.High
 }
 
 var _ Distribution = &IntUniformDistribution{}
