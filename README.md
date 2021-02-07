@@ -21,6 +21,7 @@ These algorithms are implemented in pure Go and continuously benchmarked on GitH
 * BIPOP-CMA-ES: BI-population CMA-ES [5]
 * Median Stopping Rule [6]
 * ASHA: Asynchronous Successive Halving Algorithm (Optuna flavored version) [1,7,8]
+* Sobol's Quasi-Monte Carlo Sampling [10]
 
 **Built-in dashboard:**
 
@@ -205,6 +206,8 @@ References:
 * [7] [Kevin G. Jamieson and Ameet S. Talwalkar. Non-stochastic best arm identification and hyperparameter optimization. In AISTATS, 2016.](http://proceedings.mlr.press/v51/jamieson16.pdf)
 * [8] [Liam Li, Kevin Jamieson, Afshin Rostamizadeh, Ekaterina Gonina, Moritz Hardt, Benjamin Recht, and Ameet Talwalkar. Massively parallel hyperparameter tuning. arXiv preprint arXiv:1810.05934, 2018.](https://arxiv.org/abs/1810.05934)
 * [9] [J. Snoek, H. Larochelle, and R. Adams. Practical Bayesian optimization of machine learning algorithms. In Advances in Neural Information Processing Systems 25, pages 2960–2968, 2012.](https://arxiv.org/abs/1206.2944)
+* [10] [S. Joe and F. Y. Kuo, Remark on Algorithm 659: Implementing Sobol's quasirandom sequence generator, ACM Trans. Math. Softw. 29, 49-57 (2003).](https://dl.acm.org/doi/10.1145/641876.641879)
+* [11] [Sergei Kucherenko, Daniel Albrecht, and Andrea Saltelli. Exploring multi-dimensional spaces: A comparison of latin hypercube and quasi monte carlo sampling techniques. arXiv preprint arXiv:1505.02350, 2015.](https://arxiv.org/abs/1505.02350)
 
 Presentations:
 
@@ -223,4 +226,3 @@ Status:
 ## License
 
 This software is licensed under the MIT license, see [LICENSE](./LICENSE) for more information.
-
