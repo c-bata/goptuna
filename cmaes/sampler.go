@@ -227,7 +227,7 @@ func (s *Sampler) initOptimizer(
 	return NewOptimizer(mean, sigma0, options...)
 }
 
-// NewSampler returns the TPE sampler.
+// NewSampler returns the CMA-ES sampler.
 func NewSampler(opts ...SamplerOption) *Sampler {
 	sampler := &Sampler{
 		rng:            rand.New(rand.NewSource(0)),
