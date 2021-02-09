@@ -30,10 +30,13 @@ func initDirectionNumbers(dim uint32) [][]uint32 {
 		v[j] = make([]uint32, maxBit+1)
 
 		// Read in parameters from file
-		// Skip 1000 lines from the top as Joe&Kuo's C++ program do.
-		dn := directionNumbers[1000+j]
+		dn := directionNumbers[j]
+		m := make([]uint32, len(dn.M)+1)
+		for i := uint32(0); i < dn.S; i++ {
+			m[i+1] = dn.M[i]
+		}
 		for i := uint32(1); i <= dn.S; i++ {
-			v[j][i] = dn.M[i-1] << (32 - i)
+			v[j][i] = m[i] << (32 - i)
 		}
 		for i := dn.S + 1; i <= maxBit; i++ {
 			v[j][i] = v[j][i-dn.S] ^ (v[j][i-dn.S] >> dn.S)

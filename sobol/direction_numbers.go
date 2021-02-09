@@ -4,7 +4,7 @@ package sobol
 
 // The original data of direction numbers is distributed at https://web.maths.unsw.edu.au/~fkuo/sobol/ (BSD License).
 
-const maxDim = 21201 - 1002  // Due to skip 1000 lines
+const maxDim = 21201 - 2
 const maxDeg = 18
 const maxBit = 30
 

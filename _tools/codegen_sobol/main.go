@@ -103,7 +103,7 @@ func main() {
 	fmt.Fprintf(fout, "\n")
 	fmt.Fprintf(fout, "// The original data of direction numbers is distributed at https://web.maths.unsw.edu.au/~fkuo/sobol/ (BSD License).\n")
 	fmt.Fprintf(fout, "\n")
-	fmt.Fprintf(fout, "const maxDim = 21201 - 1002  // Due to skip 1000 lines\n")
+	fmt.Fprintf(fout, "const maxDim = 21201 - 2\n")
 	fmt.Fprintf(fout, "const maxDeg = 18\n")
 	fmt.Fprintf(fout, "const maxBit = 30\n")
 	fmt.Fprintf(fout, "\n")
