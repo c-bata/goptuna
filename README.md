@@ -21,7 +21,7 @@ These algorithms are implemented in pure Go and continuously benchmarked on GitH
 * BIPOP-CMA-ES: BI-population CMA-ES [5]
 * Median Stopping Rule [6]
 * ASHA: Asynchronous Successive Halving Algorithm (Optuna flavored version) [1,7,8]
-* Sobol's Quasi-Monte Carlo Sampling [10]
+* Quasi-monte carlo sampling based on Sobol sequence [10, 11]
 
 **Built-in dashboard:**
 
