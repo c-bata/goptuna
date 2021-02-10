@@ -10,8 +10,27 @@ import (
 var _ goptuna.RelativeSampler = &Sampler{}
 
 // Sampler for quasi-Monte Carlo Sampling based on Sobol sequence.
+// It is recommended to use "SamplerOptionSkipInitialPoints(n)" for better performance.
+// Furthermore, if you use this sampler from multiple workers, you need to specify
+// different "n" argument for each workers to remove duplicated parameters.
 type Sampler struct {
-	engine *Engine
+	engine  *Engine
+	numSkip uint32
+}
+
+// SamplerOption is a type of function to set options.
+type SamplerOption func(sampler *Sampler)
+
+// SamplerOptionSkipInitialPoints to skip the number of initial points.
+// Joe&Kuo recommended to drop initial portion of sequence.
+// Thereby, Sobol' sequence tends to perform better.
+// This function takes 'nSamples' argument which is the number of points to be
+// used (= the number of objective function calls), then skips the largest
+// power of 2 points smaller than nSample.
+func SamplerOptionSkipInitialPoints(nSamples uint32) SamplerOption {
+	return func(sampler *Sampler) {
+		sampler.numSkip = getNumberOfSkippedPoints(nSamples)
+	}
 }
 
 // SampleRelative samples multiple dimensional parameters in a given search space.
@@ -19,6 +38,9 @@ func (s *Sampler) SampleRelative(study *goptuna.Study, trial goptuna.FrozenTrial
 	dim := len(searchSpace)
 	if s.engine == nil {
 		s.engine = NewEngine(uint32(dim))
+		for i := uint32(0); i < s.numSkip; i++ {
+			s.engine.Draw()
+		}
 	} else {
 		// Detect dynamic search space.
 		if s.engine.dim != uint32(dim) {
@@ -68,7 +90,8 @@ func (s *Sampler) SampleRelative(study *goptuna.Study, trial goptuna.FrozenTrial
 // NewSampler returns the Sobol sampler.
 func NewSampler() *Sampler {
 	sampler := &Sampler{
-		engine: nil,
+		engine:  nil,
+		numSkip: 0,
 	}
 	return sampler
 }

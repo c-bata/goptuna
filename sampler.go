@@ -94,7 +94,7 @@ type RandomSampler struct {
 	mu  sync.Mutex
 }
 
-// RandomSamplerOption is a type of function to set change the option.
+// RandomSamplerOption is a type of function to set options.
 type RandomSamplerOption func(sampler *RandomSampler)
 
 // RandomSamplerOptionSeed sets seed number.

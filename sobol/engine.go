@@ -14,6 +14,24 @@ func findRightmostZeroBit(n uint32) uint32 {
 	return c + 1 // starts from 1
 }
 
+func getNumberOfSkippedPoints(n uint32) uint32 {
+	// In the 3-page notes of Joe & Kuo, they said:
+	//
+	// > It has been recommended by some that the Sobol0 sequence tends to perform better
+	// > if an initial portion of the sequence is dropped: the number of points skipped is
+	// > the largest power of 2 smaller than the number of points to be used.
+	// > However, we are less persuaded by such recommendation ourselves.
+	cnt := uint32(0)
+	for {
+		n >>= 1
+		if n == 0 {
+			break
+		}
+		cnt++
+	}
+	return uint32(math.Pow(2, float64(cnt)))
+}
+
 func initDirectionNumbers(dim uint32) [][]uint32 {
 	v := make([][]uint32, dim)
 	for i := uint32(0); i < dim; i++ {

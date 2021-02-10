@@ -35,3 +35,38 @@ func Test_findRightmostZeroBit(t *testing.T) {
 		})
 	}
 }
+
+func Test_getNumberOfSkippedPoints(t *testing.T) {
+	tests := []struct {
+		n        uint32
+		expected uint32
+	}{
+		{
+			n:        2,
+			expected: 2,
+		},
+		{
+			n:        7,
+			expected: 4,
+		},
+		{
+			n:        8,
+			expected: 8,
+		},
+		{
+			n:        10,
+			expected: 8,
+		},
+		{
+			n:        20,
+			expected: 16,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("n=%d", tt.n), func(t *testing.T) {
+			if got := getNumberOfSkippedPoints(tt.n); got != tt.expected {
+				t.Errorf("skippedPoints(%d) = %v, expected %v", tt.n, got, tt.expected)
+			}
+		})
+	}
+}
