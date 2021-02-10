@@ -38,7 +38,7 @@ func (s *Sampler) SampleRelative(study *goptuna.Study, trial goptuna.FrozenTrial
 	dim := len(searchSpace)
 	if s.engine == nil {
 		s.engine = NewEngine(uint32(dim))
-		for i := uint32(0); i<s.numSkip; i++ {
+		for i := uint32(0); i < s.numSkip; i++ {
 			s.engine.Draw()
 		}
 	} else {
