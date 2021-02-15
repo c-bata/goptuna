@@ -36,6 +36,26 @@ func Test_findRightmostZeroBit(t *testing.T) {
 	}
 }
 
+func BenchmarkFindRightmostZeroBit(b *testing.B) {
+	for n := uint32(0); n < uint32(b.N); n++ {
+		findRightmostZeroBit(n)
+	}
+}
+
+func BenchmarkOldFindRightmostZeroBit(b *testing.B) {
+	old := func(n uint32) uint32 {
+		c := uint32(0)
+		for n&(1<<c) != 0 {
+			c++
+		}
+		return c + 1 // starts from 1
+	}
+
+	for n := uint32(0); n < uint32(b.N); n++ {
+		old(n)
+	}
+}
+
 func Test_getNumberOfSkippedPoints(t *testing.T) {
 	tests := []struct {
 		n        uint32
