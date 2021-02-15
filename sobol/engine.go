@@ -3,15 +3,13 @@ package sobol
 import (
 	"fmt"
 	"math"
+	"math/bits"
 )
 
 // findRightmostZeroBit returns index from the right of the first zero bit of n.
 func findRightmostZeroBit(n uint32) uint32 {
-	c := uint32(0)
-	for n&(1<<c) != 0 {
-		c++
-	}
-	return c + 1 // starts from 1
+	n = ^n
+	return uint32(bits.OnesCount32((n & -n) - 1)) + 1
 }
 
 func getNumberOfSkippedPoints(n uint32) uint32 {
