@@ -3,6 +3,7 @@ REVISION := $(shell git rev-parse --short HEAD)
 LDFLAGS := -X 'main.version=$(VERSION)' \
            -X 'main.revision=$(REVISION)'
 
+NO_EMBED_PKGS := $(shell go list -e ./... | grep -v -e dashboard -e cmd)
 GOIMPORTS ?= goimports
 GOCILINT ?= golangci-lint
 GO ?= go
@@ -10,7 +11,7 @@ GODOC ?= godoc
 
 .DEFAULT_GOAL := help
 
-SOURCES := $(shell find . -name "*.go" | grep -v "sobol/direction_numbers.go" | grep -v "dashboard/statik/statik.go")
+SOURCES := $(shell find . -name "*.go" | grep -v -e "sobol/direction_numbers.go" -e "dashboard/statik/statik.go")
 
 .PHONY: fmt
 fmt: $(SOURCES) ## Formatting source codes.
@@ -22,7 +23,7 @@ lint: ## Run golint and go vet.
 
 .PHONY: test
 test:  ## Run tests with race condition checking.
-	@$(GO) test -race ./...
+	@$(GO) test -race $(NO_EMBED_PKGS)
 
 .PHONY: bench
 bench:  ## Run benchmarks.

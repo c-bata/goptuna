@@ -28,18 +28,45 @@ jobs:
         tar -xvf ./golangci-lint-1.20.1-linux-amd64.tar.gz
         GOCILINT=./golangci-lint-1.20.1-linux-amd64/golangci-lint make lint
 
+  build:
+    name: Test on ${{ matrix.os }} with ${{ matrix.go }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        go: [1.15, 1.16]
+
+    steps:
+      - name: Set up Go ${{ matrix.go }}
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@master
+
+      - name: Put a dummy js file for go:embed.
+        run: |
+          mkdir -p dashboard/public/
+          touch dashboard/public/bundle.js
+
+      - name: Check whether a goptuna binary is successfully built.
+        run: go build -o ./goptuna cmd/main.go
+
   test:
-    name: Test on ${{ matrix.os }}
+    name: Test on ${{ matrix.os }} with ${{ matrix.go }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
+        go: [1.16]
 
     steps:
-    - name: Set up Go 1.15
+    - name: Set up Go ${{ matrix.go }}
       uses: actions/setup-go@v2
       with:
-        go-version: 1.15
+        go-version: ${{ matrix.go }}
       id: go
 
     - name: Check out code into the Go module directory
