@@ -3,7 +3,6 @@
 ![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)
 [![GoDoc](https://godoc.org/github.com/c-bata/goptuna?status.svg)](https://godoc.org/github.com/c-bata/goptuna)
 [![Go Report Card](https://goreportcard.com/badge/github.com/c-bata/goptuna)](https://goreportcard.com/report/github.com/c-bata/goptuna)
-![tests](https://github.com/c-bata/goptuna/workflows/tests/badge.svg)
 
 Distributed hyperparameter optimization framework, inspired by [Optuna](https://github.com/optuna/optuna) [1].
 This library is particularly designed for machine learning, but everything will be able to optimize if you can define the objective function
