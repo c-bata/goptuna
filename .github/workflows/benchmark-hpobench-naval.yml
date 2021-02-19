@@ -51,6 +51,7 @@ jobs:
           wget -O ./tmp/fcnet_tabular_benchmarks.tar.gz http://ml4aad.org/wp-content/uploads/2019/01/fcnet_tabular_benchmarks.tar.gz
           tar xf ./tmp/fcnet_tabular_benchmarks.tar.gz -C ./tmp
 
+      - run: go get github.com/sile/kurobako-go
       - name: Run HPOBench-Naval Benchmark
         env:
           KUROBAKO: ./kurobako

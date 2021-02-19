@@ -39,6 +39,7 @@ jobs:
           chmod +x kurobako
           ./kurobako -h
 
+      - run: go get github.com/sile/kurobako-go
       - name: Run benchmarks of Ackley function
         env:
           KUROBAKO: ./kurobako
