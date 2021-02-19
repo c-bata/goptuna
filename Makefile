@@ -3,24 +3,14 @@ REVISION := $(shell git rev-parse --short HEAD)
 LDFLAGS := -X 'main.version=$(VERSION)' \
            -X 'main.revision=$(REVISION)'
 
-GOIMPORTS ?= GO111MODULE=on goimports
-GOCILINT ?= GO111MODULE=on golangci-lint
-GO ?= GO111MODULE=on go
-GODOC ?= GO111MODULE=on godoc
+GOIMPORTS ?= goimports
+GOCILINT ?= golangci-lint
+GO ?= go
+GODOC ?= godoc
 
 .DEFAULT_GOAL := help
 
-PKGS := $(shell go list ./...)
-SOURCES := $(shell find . -name "*.go")
-ENV := GO111MODULE=on
-
-.PHONY: setup
-setup:  ## Setup for required tools.
-	go get -u golang.org/x/tools/cmd/goimports
-	go get -u golang.org/x/tools/cmd/stringer
-	go get golang.org/x/tools/cmd/godoc
-	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-
+SOURCES := $(shell find . -name "*.go" | grep -v "sobol/direction_numbers.go" | grep -v "dashboard/statik/statik.go")
 
 .PHONY: fmt
 fmt: $(SOURCES) ## Formatting source codes.
@@ -57,13 +47,6 @@ build: ## Build example command lines.
 	mkdir -p ./bin/
 	$(GO) build -o ./bin/goptuna -ldflags "$(LDFLAGS)" cmd/main.go
 	./_examples/build.sh
-
-.PHONY: build-dashboard
-build-dashboard: ## Build dashboard and bundle it.
-	docker build -t c-bata/goptuna-dashboard ./dashboard
-	docker run -it --rm \
-		-v `PWD`/dashboard/statik:/usr/src/statik \
-		c-bata/goptuna-dashboard
 
 .PHONY: help
 help: ## Show help text
