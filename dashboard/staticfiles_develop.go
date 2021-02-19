@@ -14,7 +14,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func registerStaticFileRoutes(r *mux.Router, prefix string) error {
+func registerStaticFileRoutes(r *mux.Router, prefix string) {
 	staticRoot := os.Getenv("GOPTUNA_DASHBOARD_STATIC_ROOT")
 	if staticRoot == "" {
 		staticRoot = "dashboard/public"
@@ -62,5 +62,8 @@ func registerStaticFileRoutes(r *mux.Router, prefix string) error {
 		r.Path(urlpath).Methods("Get").HandlerFunc(handler)
 		return nil
 	}
-	return filepath.Walk(staticRoot, wf)
+	err := filepath.Walk(staticRoot, wf)
+	if err != nil {
+		panic(err)
+	}
 }

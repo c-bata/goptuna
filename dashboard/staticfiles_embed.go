@@ -13,10 +13,9 @@ import (
 //go:embed public/bundle.js
 var jsbytes []byte
 
-func registerStaticFileRoutes(r *mux.Router, prefix string) error {
+func registerStaticFileRoutes(r *mux.Router, prefix string) {
 	r.Path(path.Join(prefix, "bundle.js")).Methods("Get").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/javascript")
 		w.Write(jsbytes)
 	})
-	return nil
 }
