@@ -32,9 +32,6 @@ func registerStaticFileRoutes(r *mux.Router, prefix string) error {
 		}
 		urlpath := filepath[len(staticRoot):]
 		urlpath = path.Join(prefix, urlpath)
-		if urlpath[0] != '/' {
-			urlpath = "/" + urlpath
-		}
 
 		var contentType string
 		if strings.HasSuffix(filepath, ".css") {

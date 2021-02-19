@@ -38,7 +38,7 @@ func NewServer(s goptuna.Storage) (http.Handler, error) {
 	router.HandleFunc("/api/studies/{study_id:[0-9]+}", handleDeleteStudy).Methods("DELETE")
 
 	// Static files
-	err := registerStaticFileRoutes(router, "static")
+	err := registerStaticFileRoutes(router, "/static")
 	if err != nil {
 		return nil, err
 	}
