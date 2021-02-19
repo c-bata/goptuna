@@ -1,4 +1,4 @@
-// +build !develop
+// +build !develop,!go1.16
 
 package dashboard
 
@@ -48,9 +48,6 @@ func registerStaticFileRoutes(r *mux.Router, prefix string) error {
 		}
 		urlpath := filepath[len("/"):]
 		urlpath = path.Join(prefix, urlpath)
-		if urlpath[0] != '/' {
-			urlpath = "/" + urlpath
-		}
 		r.Path(urlpath).Methods("Get").HandlerFunc(handler)
 	}
 	return nil

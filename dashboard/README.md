@@ -2,7 +2,11 @@
 
 ## Running dashboard
 
-Pre-built JavaScript files are embedded using [rakyll/statik](https://github.com/rakyll/statik).
+Pre-built JavaScript files are embedded using:
+
+* `go:embed` for Go1.16 or later.
+* [rakyll/statik](https://github.com/rakyll/statik) for Go1.15 or older.
+
 So it's ok you just run `goptuna dashboard` command like this:
 
 ```

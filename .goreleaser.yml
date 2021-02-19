@@ -1,6 +1,6 @@
 project_name: goptuna
 env:
-  - GO111MODULE=on
+  - GO111MODULE=auto
 before:
   hooks:
     - go mod tidy

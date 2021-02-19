@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/go-examples.yml'
+      - '_examples/build.sh'
       - '**.go'
 jobs:
   examples:
@@ -24,9 +25,9 @@ jobs:
 
     - name: Running go tests
       env:
-        GO111MODULE: on
+        GO111MODULE: auto
       run: |
-        make build
+        _examples/build.sh
         ./bin/cmaes
         ./bin/sobol
         ./bin/cmaes_blackhole
