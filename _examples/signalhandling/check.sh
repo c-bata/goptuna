@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export GO111MODULE=on
+export GO111MODULE=auto
 DIR=$(cd $(dirname $0); pwd)
 REPOSITORY_ROOT=$(cd $(dirname $(dirname $(dirname $0))); pwd)
 
