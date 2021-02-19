@@ -9,7 +9,7 @@ import (
 // findRightmostZeroBit returns index from the right of the first zero bit of n.
 func findRightmostZeroBit(n uint32) uint32 {
 	n = ^n
-	return uint32(bits.OnesCount32((n & -n) - 1)) + 1
+	return uint32(bits.OnesCount32((n&-n)-1)) + 1
 }
 
 func getNumberOfSkippedPoints(n uint32) uint32 {

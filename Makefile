@@ -10,16 +10,8 @@ GODOC ?= godoc
 
 .DEFAULT_GOAL := help
 
-PKGS := $(shell go list ./...)
-SOURCES := $(shell find . -name "*.go")
-
-.PHONY: setup
-setup:  ## Setup for required tools.
-	go get -u golang.org/x/tools/cmd/goimports
-	go get -u golang.org/x/tools/cmd/stringer
-	go get golang.org/x/tools/cmd/godoc
-	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-
+NO_EMBED_PKGS := $(shell go list ./... | grep -v dashboard)
+SOURCES := $(shell find . -name "*.go" | grep -v "sobol/direction_numbers.go")
 
 .PHONY: fmt
 fmt: $(SOURCES) ## Formatting source codes.
@@ -27,11 +19,11 @@ fmt: $(SOURCES) ## Formatting source codes.
 
 .PHONY: lint
 lint: ## Run golint and go vet.
-	@$(GOCILINT) run --no-config --disable-all --enable=goimports --enable=gocyclo --enable=govet --enable=misspell --enable=golint ./...
+	@$(GOCILINT) run --no-config --disable-all --enable=goimports --enable=gocyclo --enable=govet --enable=misspell --enable=golint --skip-files="dashboard/staticfiles_embed.go" ./...
 
 .PHONY: test
 test:  ## Run tests with race condition checking.
-	@$(GO) test -race ./...
+	@$(GO) test -race $(NO_EMBED_PKGS)
 
 .PHONY: bench
 bench:  ## Run benchmarks.
