@@ -3,16 +3,15 @@ REVISION := $(shell git rev-parse --short HEAD)
 LDFLAGS := -X 'main.version=$(VERSION)' \
            -X 'main.revision=$(REVISION)'
 
-GOIMPORTS ?= GO111MODULE=on goimports
-GOCILINT ?= GO111MODULE=on golangci-lint
-GO ?= GO111MODULE=on go
-GODOC ?= GO111MODULE=on godoc
+GOIMPORTS ?= goimports
+GOCILINT ?= golangci-lint
+GO ?= go
+GODOC ?= godoc
 
 .DEFAULT_GOAL := help
 
 PKGS := $(shell go list ./...)
 SOURCES := $(shell find . -name "*.go")
-ENV := GO111MODULE=on
 
 .PHONY: setup
 setup:  ## Setup for required tools.

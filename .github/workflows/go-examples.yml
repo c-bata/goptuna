@@ -24,7 +24,7 @@ jobs:
 
     - name: Running go tests
       env:
-        GO111MODULE: on
+        GO111MODULE: auto
       run: |
         make build
         ./bin/cmaes
