@@ -59,7 +59,7 @@ func registerStaticFileRoutes(r *mux.Router, prefix string) error {
 			w.Header().Set("Content-Type", contentType)
 			w.Write(data)
 		}
-		r.Path(urlpath).Methods("Get").HandlerFunc(handler)
+		r.HandleFunc(urlpath, handler).Methods("GET")
 		return nil
 	}
 	return filepath.Walk(staticRoot, wf)
