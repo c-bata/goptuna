@@ -218,12 +218,12 @@ const TrialTable: FC<{ trials: Trial[] }> = ({ trials = [] }) => {
     { field: "value", label: "Value", sortable: true },
     {
       field: "datetime_start",
-      label: "Duration(ms)",
+      label: "Duration(sec)",
       toCellValue: (i) => {
         const startMs = trials[i].datetime_start?.getTime()
         const completeMs = trials[i].datetime_complete?.getTime()
         if (startMs !== undefined && completeMs !== undefined) {
-          return (completeMs - startMs).toString()
+          return ((completeMs - startMs) / 1000).toString()
         }
         return null
       },
