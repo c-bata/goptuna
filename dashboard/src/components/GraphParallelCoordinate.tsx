@@ -61,7 +61,7 @@ const plotCoordinate = (trials: Trial[]) => {
       return param!.value
     })
     const isnum = valueStrings.every((v) => {
-      return /^-?\d+\.\d+$/.test(v)
+      return !isNaN(parseFloat(v))
     })
     if (isnum) {
       const values: number[] = valueStrings.map((v) => parseFloat(v))
