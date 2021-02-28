@@ -49,7 +49,7 @@ export const GraphSlice: FC<{
 
   useEffect(() => {
     plotSlice(trials, selected)
-  }, [trials, paramNames, selected])
+  }, [trials, selected])
 
   const handleSelectedParam = (e: ChangeEvent<{ value: unknown }>) => {
     setSelected(e.target.value as string)
