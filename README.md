@@ -204,9 +204,9 @@ References:
 * [6] [D. Golovin, B. Sonik, S. Moitra, G. Kochanski, J. Karro, and D.Sculley. Google Vizier: A service for black-box optimization. KDD, 2017.](http://www.kdd.org/kdd2017/papers/view/google-vizier-a-service-for-black-box-optimization)
 * [7] [K. Jamieson and T. Ameet. Non-stochastic best arm identification and hyperparameter optimization, AISTATS, 2016.](http://proceedings.mlr.press/v51/jamieson16.pdf)
 * [8] [L. Li, K. Jamieson, A. Rostamizadeh, E. Gonina, M. Hardt, B. Recht, and A. Talwalkar, Massively parallel hyperparameter tuning, arXiv preprint arXiv:1810.05934, 2018.](https://arxiv.org/abs/1810.05934)
-* [9] [J. Snoek, H. Larochelle, and R. Adams. Practical Bayesian optimization of machine learning algorithms. In Advances in Neural Information Processing Systems 25, pages 2960–2968, 2012.](https://arxiv.org/abs/1206.2944)
+* [9] [J. Snoek, H. Larochelle, and R. Adams. Practical Bayesian optimization of machine learning algorithms. NeurIPS, 2012.](https://arxiv.org/abs/1206.2944)
 * [10] [S. Joe and F. Y. Kuo, Remark on Algorithm 659: Implementing Sobol's quasirandom sequence generator, ACM Trans, 2003.](https://dl.acm.org/doi/10.1145/641876.641879)
-* [11] [S. Kucherenko, D. Albrecht, and A. Saltelli. Exploring multi-dimensional spaces: A comparison of latin hypercube and quasi monte carlo sampling techniques. arXiv preprint arXiv:1505.02350, 2015.](https://arxiv.org/abs/1505.02350)
+* [11] [S. Kucherenko, D. Albrecht, and A. Saltelli. Exploring multi-dimensional spaces: A comparison of latin hypercube and quasi monte carlo sampling techniques, arXiv:1505.02350, 2015.](https://arxiv.org/abs/1505.02350)
 
 Presentations:
 
