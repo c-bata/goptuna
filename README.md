@@ -214,7 +214,7 @@ Presentations:
 
 Blog posts:
 
-* [Practical bayesian optimization using Goptuna](https://medium.com/@c_bata_/practical-bayesian-optimization-in-go-using-goptuna-edf97195fcb5).
+* [Practical bayesian optimization using Goptuna](https://c-bata.medium.com/practical-bayesian-optimization-in-go-using-goptuna-edf97195fcb5).
 
 Status:
 
