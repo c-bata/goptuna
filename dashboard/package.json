@@ -20,8 +20,8 @@
     "axios": "0.21.1",
     "notistack": "1.0.1",
     "plotly.js-dist": "1.57.1",
-    "react": "16.14.0",
-    "react-dom": "16.14.0",
+    "react": "17.0.1",
+    "react-dom": "17.0.1",
     "react-router-dom": "5.2.0",
     "recoil": "0.1.2"
   },
