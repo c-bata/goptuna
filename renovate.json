@@ -5,7 +5,8 @@
   "packageRules": [
     {
       "matchPaths": ["dashboard/**"],
-      "groupName": "dashboard-js",
+      "matchUpdateTypes": ["minor"],
+      "groupName": "JavaScript Dependencies",
       "schedule": ["before 3am on the first day of the month"],
       "automerge": true,
       "automergeType": "branch"
