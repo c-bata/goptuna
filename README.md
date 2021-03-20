@@ -4,7 +4,7 @@
 [![GoDoc](https://godoc.org/github.com/c-bata/goptuna?status.svg)](https://godoc.org/github.com/c-bata/goptuna)
 [![Go Report Card](https://goreportcard.com/badge/github.com/c-bata/goptuna)](https://goreportcard.com/report/github.com/c-bata/goptuna)
 
-Distributed hyperparameter optimization framework, inspired by [Optuna](https://github.com/optuna/optuna) [1].
+Decentralized hyperparameter optimization framework, inspired by [Optuna](https://github.com/optuna/optuna) [1].
 This library is particularly designed for machine learning, but everything will be able to optimize if you can define the objective function
 (e.g. Optimizing the number of goroutines of your server and the memory buffer size of the caching systems).
 
@@ -112,7 +112,6 @@ $ docker run \
   -d \
   --rm \
   -p 3306:3306 \
-  --mount type=volume,src=mysql,dst=/etc/mysql/conf.d \
   -e MYSQL_USER=goptuna \
   -e MYSQL_DATABASE=goptuna \
   -e MYSQL_PASSWORD=password \
@@ -200,10 +199,10 @@ References:
 * [2] [J. Bergstra, R. Bardenet, Y. Bengio, and B. Kégl, Algorithms for hyper-parameter optimization. NeurIPS, 2011.](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)
 * [3] [N. Hansen, The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772, 2016.](https://arxiv.org/abs/1604.00772)
 * [4] [A. Auger, N. Hansen. A restart CMA evolution strategy with increasing population size, CEC, 2005.](https://sci2s.ugr.es/sites/default/files/files/TematicWebSites/EAMHCO/contributionsCEC05/auger05ARCMA.pdf)
-* [5] [N. Hansen, Benchmarking a BI-Population CMA-ES on the BBOB-2009 Function Testbed, GECCO workshop, 2009.](https://hal.inria.fr/inria-00382093/document)
+* [5] [N. Hansen, Benchmarking a BI-Population CMA-ES on the BBOB-2009 Function Testbed, GECCO Workshop, 2009.](https://hal.inria.fr/inria-00382093/document)
 * [6] [D. Golovin, B. Sonik, S. Moitra, G. Kochanski, J. Karro, and D.Sculley. Google Vizier: A service for black-box optimization. KDD, 2017.](http://www.kdd.org/kdd2017/papers/view/google-vizier-a-service-for-black-box-optimization)
 * [7] [K. Jamieson and T. Ameet. Non-stochastic best arm identification and hyperparameter optimization, AISTATS, 2016.](http://proceedings.mlr.press/v51/jamieson16.pdf)
-* [8] [L. Li, K. Jamieson, A. Rostamizadeh, E. Gonina, M. Hardt, B. Recht, and A. Talwalkar, Massively parallel hyperparameter tuning, arXiv preprint arXiv:1810.05934, 2018.](https://arxiv.org/abs/1810.05934)
+* [8] [L. Li, K. Jamieson, A. Rostamizadeh, E. Gonina, M. Hardt, B. Recht, and A. Talwalkar, Massively parallel hyperparameter tuning, arXiv:1810.05934, 2018.](https://arxiv.org/abs/1810.05934)
 * [9] [J. Snoek, H. Larochelle, and R. Adams. Practical Bayesian optimization of machine learning algorithms. NeurIPS, 2012.](https://arxiv.org/abs/1206.2944)
 * [10] [S. Joe and F. Y. Kuo, Remark on Algorithm 659: Implementing Sobol's quasirandom sequence generator, ACM Trans, 2003.](https://dl.acm.org/doi/10.1145/641876.641879)
 * [11] [S. Kucherenko, D. Albrecht, and A. Saltelli. Exploring multi-dimensional spaces: A comparison of latin hypercube and quasi monte carlo sampling techniques, arXiv:1505.02350, 2015.](https://arxiv.org/abs/1505.02350)
