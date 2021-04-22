@@ -11,7 +11,7 @@ This library is particularly designed for machine learning, but everything will 
 **Supported algorithms:**
 
 Goptuna supports various state-of-the-art Bayesian optimization, Evolution strategy and Multi-armed bandit algorithms.
-These algorithms are implemented in pure Go and continuously benchmarked on GitHub Actions.
+All algorithms are implemented in pure Go and continuously benchmarked on GitHub Actions.
 
 * Random search
 * TPE: Tree-structured Parzen Estimators [2]
@@ -95,7 +95,7 @@ Furthermore, I recommend you to use RDB storage backend for following purposes.
 
 * Continue from where we stopped in the previous optimizations.
 * Scale studies to tens of workers that connecting to the same RDB storage.
-* Check optimization results via built-in dashboard.
+* Check optimization results via a built-in dashboard.
 
 ### Advanced usage
 
@@ -120,7 +120,7 @@ $ docker run \
   mysql:8.0
 ```
 
-Then, create a study object using goptuna CLI.
+Then, create a study object using Goptuna CLI.
 
 ```console
 $ goptuna create-study --storage mysql://goptuna:password@localhost:3306/yourdb --study yourstudy
@@ -195,17 +195,17 @@ $ goptuna dashboard --storage mysql://goptuna:password@127.0.0.1:3306/yourdb
 
 References:
 
-* [1] [T. Akiba, S. Sano, T. Yanase, T. Ohta, M. Koyama, Optuna: A Next-generation Hyperparameter Optimization Framework, KDD, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
+* [1] [T. Akiba, S. Sano, T. Yanase, T. Ohta, and M. Koyama, Optuna: A Next-generation Hyperparameter Optimization Framework, KDD, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
 * [2] [J. Bergstra, R. Bardenet, Y. Bengio, and B. Kégl, Algorithms for hyper-parameter optimization. NeurIPS, 2011.](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)
 * [3] [N. Hansen, The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772, 2016.](https://arxiv.org/abs/1604.00772)
-* [4] [A. Auger, N. Hansen. A restart CMA evolution strategy with increasing population size, CEC, 2005.](https://sci2s.ugr.es/sites/default/files/files/TematicWebSites/EAMHCO/contributionsCEC05/auger05ARCMA.pdf)
+* [4] [A. Auger and N. Hansen, A restart CMA evolution strategy with increasing population size, CEC, 2005.](https://sci2s.ugr.es/sites/default/files/files/TematicWebSites/EAMHCO/contributionsCEC05/auger05ARCMA.pdf)
 * [5] [N. Hansen, Benchmarking a BI-Population CMA-ES on the BBOB-2009 Function Testbed, GECCO Workshop, 2009.](https://hal.inria.fr/inria-00382093/document)
-* [6] [D. Golovin, B. Sonik, S. Moitra, G. Kochanski, J. Karro, and D.Sculley. Google Vizier: A service for black-box optimization. KDD, 2017.](http://www.kdd.org/kdd2017/papers/view/google-vizier-a-service-for-black-box-optimization)
-* [7] [K. Jamieson and T. Ameet. Non-stochastic best arm identification and hyperparameter optimization, AISTATS, 2016.](http://proceedings.mlr.press/v51/jamieson16.pdf)
+* [6] [D. Golovin, B. Sonik, S. Moitra, G. Kochanski, J. Karro, and D.Sculley, Google Vizier: A service for black-box optimization. KDD, 2017.](http://www.kdd.org/kdd2017/papers/view/google-vizier-a-service-for-black-box-optimization)
+* [7] [K. Jamieson and T. Ameet, Non-stochastic best arm identification and hyperparameter optimization, AISTATS, 2016.](http://proceedings.mlr.press/v51/jamieson16.pdf)
 * [8] [L. Li, K. Jamieson, A. Rostamizadeh, E. Gonina, M. Hardt, B. Recht, and A. Talwalkar, Massively parallel hyperparameter tuning, arXiv:1810.05934, 2018.](https://arxiv.org/abs/1810.05934)
 * [9] [J. Snoek, H. Larochelle, and R. Adams. Practical Bayesian optimization of machine learning algorithms. NeurIPS, 2012.](https://arxiv.org/abs/1206.2944)
 * [10] [S. Joe and F. Y. Kuo, Remark on Algorithm 659: Implementing Sobol's quasirandom sequence generator, ACM Trans, 2003.](https://dl.acm.org/doi/10.1145/641876.641879)
-* [11] [S. Kucherenko, D. Albrecht, and A. Saltelli. Exploring multi-dimensional spaces: A comparison of latin hypercube and quasi monte carlo sampling techniques, arXiv:1505.02350, 2015.](https://arxiv.org/abs/1505.02350)
+* [11] [S. Kucherenko, D. Albrecht, and A. Saltelli, Exploring multi-dimensional spaces: A comparison of latin hypercube and quasi monte carlo sampling techniques, arXiv:1505.02350, 2015.](https://arxiv.org/abs/1505.02350)
 
 Presentations:
 
