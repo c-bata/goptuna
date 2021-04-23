@@ -1,6 +1,6 @@
 FROM node:14.15.4 AS front-builder
 
-RUN mkdir -p /usr/src/
+RUN mkdir -p /usr/src/public/
 WORKDIR /usr/src
 
 ADD ./package.json /usr/src/package.json
