@@ -20,6 +20,7 @@ jobs:
           cd dashboard
           npm install
           npm run build:prd
+          git checkout package-lock.json  # Avoid https://github.com/c-bata/goptuna/runs/2420513033
 
       - name: Setup Go
         uses: actions/setup-go@v2
