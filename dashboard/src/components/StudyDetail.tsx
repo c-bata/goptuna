@@ -228,15 +228,15 @@ const TrialTable: FC<{ trials: Trial[] }> = ({ trials = [] }) => {
         return null
       },
       sortable: true,
-      less: (i, j): number => {
-        const firstStartMs = trials[i].datetime_start?.getTime()
-        const firstCompleteMs = trials[i].datetime_complete?.getTime()
+      less: (firstEl, secondEl): number => {
+        const firstStartMs = firstEl.datetime_start?.getTime()
+        const firstCompleteMs = firstEl.datetime_complete?.getTime()
         const firstDurationMs =
           firstStartMs !== undefined && firstCompleteMs !== undefined
             ? firstCompleteMs - firstStartMs
             : undefined
-        const secondStartMs = trials[j].datetime_start?.getTime()
-        const secondCompleteMs = trials[j].datetime_complete?.getTime()
+        const secondStartMs = secondEl.datetime_start?.getTime()
+        const secondCompleteMs = secondEl.datetime_complete?.getTime()
         const secondDurationMs =
           secondStartMs !== undefined && secondCompleteMs !== undefined
             ? secondCompleteMs - secondStartMs
