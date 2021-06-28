@@ -22,12 +22,6 @@ All algorithms are implemented in pure Go and continuously benchmarked on GitHub
 * ASHA: Asynchronous Successive Halving Algorithm (Optuna flavored version) [1,7,8]
 * Quasi-monte carlo sampling based on Sobol sequence [10, 11]
 
-**Built-in dashboard:**
-
-| Manage optimization results | Interactive live-updating graphs |
-| --------------------------- | -------------------------------- |
-| <img width="750" alt="state-of-the-art-algorithms" src="https://user-images.githubusercontent.com/5564044/97099702-4107be80-16cf-11eb-9d97-f5ceec98ce52.gif"> | <img width="750" alt="visualization" src="https://user-images.githubusercontent.com/5564044/97099797-66e19300-16d0-11eb-826c-6977e3941fb0.gif"> |
-
 **Projects using Goptuna:**
 
 * [Kubeflow/Katib: Kubernetes-based system for hyperparameter tuning and neural architecture search.](https://github.com/kubeflow/katib)
@@ -97,7 +91,19 @@ Furthermore, I recommend you to use RDB storage backend for following purposes.
 * Scale studies to tens of workers that connecting to the same RDB storage.
 * Check optimization results via a built-in dashboard.
 
-### Advanced usage
+
+### Built-in Web Dashboard
+
+You can check optimization results by built-in web dashboard.
+
+* SQLite3: `$ goptuna dashboard --storage sqlite:///example.db` (See [here](./_examples/simple_rdb/check_sqlite3.sh) for details).
+* MySQL: `$ goptuna dashboard --storage mysql://goptuna:password@127.0.0.1:3306/yourdb` (See [here](./_examples/simple_rdb/check_mysql.sh) for details)
+
+| Manage optimization results | Interactive live-updating graphs |
+| --------------------------- | -------------------------------- |
+| <img width="750" alt="state-of-the-art-algorithms" src="https://user-images.githubusercontent.com/5564044/97099702-4107be80-16cf-11eb-9d97-f5ceec98ce52.gif"> | <img width="750" alt="visualization" src="https://user-images.githubusercontent.com/5564044/97099797-66e19300-16d0-11eb-826c-6977e3941fb0.gif"> |
+
+### Advanced Usage
 
 <details>
 
@@ -163,30 +169,6 @@ func main() {
 ```
 
 Full source code is available [here](./_examples/simple_rdb/main.go).
-
-</details>
-
-<details>
-
-<summary>Built-in Realtime Web Dashboard</summary>
-
-You can check optimization results by built-in web dashboard.
-
-SQLite3:
-
-```console
-$ goptuna dashboard --storage sqlite:///example.db
-```
-
-MySQL:
-
-```console
-$ goptuna dashboard --storage mysql://goptuna:password@127.0.0.1:3306/yourdb
-```
-
-![goptuna dashboard](https://user-images.githubusercontent.com/5564044/96722047-e7aa4180-13e7-11eb-9f56-99a3ca7c6d35.gif)
-
-[Shell script to reproduce this](./_examples/simple_rdb/check_mysql.sh) (SQLite3 version is [here](./_examples/simple_rdb/check_sqlite3.sh)).
 
 </details>
 
