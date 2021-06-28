@@ -107,6 +107,37 @@ You can check optimization results by built-in web dashboard.
 
 <details>
 
+<summary>Parallel optimization with multiple goroutine workers</summary>
+
+``Optimize`` method of ``goptuna.Study`` object is designed as the goroutine safe.
+So you can easily optimize your objective function using multiple goroutine workers.
+
+```go
+package main
+
+import ...
+
+func main() {
+    study, _ := goptuna.CreateStudy(...)
+
+    eg, ctx := errgroup.WithContext(context.Background())
+    study.WithContext(ctx)
+    for i := 0; i < 5; i++ {
+        eg.Go(func() error {
+            return study.Optimize(objective, 100)
+        })
+    }
+    if err := eg.Wait(); err != nil { ... }
+    ...
+}
+```
+
+[full source code](./_examples/concurrency/main.go)
+
+</details>
+
+<details>
+
 <summary>Distributed optimization using MySQL</summary>
 
 There is no complicated setup to use RDB storage backend.
@@ -172,6 +203,48 @@ Full source code is available [here](./_examples/simple_rdb/main.go).
 
 </details>
 
+<details>
+
+<summary>Receive notifications of each trials</summary>
+
+You can receive notifications of each trials via channel.
+It can be used for logging and any notification systems.
+
+```go
+package main
+
+import ...
+
+func main() {
+    trialchan := make(chan goptuna.FrozenTrial, 8)
+    study, _ := goptuna.CreateStudy(
+        ...
+        goptuna.StudyOptionIgnoreObjectiveErr(true),
+        goptuna.StudyOptionSetTrialNotifyChannel(trialchan),
+    )
+
+    var wg sync.WaitGroup
+    wg.Add(2)
+    go func() {
+        defer wg.Done()
+        err = study.Optimize(objective, 100)
+        close(trialchan)
+    }()
+    go func() {
+        defer wg.Done()
+        for t := range trialchan {
+            log.Println("trial", t)
+        }
+    }()
+    wg.Wait()
+    if err != nil { ... }
+    ...
+}
+```
+
+[full source code](./_examples/trialnotify/main.go)
+
+</details>
 
 ## Links
 
