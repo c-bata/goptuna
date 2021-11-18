@@ -10,7 +10,7 @@ This library is particularly designed for machine learning, but everything will 
 
 **Supported algorithms:**
 
-Goptuna supports various state-of-the-art Bayesian optimization, Evolution strategy and Multi-armed bandit algorithms.
+Goptuna supports various state-of-the-art Bayesian optimization, evolution strategies and Multi-armed bandit algorithms.
 All algorithms are implemented in pure Go and continuously benchmarked on GitHub Actions.
 
 * Random search
