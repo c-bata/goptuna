@@ -542,8 +542,8 @@ func getObservationPairs(study *goptuna.Study, paramName string) ([]float64, [][
 	values := make([]float64, 0, len(trials))
 	scores := make([][2]float64, 0, len(trials))
 	for _, trial := range trials {
-		ir, ok := trial.InternalParams[paramName]
-		if !ok {
+		ir, err := study.Storage.GetTrialParam(trial.ID, paramName)
+		if err != nil {
 			continue
 		}
 
