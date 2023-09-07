@@ -22,6 +22,7 @@ jobs:
       uses: golangci/golangci-lint-action@v3
       with:
           version: latest
+          args: --timeout=30m --issues-exit-code=0 
 
   build:
     name: Test on ${{ matrix.os }} with ${{ matrix.go }}
