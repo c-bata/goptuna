@@ -19,7 +19,7 @@ fmt: $(SOURCES) ## Formatting source codes.
 
 .PHONY: lint
 lint: ## Run golint and go vet.
-	@$(GOCILINT) run --no-config --disable-all --enable=goimports --enable=gocyclo --enable=govet --enable=misspell --enable=golint ./...
+	@$(GOCILINT) run ./...
 
 .PHONY: test
 test:  ## Run tests with race condition checking.

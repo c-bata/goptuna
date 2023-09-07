@@ -13,12 +13,12 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
 
-      - name: Set up Node v14
-        uses: actions/setup-node@v2-beta
+      - name: Set up Node
+        uses: actions/setup-node@v3
         with:
-          node-version: '14'
+          node-version: '18'
       - run: |
           cd dashboard
           npm install
@@ -29,12 +29,12 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
 
-      - name: Set up Node v14
-        uses: actions/setup-node@v2-beta
+      - name: Set up Node
+        uses: actions/setup-node@v3
         with:
-          node-version: '14'
+          node-version: '18'
       - run: |
           cd dashboard
           npm install
