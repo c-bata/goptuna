@@ -17,7 +17,7 @@ var config = {
                 {
                     test: /\.tsx?$/,
                     exclude: [/node_modules/],
-                    loader: 'ts-loader',
+                    loader: 'esbuild-loader',
                     options: {
                         configFile: __dirname + '/tsconfig.json'
                     }
