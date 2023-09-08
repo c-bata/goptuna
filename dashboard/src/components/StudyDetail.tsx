@@ -1,7 +1,7 @@
 import React, { FC, useEffect, useState } from "react"
 import { useRecoilValue } from "recoil"
 import { Link, useParams } from "react-router-dom"
-import { createStyles, fade, makeStyles, Theme } from "@material-ui/core/styles"
+import { styled } from "@mui/system"
 import {
   AppBar,
   Card,
@@ -15,8 +15,9 @@ import {
   IconButton,
   Select,
   MenuItem,
-} from "@material-ui/core"
-import { Home, Cached } from "@material-ui/icons"
+  useTheme,
+} from "@mui/material"
+import { Home, Cached } from "@mui/icons-material"
 
 import { DataGridColumn, DataGrid } from "./DataGrid"
 import { GraphParallelCoordinate } from "./GraphParallelCoordinate"
@@ -25,15 +26,11 @@ import { GraphSlice } from "./GraphSlice"
 import { GraphHistory } from "./GraphHistory"
 import { actionCreator } from "../action"
 import { studyDetailsState } from "../state"
+const theme = useTheme()
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
-    paper: {
-      margin: theme.spacing(2),
-      padding: theme.spacing(2),
-    },
     card: {
-      margin: theme.spacing(2),
     },
     reload: {
       position: "relative",
@@ -72,15 +69,8 @@ const useStyles = makeStyles((theme: Theme) =>
         },
       },
     },
-    grow: {
-      flexGrow: 1,
-    },
   })
 )
-
-interface ParamTypes {
-  studyId: string
-}
 
 export const useStudyDetailValue = (studyId: number): StudyDetail | null => {
   const studyDetails = useRecoilValue<StudyDetails>(studyDetailsState)
@@ -90,7 +80,7 @@ export const useStudyDetailValue = (studyId: number): StudyDetail | null => {
 export const StudyDetail: FC<{}> = () => {
   const classes = useStyles()
   const action = actionCreator()
-  const { studyId } = useParams<ParamTypes>()
+  const { studyId } = useParams<{studyId: string}>()
   const studyIdNumber = parseInt(studyId, 10)
   const studyDetail = useStudyDetailValue(studyIdNumber)
   const [openReloadIntervalSelect, setOpenReloadIntervalSelect] = useState<
@@ -121,7 +111,7 @@ export const StudyDetail: FC<{}> = () => {
         <Container>
           <Toolbar>
             <Typography variant="h6">{APP_BAR_TITLE}</Typography>
-            <div className={classes.grow} />
+            <Box sx={{flexGrow: 1}} />
             <div
               className={classes.reload}
               onClick={(e) => {
@@ -165,40 +155,43 @@ export const StudyDetail: FC<{}> = () => {
         </Container>
       </AppBar>
       <Container>
-        <div>
-          <Paper className={classes.paper}>
+        <>
+          <Paper sx={{
+            margin: theme.spacing(2),
+            padding: theme.spacing(2),
+          }}>
             <Typography variant="h6">{title}</Typography>
           </Paper>
-          <Card className={classes.card}>
+          <Card sx={{margin: theme.spacing(2)}}>
             <CardContent>
               <GraphHistory study={studyDetail} />
             </CardContent>
           </Card>
           <Grid container direction="row">
             <Grid item xs={6}>
-              <Card className={classes.card}>
+              <Card sx={{margin: theme.spacing(2)}}>
                 <CardContent>
                   <GraphParallelCoordinate trials={trials} />
                 </CardContent>
               </Card>
             </Grid>
             <Grid item xs={6}>
-              <Card className={classes.card}>
+              <Card sx={{margin: theme.spacing(2)}}>
                 <CardContent>
                   <GraphIntermediateValues trials={trials} />
                 </CardContent>
               </Card>
             </Grid>
           </Grid>
-          <Card className={classes.card}>
+          <Card sx={{margin: theme.spacing(2)}}>
             <CardContent>
               <GraphSlice trials={trials} />
             </CardContent>
           </Card>
-          <Card className={classes.card}>
+          <Card sx={{margin: theme.spacing(2)}}>
             <TrialTable trials={trials} />
           </Card>
-        </div>
+        </>
       </Container>
     </div>
   )

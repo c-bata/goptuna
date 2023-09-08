@@ -1,6 +1,6 @@
 import React, { FC } from "react"
 import { RecoilRoot } from "recoil"
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { SnackbarProvider } from "notistack"
 
 import { StudyDetail } from "./StudyDetail"
@@ -11,13 +11,13 @@ export const App: FC<{}> = () => {
     <RecoilRoot>
       <SnackbarProvider maxSnack={3}>
         <Router>
-          <Switch>
+          <Routes>
             <Route
               path={URL_PREFIX + "/studies/:studyId"}
-              children={<StudyDetail />}
+              element={<StudyDetail />}
             />
-            <Route path={URL_PREFIX + "/"} children={<StudyList />} />
-          </Switch>
+            <Route path={URL_PREFIX + "/"} element={<StudyList />} />
+          </Routes>
         </Router>
       </SnackbarProvider>
     </RecoilRoot>
