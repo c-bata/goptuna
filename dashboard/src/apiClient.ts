@@ -7,13 +7,16 @@ interface TrialResponse {
   study_id: number
   number: number
   state: TrialState
-  value?: number
+  value: number
   intermediate_values: TrialIntermediateValue[]
-  datetime_start: string
+  datetime_start?: string
   datetime_complete?: string
   params: TrialParam[]
+  fixed_params: {
+    name: string
+    param_external_value: string
+  }[]
   user_attrs: Attribute[]
-  system_attrs: Attribute[]
 }
 
 const convertTrialResponse = (res: TrialResponse): Trial => {
@@ -24,13 +27,15 @@ const convertTrialResponse = (res: TrialResponse): Trial => {
     state: res.state,
     value: res.value,
     intermediate_values: res.intermediate_values,
-    datetime_start: new Date(res.datetime_start),
+    datetime_start: res.datetime_start
+      ? new Date(res.datetime_start)
+      : undefined,
     datetime_complete: res.datetime_complete
       ? new Date(res.datetime_complete)
       : undefined,
     params: res.params,
+    fixed_params: res.fixed_params,
     user_attrs: res.user_attrs,
-    system_attrs: res.system_attrs,
   }
 }
 
@@ -38,27 +43,36 @@ interface StudyDetailResponse {
   name: string
   datetime_start: string
   direction: StudyDirection
-  best_trial?: TrialResponse
+  user_attrs: Attribute[]
   trials: TrialResponse[]
+  best_trial: TrialResponse
+  intersection_search_space: SearchSpaceItem[]
+  union_search_space: SearchSpaceItem[]
+  union_user_attrs: AttributeSpec[]
+  has_intermediate_values: boolean
 }
 
-export const getStudyDetailAPI = (studyId: number): Promise<StudyDetail> => {
+export const getStudyDetailAPI = (
+  studyId: number,
+): Promise<StudyDetail> => {
   return axiosInstance
     .get<StudyDetailResponse>(`/api/studies/${studyId}`, {})
     .then((res) => {
-      const trials = res.data.trials.map(
-        (trial): Trial => {
-          return convertTrialResponse(trial)
-        }
-      )
+      const trials = res.data.trials.map((trial): Trial => {
+        return convertTrialResponse(trial)
+      })
       return {
+        id: studyId,
         name: res.data.name,
         datetime_start: new Date(res.data.datetime_start),
         direction: res.data.direction,
-        best_trial: res.data.best_trial
-          ? convertTrialResponse(res.data.best_trial)
-          : undefined,
+        user_attrs: res.data.user_attrs,
         trials: trials,
+        best_trial: convertTrialResponse(res.data.best_trial),
+        union_search_space: res.data.union_search_space,
+        intersection_search_space: res.data.intersection_search_space,
+        union_user_attrs: res.data.union_user_attrs,
+        has_intermediate_values: res.data.has_intermediate_values,
       }
     })
 }
@@ -68,21 +82,7 @@ interface StudySummariesResponse {
     study_id: number
     study_name: string
     direction: StudyDirection
-    best_trial?: {
-      trial_id: number
-      study_id: number
-      number: number
-      state: TrialState
-      value?: number
-      intermediate_values: TrialIntermediateValue[]
-      datetime_start: string
-      datetime_complete?: string
-      params: TrialParam[]
-      user_attrs: Attribute[]
-      system_attrs: Attribute[]
-    }
     user_attrs: Attribute[]
-    system_attrs: Attribute[]
     datetime_start?: string
   }[]
 }
@@ -91,24 +91,17 @@ export const getStudySummariesAPI = (): Promise<StudySummary[]> => {
   return axiosInstance
     .get<StudySummariesResponse>(`/api/studies`, {})
     .then((res) => {
-      return res.data.study_summaries.map(
-        (study): StudySummary => {
-          const best_trial = study.best_trial
-            ? convertTrialResponse(study.best_trial)
-            : undefined
-          return {
-            study_id: study.study_id,
-            study_name: study.study_name,
-            direction: study.direction,
-            best_trial: best_trial,
-            user_attrs: study.user_attrs,
-            system_attrs: study.system_attrs,
-            datetime_start: study.datetime_start
-              ? new Date(study.datetime_start)
-              : undefined,
-          }
+      return res.data.study_summaries.map((study): StudySummary => {
+        return {
+          study_id: study.study_id,
+          study_name: study.study_name,
+          direction: study.direction,
+          user_attrs: study.user_attrs,
+          datetime_start: study.datetime_start
+            ? new Date(study.datetime_start)
+            : undefined,
         }
-      )
+      })
     })
 }
 
@@ -117,21 +110,8 @@ interface CreateNewStudyResponse {
     study_id: number
     study_name: string
     direction: StudyDirection
-    best_trial?: {
-      trial_id: number
-      study_id: number
-      number: number
-      state: TrialState
-      value?: number
-      intermediate_values: TrialIntermediateValue[]
-      datetime_start: string
-      datetime_complete?: string
-      params: TrialParam[]
-      user_attrs: Attribute[]
-      system_attrs: Attribute[]
-    }
     user_attrs: Attribute[]
-    system_attrs: Attribute[]
+    is_preferential: boolean
     datetime_start?: string
   }
 }
@@ -151,9 +131,8 @@ export const createNewStudyAPI = (
         study_id: study_summary.study_id,
         study_name: study_summary.study_name,
         direction: study_summary.direction,
-        // best_trial: undefined,
         user_attrs: study_summary.user_attrs,
-        system_attrs: study_summary.system_attrs,
+        is_preferential: study_summary.is_preferential,
         datetime_start: study_summary.datetime_start
           ? new Date(study_summary.datetime_start)
           : undefined,
@@ -161,8 +140,79 @@ export const createNewStudyAPI = (
     })
 }
 
-export const deleteStudyAPI = (studyId: number): Promise<{}> => {
-  return axiosInstance.delete<{}>(`/api/studies/${studyId}`).then((res) => {
-    return {}
+export const deleteStudyAPI = (studyId: number): Promise<void> => {
+  return axiosInstance.delete(`/api/studies/${studyId}`).then(() => {
+    return
   })
+}
+
+export const tellTrialAPI = (
+  trialId: number,
+  state: TrialStateFinished,
+  value: number
+): Promise<void> => {
+  const req: { state: TrialState; value: number } = {
+    state: state,
+    value: value,
+  }
+
+  return axiosInstance
+    .post<void>(`/api/trials/${trialId}/tell`, req)
+    .then(() => {
+      return
+    })
+}
+
+export const saveTrialUserAttrsAPI = (
+  trialId: number,
+  user_attrs: { [key: string]: number | string }
+): Promise<void> => {
+  const req = { user_attrs: user_attrs }
+
+  return axiosInstance
+    .post<void>(`/api/trials/${trialId}/user-attrs`, req)
+    .then(() => {
+      return
+    })
+}
+
+interface ParamImportancesResponse {
+  param_importances: ParamImportance[][]
+}
+
+export const getParamImportances = (
+  studyId: number
+): Promise<ParamImportance[][]> => {
+  return axiosInstance
+    .get<ParamImportancesResponse>(`/api/studies/${studyId}/param_importances`)
+    .then((res) => {
+      return res.data.param_importances
+    })
+}
+
+export const reportPreferenceAPI = (
+  studyId: number,
+  candidates: number[],
+  clicked: number
+): Promise<void> => {
+  return axiosInstance
+    .post<void>(`/api/studies/${studyId}/preference`, {
+      candidates: candidates,
+      clicked: clicked,
+      mode: "ChooseWorst",
+    })
+    .then(() => {
+      return
+    })
+}
+
+export const skipPreferentialTrialAPI = (
+  studyId: number,
+  trialId: number
+): Promise<void> => {
+  return axiosInstance
+    .post<void>(`/api/studies/${studyId}/${trialId}/skip`)
+    .then(() => {
+      return
+    })
 }

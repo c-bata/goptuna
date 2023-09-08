@@ -188,15 +188,26 @@ func handleGetStudyDetail(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(struct {
 		Name          string        `json:"name"`
 		Direction     string        `json:"direction"`
+		UserAttrs     []Attribute   `json:"user_attrs"`
 		DatetimeStart string        `json:"datetime_start"`
 		BestTrial     FrozenTrial   `json:"best_trial"`
 		Trials        []FrozenTrial `json:"trials"`
+		// TODO(c-bata): Support following columns
+		IntersectionSearchSpace []struct{} `json:"intersection_search_space"`
+		UnionSearchSpace        []struct{} `json:"union_search_space"`
+		UnionUserAttrs          []struct{} `json:"union_user_attrs"`
+		HasIntermediateValues   bool       `json:"has_intermediate_values"`
 	}{
-		Name:          studySummary.Name,
-		Direction:     studySummary.Direction,
-		DatetimeStart: studySummary.DatetimeStart,
-		BestTrial:     studySummary.BestTrial,
-		Trials:        toFrozenTrials(trials),
+		Name:                    studySummary.Name,
+		Direction:               studySummary.Direction,
+		UserAttrs:               studySummary.UserAttrs,
+		DatetimeStart:           studySummary.DatetimeStart,
+		BestTrial:               studySummary.BestTrial,
+		Trials:                  toFrozenTrials(trials),
+		IntersectionSearchSpace: []struct{}{},
+		UnionSearchSpace:        []struct{}{},
+		UnionUserAttrs:          []struct{}{},
+		HasIntermediateValues:   false,
 	})
 }
 
