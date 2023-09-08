@@ -1,4 +1,4 @@
-//go:build !develop && go1.16
+//go:build !develop
 
 package dashboard
 

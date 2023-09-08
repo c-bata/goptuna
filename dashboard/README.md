@@ -2,11 +2,7 @@
 
 ## Running dashboard
 
-Pre-built JavaScript files are embedded using:
-
-* `go:embed` for Go1.16 or later.
-* [rakyll/statik](https://github.com/rakyll/statik) for Go1.15 or older.
-
+Pre-built JavaScript files are embedded using `go:embed`.
 So it's ok you just run `goptuna dashboard` command like this:
 
 ```
@@ -43,19 +39,9 @@ Use "goptuna [command] --help" for more information about a command.
 
 ## How to compile TypeScript files
 
-### Compiling TypeScript files and embedding to Go using Docker
-
-You just run to `make build-dashboard` to compile TypeScript files and embedding to Go.
-
-```
-$ docker build -t c-bata/goptuna-dashboard ./dashboard
-$ docker run -it --rm -v `PWD`/dashboard/statik:/usr/src/statik c-bata/goptuna-dashboard
-```
-
-
 ### Compiling TypeScript files manually
 
-Node.js v14.14.0 is required to compile TypeScript files.
+Node.js v20 is required to compile TypeScript files.
 
 ```
 $ npm install
@@ -79,13 +65,6 @@ $ npm run build:prd
 ```
 
 </details>
-
-### Embeddeing to Go using rakyll/statik
-
-```
-$ statik -src=./public -include=bundle.js,bundle.js.LICENSE.txt
-```
-
 
 ## Running Dashboard server for reloading
 

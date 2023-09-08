@@ -6,7 +6,6 @@ require (
 	github.com/google/uuid v1.3.1
 	github.com/gorilla/mux v1.8.0
 	github.com/jinzhu/gorm v1.9.16
-	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cobra v1.7.0
 	gonum.org/v1/gonum v0.14.0
 	gorm.io/driver/mysql v1.0.3
