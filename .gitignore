@@ -12,3 +12,5 @@ dashboard/public/
 *.sqlite3
 *.db
 *.bin
+
+dist/
