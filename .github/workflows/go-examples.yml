@@ -33,5 +33,4 @@ jobs:
         ./bin/sobol
         ./bin/cmaes_blackhole
         ./bin/simple_tpe
-        ./bin/concurrency
         ./bin/trialnotify
