@@ -25,6 +25,11 @@ type Attribute struct {
 	Value string `json:"value"`
 }
 
+type AttributeSpec struct {
+	Key      string `json:"key"`
+	Sortable bool   `json:"sortable"`
+}
+
 type IntermediateValue struct {
 	Step  int     `json:"step"`
 	Value float64 `json:"value"`

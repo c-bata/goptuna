@@ -14,8 +14,10 @@ import (
 )
 
 var (
-	storage      goptuna.Storage
-	storageMutex sync.RWMutex
+	storage                       goptuna.Storage
+	storageMutex                  sync.RWMutex
+	cachedExtraStudyProperty      map[int]*CachedExtraStudyProperty
+	cachedExtraStudyPropertyMutex sync.RWMutex
 
 	errNotFound = errors.New("not found")
 )
@@ -24,6 +26,10 @@ func NewServer(s goptuna.Storage) (http.Handler, error) {
 	storageMutex.Lock()
 	defer storageMutex.Unlock()
 	storage = s
+
+	cachedExtraStudyPropertyMutex.Lock()
+	defer cachedExtraStudyPropertyMutex.Unlock()
+	cachedExtraStudyProperty = make(map[int]*CachedExtraStudyProperty, 8)
 
 	router := mux.NewRouter()
 
@@ -184,6 +190,18 @@ func handleGetStudyDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var ok bool
+	var p *CachedExtraStudyProperty
+	cachedExtraStudyPropertyMutex.Lock()
+	defer cachedExtraStudyPropertyMutex.Unlock()
+	if p, ok = cachedExtraStudyProperty[studyID]; ok {
+		p.Update(trials)
+	} else {
+		p = NewCachedExtraStudyProperty()
+		p.Update(trials)
+		cachedExtraStudyProperty[studyID] = p
+	}
+
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 	json.NewEncoder(w).Encode(struct {
 		Name          string        `json:"name"`
@@ -193,10 +211,10 @@ func handleGetStudyDetail(w http.ResponseWriter, r *http.Request) {
 		BestTrial     FrozenTrial   `json:"best_trial"`
 		Trials        []FrozenTrial `json:"trials"`
 		// TODO(c-bata): Support following columns
-		IntersectionSearchSpace []struct{} `json:"intersection_search_space"`
-		UnionSearchSpace        []struct{} `json:"union_search_space"`
-		UnionUserAttrs          []struct{} `json:"union_user_attrs"`
-		HasIntermediateValues   bool       `json:"has_intermediate_values"`
+		IntersectionSearchSpace []struct{}      `json:"intersection_search_space"`
+		UnionSearchSpace        []struct{}      `json:"union_search_space"`
+		UnionUserAttrs          []AttributeSpec `json:"union_user_attrs"`
+		HasIntermediateValues   bool            `json:"has_intermediate_values"`
 	}{
 		Name:                    studySummary.Name,
 		Direction:               studySummary.Direction,
@@ -206,8 +224,8 @@ func handleGetStudyDetail(w http.ResponseWriter, r *http.Request) {
 		Trials:                  toFrozenTrials(trials),
 		IntersectionSearchSpace: []struct{}{},
 		UnionSearchSpace:        []struct{}{},
-		UnionUserAttrs:          []struct{}{},
-		HasIntermediateValues:   false,
+		UnionUserAttrs:          p.GetUnionUserAttrs(),
+		HasIntermediateValues:   p.hasIntermediateValues,
 	})
 }
 

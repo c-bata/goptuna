@@ -9,7 +9,6 @@ import {
   useTheme,
 } from "@mui/material"
 import { GraphHistory } from "./GraphHistory"
-import { GraphTimeline } from "./GraphTimeline"
 import { GraphIntermediateValues } from "./GraphIntermediateValues"
 import Grid2 from "@mui/material/Unstable_Grid2"
 import { DataGrid, DataGridColumn } from "./DataGrid"
@@ -97,9 +96,6 @@ export const StudyHistory: FC<{ studyId: number }> = ({ studyId }) => {
             />
           </Grid2>
         ) : null}
-        <Grid2 xs={6}>
-          <GraphTimeline study={studyDetail} />
-        </Grid2>
         <Grid2 xs={6}>
           <Card>
             <CardContent

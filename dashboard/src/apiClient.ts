@@ -59,6 +59,7 @@ export const getStudyDetailAPI = (studyId: number): Promise<StudyDetail> => {
       const trials = res.data.trials.map((trial): Trial => {
         return convertTrialResponse(trial)
       })
+      console.dir(res.data)
       return {
         id: studyId,
         name: res.data.name,
