@@ -1,116 +1,127 @@
-import * as plotly from "plotly.js-dist"
+import * as plotly from "plotly.js-dist-min"
 import React, { ChangeEvent, FC, useEffect, useState } from "react"
 import {
   Grid,
   FormControl,
   FormLabel,
   FormControlLabel,
-  Checkbox,
-  Switch,
+  MenuItem,
+  Select,
   Radio,
   RadioGroup,
-} from "@material-ui/core"
+  Typography,
+  SelectChangeEvent,
+  useTheme,
+} from "@mui/material"
+import { plotlyDarkTemplate } from "./PlotlyDarkMode"
+import {
+  useFilteredTrials,
+  Target,
+  useObjectiveAndUserAttrTargets,
+} from "../trialFilter"
 
 const plotDomId = "graph-history"
 
 export const GraphHistory: FC<{
   study: StudyDetail | null
-}> = ({ study = null }) => {
-  const [xAxis, setXAxis] = useState<string>("number")
-  const [logScale, setLogScale] = useState<boolean>(false)
-  const [filterCompleteTrial, setFilterCompleteTrial] = useState<boolean>(false)
-  const [filterPrunedTrial, setFilterPrunedTrial] = useState<boolean>(false)
-
-  const handleXAxisChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setXAxis(e.target.value)
-  }
-
-  const handleLogScaleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault()
-    setLogScale(!logScale)
-  }
-
-  const handleFilterCompleteChange = (e: ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault()
-    setFilterCompleteTrial(!filterCompleteTrial)
-  }
-
-  const handleFilterPrunedChange = (e: ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault()
-    setFilterPrunedTrial(!filterPrunedTrial)
-  }
+  logScale: boolean
+  includePruned: boolean
+}> = ({ study, logScale, includePruned }) => {
+  const theme = useTheme()
+  const [xAxis, setXAxis] = useState<
+    "number" | "datetime_start" | "datetime_complete"
+  >("number")
+  const [targets, selected, setTarget] = useObjectiveAndUserAttrTargets(study)
+  const trials = useFilteredTrials(study, [selected], !includePruned)
 
   useEffect(() => {
     if (study !== null) {
       plotHistory(
-        study,
+        trials,
+        study.direction,
+        selected,
         xAxis,
         logScale,
-        filterCompleteTrial,
-        filterPrunedTrial
+        theme.palette.mode
       )
     }
-  }, [study, logScale, xAxis, filterPrunedTrial, filterCompleteTrial])
+  }, [trials, study?.direction, selected, logScale, xAxis, theme.palette.mode])
+
+  const handleObjectiveChange = (event: SelectChangeEvent<string>) => {
+    setTarget(event.target.value)
+  }
+
+  const handleXAxisChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value === "number") {
+      setXAxis("number")
+    } else if (e.target.value === "datetime_start") {
+      setXAxis("datetime_start")
+    } else if (e.target.value === "datetime_complete") {
+      setXAxis("datetime_complete")
+    }
+  }
 
   return (
     <Grid container direction="row">
-      <Grid item xs={3}>
-        <Grid container direction="column">
-          <FormControl component="fieldset">
-            <FormLabel component="legend">Log scale:</FormLabel>
-            <Switch
-              checked={logScale}
-              onChange={handleLogScaleChange}
-              value="enable"
-            />
-          </FormControl>
-          <FormControl component="fieldset">
-            <FormLabel component="legend">Filter state:</FormLabel>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={!filterCompleteTrial}
-                  onChange={handleFilterCompleteChange}
-                />
-              }
-              label="Complete"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={!filterPrunedTrial}
-                  onChange={handleFilterPrunedChange}
-                />
-              }
-              label="Pruned"
-            />
-          </FormControl>
-          <FormControl component="fieldset">
-            <FormLabel component="legend">X-axis:</FormLabel>
-            <RadioGroup
-              aria-label="gender"
-              name="gender1"
-              value={xAxis}
-              onChange={handleXAxisChange}
+      <Grid
+        item
+        xs={3}
+        container
+        direction="column"
+        sx={{ paddingRight: theme.spacing(2) }}
+      >
+        <Typography
+          variant="h6"
+          sx={{ margin: "1em 0", fontWeight: theme.typography.fontWeightBold }}
+        >
+          History
+        </Typography>
+        {targets.length >= 2 ? (
+          <FormControl
+            component="fieldset"
+            sx={{ marginBottom: theme.spacing(2) }}
+          >
+            <FormLabel component="legend">y Axis</FormLabel>
+            <Select
+              value={selected.identifier()}
+              onChange={handleObjectiveChange}
             >
-              <FormControlLabel
-                value="number"
-                control={<Radio />}
-                label="Number"
-              />
-              <FormControlLabel
-                value="datetime_start"
-                control={<Radio />}
-                label="Datetime start"
-              />
-              <FormControlLabel
-                value="datetime_complete"
-                control={<Radio />}
-                label="Datetime complete"
-              />
-            </RadioGroup>
+              {targets.map((t, i) => (
+                <MenuItem value={t.identifier()} key={i}>
+                  {t.toLabel()}
+                </MenuItem>
+              ))}
+            </Select>
           </FormControl>
-        </Grid>
+        ) : null}
+        <FormControl
+          component="fieldset"
+          sx={{ marginBottom: theme.spacing(2) }}
+        >
+          <FormLabel component="legend">X-axis:</FormLabel>
+          <RadioGroup
+            aria-label="gender"
+            name="gender1"
+            value={xAxis}
+            onChange={handleXAxisChange}
+          >
+            <FormControlLabel
+              value="number"
+              control={<Radio />}
+              label="Number"
+            />
+            <FormControlLabel
+              value="datetime_start"
+              control={<Radio />}
+              label="Datetime start"
+            />
+            <FormControlLabel
+              value="datetime_complete"
+              control={<Radio />}
+              label="Datetime complete"
+            />
+          </RadioGroup>
+        </FormControl>
       </Grid>
       <Grid item xs={9}>
         <div id={plotDomId} />
@@ -120,11 +131,12 @@ export const GraphHistory: FC<{
 }
 
 const plotHistory = (
-  study: StudyDetail,
-  xAxis: string,
+  trials: Trial[],
+  direction: StudyDirection,
+  target: Target,
+  xAxis: "number" | "datetime_start" | "datetime_complete",
   logScale: boolean,
-  filterCompleteTrial: boolean,
-  filterPrunedTrial: boolean
+  mode: string
 ) => {
   if (document.getElementById(plotDomId) === null) {
     return
@@ -138,68 +150,85 @@ const plotHistory = (
       b: 0,
     },
     yaxis: {
+      title: target.toLabel(),
       type: logScale ? "log" : "linear",
     },
     xaxis: {
+      title: xAxis === "number" ? "Trial" : "Time",
       type: xAxis === "number" ? "linear" : "date",
     },
-    showlegend: false,
+    showlegend: true,
+    uirevision: "true",
+    template: mode === "dark" ? plotlyDarkTemplate : {},
   }
-
-  let filteredTrials = study.trials.filter(
-    (t) => t.state === "Complete" || t.state === "Pruned"
-  )
-  if (filterCompleteTrial) {
-    filteredTrials = filteredTrials.filter((t) => t.state !== "Complete")
-  }
-  if (filterPrunedTrial) {
-    filteredTrials = filteredTrials.filter((t) => t.state !== "Pruned")
-  }
-  if (filteredTrials.length === 0) {
-    plotly.react(plotDomId, [])
+  if (trials.length === 0) {
+    plotly.react(plotDomId, [], layout)
     return
   }
-  let trialsForLinePlot: Trial[] = []
-  let currentBest: number | null = null
-  filteredTrials.forEach((item) => {
-    if (currentBest === null) {
-      currentBest = item.value!
-      trialsForLinePlot.push(item)
-    } else if (study.direction === "maximize" && item.value! > currentBest) {
-      currentBest = item.value!
-      trialsForLinePlot.push(item)
-    } else if (study.direction === "minimize" && item.value! < currentBest) {
-      currentBest = item.value!
-      trialsForLinePlot.push(item)
-    }
-  })
 
   const getAxisX = (trial: Trial): number | Date => {
     return xAxis === "number"
       ? trial.number
       : xAxis === "datetime_start"
-      ? trial.datetime_start
+      ? trial.datetime_start!
       : trial.datetime_complete!
   }
 
-  let xForLinePlot = trialsForLinePlot.map(getAxisX)
-  xForLinePlot.push(getAxisX(filteredTrials[filteredTrials.length - 1]))
-  let yForLinePlot = trialsForLinePlot.map((t: Trial): number => t.value!)
-  yForLinePlot.push(yForLinePlot[yForLinePlot.length - 1])
-
   const plotData: Partial<plotly.PlotData>[] = [
     {
-      x: filteredTrials.map(getAxisX),
-      y: filteredTrials.map((t: Trial): number => t.value!),
+      x: trials.map(getAxisX),
+      y: trials.map((t: Trial): number => target.getTargetValue(t) as number),
+      name: target.toLabel(),
       mode: "markers",
       type: "scatter",
     },
-    {
+  ]
+
+  if (target.kind === "objective") {
+    const xForLinePlot: (number | Date)[] = []
+    const yForLinePlot: number[] = []
+    let currentBest: number | null = null
+    for (let i = 0; i < trials.length; i++) {
+      const t = trials[i]
+      if (currentBest === null) {
+        currentBest = t.value as number
+        xForLinePlot.push(getAxisX(t))
+        yForLinePlot.push(t.value as number)
+      } else if (
+        direction === "maximize" &&
+        (t.value as number) > currentBest
+      ) {
+        const p = trials[i - 1]
+        if (!xForLinePlot.includes(getAxisX(p))) {
+          xForLinePlot.push(getAxisX(p))
+          yForLinePlot.push(currentBest)
+        }
+        currentBest = t.value as number
+        xForLinePlot.push(getAxisX(t))
+        yForLinePlot.push(t.value as number)
+      } else if (
+        direction === "minimize" &&
+        (t.value as number) < currentBest
+      ) {
+        const p = trials[i - 1]
+        if (!xForLinePlot.includes(getAxisX(p))) {
+          xForLinePlot.push(getAxisX(p))
+          yForLinePlot.push(currentBest)
+        }
+        currentBest = t.value as number
+        xForLinePlot.push(getAxisX(t))
+        yForLinePlot.push(t.value as number)
+      }
+    }
+    xForLinePlot.push(getAxisX(trials[trials.length - 1]))
+    yForLinePlot.push(yForLinePlot[yForLinePlot.length - 1])
+    plotData.push({
       x: xForLinePlot,
       y: yForLinePlot,
+      name: "Best Value",
       mode: "lines",
       type: "scatter",
-    },
-  ]
+    })
+  }
   plotly.react(plotDomId, plotData, layout)
 }

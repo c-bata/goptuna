@@ -1,193 +1,259 @@
-import * as plotly from "plotly.js-dist"
-import React, { ChangeEvent, FC, useEffect, useState } from "react"
+import * as plotly from "plotly.js-dist-min"
+import React, { FC, useEffect, useState } from "react"
 import {
   Grid,
   FormControl,
-  InputLabel,
+  FormLabel,
   MenuItem,
+  Switch,
   Select,
-} from "@material-ui/core"
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles"
+  Typography,
+  SelectChangeEvent,
+  useTheme,
+  Box,
+} from "@mui/material"
+import { plotlyDarkTemplate } from "./PlotlyDarkMode"
+import {
+  Target,
+  useFilteredTrials,
+  useObjectiveAndUserAttrTargets,
+  useParamTargets,
+} from "../trialFilter"
+import { useMergedUnionSearchSpace } from "../searchSpace"
 
 const plotDomId = "graph-slice"
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    formControl: {
-      marginBottom: theme.spacing(2),
-      marginRight: theme.spacing(5),
-      marginTop: theme.spacing(10),
-    },
-  })
-)
-
-const getParamNames = (trials: Trial[]): string[] => {
-  const paramSet = new Set<string>(
-    ...trials.map<string[]>((t) => t.params.map((p) => p.name))
-  )
-  return Array.from(paramSet)
+const isLogScale = (s: SearchSpaceItem): boolean => {
+  if (s.distribution.type === "CategoricalDistribution") {
+    return false
+  }
+  return s.distribution.log
 }
 
 export const GraphSlice: FC<{
-  trials: Trial[]
-}> = ({ trials = [] }) => {
-  const classes = useStyles()
-  const [paramNames, setParamNames] = useState<string[]>([])
-  const [selected, setSelected] = useState<string | null>(null)
+  study: StudyDetail | null
+}> = ({ study = null }) => {
+  const theme = useTheme()
+
+  const [objectiveTargets, selectedObjective, setObjectiveTarget] =
+    useObjectiveAndUserAttrTargets(study)
+  const searchSpace = useMergedUnionSearchSpace(study?.union_search_space)
+  const [paramTargets, selectedParamTarget, setParamTarget] =
+    useParamTargets(searchSpace)
+  const [logYScale, setLogYScale] = useState<boolean>(false)
+
+  const trials = useFilteredTrials(
+    study,
+    selectedParamTarget !== null
+      ? [selectedObjective, selectedParamTarget]
+      : [selectedObjective],
+    false
+  )
 
   useEffect(() => {
-    if (trials.length === 0 || paramNames.length !== 0) {
-      return
-    }
+    plotSlice(
+      trials,
+      selectedObjective,
+      selectedParamTarget,
+      searchSpace.find((s) => s.name === selectedParamTarget?.key) || null,
+      logYScale,
+      theme.palette.mode
+    )
+  }, [
+    trials,
+    selectedObjective,
+    searchSpace,
+    selectedParamTarget,
+    logYScale,
+    theme.palette.mode,
+  ])
 
-    const p = getParamNames(trials)
-    setParamNames(p)
-    if (selected === null && p.length !== 0) {
-      setSelected(p[0])
-    }
-  }, [trials])
+  const handleObjectiveChange = (event: SelectChangeEvent<string>) => {
+    setObjectiveTarget(event.target.value)
+  }
 
-  useEffect(() => {
-    plotSlice(trials, selected)
-  }, [trials, selected])
+  const handleSelectedParam = (e: SelectChangeEvent<string>) => {
+    setParamTarget(e.target.value)
+  }
 
-  const handleSelectedParam = (e: ChangeEvent<{ value: unknown }>) => {
-    setSelected(e.target.value as string)
+  const handleLogYScaleChange = () => {
+    setLogYScale(!logYScale)
   }
 
   return (
     <Grid container direction="row">
-      <Grid item xs={3}>
-        <Grid container direction="column">
-          {paramNames.length !== 0 && selected !== null ? (
-            <FormControl component="fieldset" className={classes.formControl}>
-              <InputLabel id="parameter">Parameter</InputLabel>
-              <Select value={selected} onChange={handleSelectedParam}>
-                {paramNames.map((p, i) => (
-                  <MenuItem value={p} key={i}>
-                    {p}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          ) : null}
-        </Grid>
+      <Grid
+        item
+        xs={3}
+        container
+        direction="column"
+        sx={{ paddingRight: theme.spacing(2) }}
+      >
+        <Typography
+          variant="h6"
+          sx={{ margin: "1em 0", fontWeight: theme.typography.fontWeightBold }}
+        >
+          Slice
+        </Typography>
+        {objectiveTargets.length !== 1 && (
+          <FormControl component="fieldset">
+            <FormLabel component="legend">Objective:</FormLabel>
+            <Select
+              value={selectedObjective.identifier()}
+              onChange={handleObjectiveChange}
+            >
+              {objectiveTargets.map((t, i) => (
+                <MenuItem value={t.identifier()} key={i}>
+                  {t.toLabel()}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+        {paramTargets.length !== 0 && selectedParamTarget !== null && (
+          <FormControl component="fieldset">
+            <FormLabel component="legend">Parameter:</FormLabel>
+            <Select
+              value={selectedParamTarget.identifier()}
+              onChange={handleSelectedParam}
+            >
+              {paramTargets.map((t, i) => (
+                <MenuItem value={t.identifier()} key={i}>
+                  {t.toLabel()}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+        <FormControl component="fieldset">
+          <FormLabel component="legend">Log y scale:</FormLabel>
+          <Switch
+            checked={logYScale}
+            onChange={handleLogYScaleChange}
+            value="enable"
+          />
+        </FormControl>
       </Grid>
-      <Grid item xs={6}>
-        <div id={plotDomId} />
+      <Grid item xs={9}>
+        <Box id={plotDomId} sx={{ height: "450px" }} />
       </Grid>
     </Grid>
   )
 }
 
-const plotSlice = (trials: Trial[], selected: string | null) => {
+const plotSlice = (
+  trials: Trial[],
+  objectiveTarget: Target,
+  selectedParamTarget: Target | null,
+  selectedParamSpace: SearchSpaceItem | null,
+  logYScale: boolean,
+  mode: string
+) => {
   if (document.getElementById(plotDomId) === null) {
     return
   }
 
   const layout: Partial<plotly.Layout> = {
-    title: "Slice",
     margin: {
       l: 50,
+      t: 0,
       r: 50,
+      b: 0,
     },
     xaxis: {
-      title: selected || "",
-      zerolinecolor: "#f2f5fa",
-      zerolinewidth: 1.5,
-      linecolor: "#f2f5fa",
-      linewidth: 5,
-      gridcolor: "#f2f5fa",
+      title: selectedParamTarget?.toLabel() || "",
+      type:
+        selectedParamSpace !== null && isLogScale(selectedParamSpace)
+          ? "log"
+          : "linear",
       gridwidth: 1,
+      automargin: true,
     },
     yaxis: {
-      title: "Objective Values",
-      zerolinecolor: "#f2f5fa",
-      zerolinewidth: 2,
-      linecolor: "#f2f5fa",
-      linewidth: 5,
-      gridcolor: "#f2f5fa",
+      title: "Objective Value",
+      type: logYScale ? "log" : "linear",
       gridwidth: 1,
+      automargin: true,
     },
-    plot_bgcolor: "#E5ecf6",
     showlegend: false,
+    uirevision: "true",
+    template: mode === "dark" ? plotlyDarkTemplate : {},
   }
-
-  const filteredTrials = trials.filter(
-    (t) =>
-      (t.state === "Complete" || t.state === "Pruned") &&
-      t.params.find((p) => p.name == selected) !== undefined
-  )
-
-  if (filteredTrials.length === 0 || selected === null) {
+  if (
+    selectedParamSpace === null ||
+    selectedParamTarget === null ||
+    trials.length === 0
+  ) {
     plotly.react(plotDomId, [], layout)
     return
   }
 
-  const objectiveValues: number[] = filteredTrials.map((t) => t.value!)
-  const valueStrings = filteredTrials.map((t) => {
-    return t.params.find((p) => p.name == selected)!.value
-  })
+  const objectiveValues: number[] = trials.map(
+    (t) => objectiveTarget.getTargetValue(t) as number
+  )
+  const values = trials.map(
+    (t) => selectedParamTarget.getTargetValue(t) as number
+  )
 
-  const isnum = valueStrings.every((v) => {
-    return !isNaN(parseFloat(v))
-  })
-  if (isnum) {
-    const valuesNum: number[] = valueStrings.map((v) => parseFloat(v))
+  const trialNumbers: number[] = trials.map((t) => t.number)
+  if (selectedParamSpace.distribution.type !== "CategoricalDistribution") {
     const trace: plotly.Data[] = [
       {
         type: "scatter",
-        x: valuesNum,
+        x: values,
         y: objectiveValues,
         mode: "markers",
-        xaxis: selected,
         marker: {
-          color: "#185799",
+          color: trialNumbers,
+          colorscale: "Blues",
+          reversescale: true,
+          colorbar: {
+            title: "Trial",
+          },
+          line: {
+            color: "Grey",
+            width: 0.5,
+          },
         },
       },
     ]
     layout["xaxis"] = {
-      title: selected,
-      zerolinecolor: "#f2f5fa",
-      zerolinewidth: 1.5,
-      linecolor: "#f2f5fa",
-      linewidth: 5,
-      gridcolor: "#f2f5fa",
+      title: selectedParamTarget.toLabel(),
+      type: isLogScale(selectedParamSpace) ? "log" : "linear",
       gridwidth: 1,
+      automargin: true, // Otherwise the label is outside of the plot
     }
     plotly.react(plotDomId, trace, layout)
   } else {
-    const vocabSet = new Set<string>(valueStrings)
-    const vocabArr = Array.from<string>(vocabSet)
-    const valuesCategorical: number[] = valueStrings.map((v) =>
-      vocabArr.findIndex((vocab) => v === vocab)
-    )
+    const vocabArr = selectedParamSpace.distribution.choices.map((c) => c.value)
     const tickvals: number[] = vocabArr.map((v, i) => i)
     const trace: plotly.Data[] = [
       {
         type: "scatter",
-        x: valuesCategorical,
+        x: values,
         y: objectiveValues,
         mode: "markers",
-        // xaxis: paramName,
         marker: {
-          color: "#185799",
+          color: trialNumbers,
+          colorscale: "Blues",
+          reversescale: true,
+          colorbar: {
+            title: "Trial",
+          },
+          line: {
+            color: "Grey",
+            width: 0.5,
+          },
         },
       },
     ]
     layout["xaxis"] = {
-      title: selected,
-      zerolinecolor: "#f2f5fa",
-      zerolinewidth: 1.5,
-      linecolor: "#f2f5fa",
-      linewidth: 5,
-      gridcolor: "#f2f5fa",
+      title: selectedParamTarget.toLabel(),
+      type: "linear",
       gridwidth: 1,
-      tickfont: {
-        color: "#000000",
-      },
       tickvals: tickvals,
       ticktext: vocabArr,
+      automargin: true, // Otherwise the label is outside of the plot
     }
     plotly.react(plotDomId, trace, layout)
   }

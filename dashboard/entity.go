@@ -9,8 +9,15 @@ import (
 )
 
 type TrialParam struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+	Name               string  `json:"name"`
+	ParamInternalValue float64 `json:"param_internal_value"`
+	ParamExternalValue string  `json:"param_external_value"`
+	ParamExternalType  string  `json:"param_external_type"`
+}
+
+type TrialFixedParam struct {
+	Name               string `json:"name"`
+	ParamExternalValue string `json:"param_external_value"`
 }
 
 type Attribute struct {
@@ -30,11 +37,11 @@ type FrozenTrial struct {
 	State              string              `json:"state"`
 	Value              float64             `json:"value"`
 	IntermediateValues []IntermediateValue `json:"intermediate_values"`
-	DatetimeStart      string              `json:"datetime_start"`
+	DatetimeStart      string              `json:"datetime_start,omitempty"`
 	DatetimeComplete   string              `json:"datetime_complete,omitempty"`
 	Params             []TrialParam        `json:"params"`
+	FixedParams        []TrialFixedParam   `json:"fixed_params"`
 	UserAttrs          []Attribute         `json:"user_attrs"`
-	SystemAttrs        []Attribute         `json:"system_attrs"`
 }
 
 func toAttrs(from map[string]string) []Attribute {
@@ -69,8 +76,11 @@ func toFrozenTrial(from goptuna.FrozenTrial) FrozenTrial {
 	params := make([]TrialParam, 0, len(from.Params))
 	for paramName := range from.Params {
 		params = append(params, TrialParam{
-			Name:  paramName,
-			Value: fmt.Sprintf("%v", from.Params[paramName]),
+			Name:               paramName,
+			ParamInternalValue: from.InternalParams[paramName],
+			ParamExternalValue: fmt.Sprintf("%v", from.Params[paramName]),
+			// TODO(c-bata): Support this
+			ParamExternalType: "",
 		})
 	}
 	sort.Slice(params, func(i, j int) bool {
@@ -93,7 +103,8 @@ func toFrozenTrial(from goptuna.FrozenTrial) FrozenTrial {
 		DatetimeComplete:   datetimeComplete,
 		Params:             params,
 		UserAttrs:          toAttrs(from.UserAttrs),
-		SystemAttrs:        toAttrs(from.SystemAttrs),
+		// TODO(c-bata): Support this
+		FixedParams: []TrialFixedParam{},
 	}
 }
 

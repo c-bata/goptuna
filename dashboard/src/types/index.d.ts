@@ -8,55 +8,108 @@ declare const API_ENDPOINT: string
 declare const URL_PREFIX: string
 
 type TrialState = "Running" | "Complete" | "Pruned" | "Fail" | "Waiting"
+type TrialStateFinished = "Complete" | "Fail" | "Pruned"
 type StudyDirection = "maximize" | "minimize"
 
-declare interface TrialIntermediateValue {
+type FloatDistribution = {
+  type: "FloatDistribution"
+  low: number
+  high: number
+  step: number
+  log: boolean
+}
+
+type IntDistribution = {
+  type: "IntDistribution"
+  low: number
+  high: number
+  step: number
+  log: boolean
+}
+
+type CategoricalDistribution = {
+  type: "CategoricalDistribution"
+  choices: { pytype: string; value: string }[]
+}
+
+type Distribution =
+  | FloatDistribution
+  | IntDistribution
+  | CategoricalDistribution
+
+type TrialIntermediateValue = {
   step: number
   value: number
 }
 
-declare interface TrialParam {
+type TrialParam = {
   name: string
-  value: string
+  param_internal_value: number
+  param_external_value: string
+  param_external_type: string
+  // distribution: Distribution
 }
 
-declare interface Attribute {
+type ParamImportance = {
+  name: string
+  importance: number
+  distribution: Distribution
+}
+
+type SearchSpaceItem = {
+  name: string
+  distribution: Distribution
+}
+
+type Attribute = {
   key: string
   value: string
 }
 
-declare interface Trial {
+type AttributeSpec = {
+  key: string
+  sortable: boolean
+}
+
+type Trial = {
   trial_id: number
   study_id: number
   number: number
   state: TrialState
   value?: number
   intermediate_values: TrialIntermediateValue[]
-  datetime_start: Date
+  datetime_start?: Date
   datetime_complete?: Date
   params: TrialParam[]
+  fixed_params: {
+    name: string
+    param_external_value: string
+  }[]
   user_attrs: Attribute[]
-  system_attrs: Attribute[]
 }
 
-declare interface StudySummary {
+type StudySummary = {
   study_id: number
   study_name: string
   direction: StudyDirection
-  best_trial?: Trial
   user_attrs: Attribute[]
-  system_attrs: Attribute[]
   datetime_start?: Date
 }
 
-declare interface StudyDetail {
+type StudyDetail = {
+  id: number
   name: string
   direction: StudyDirection
+  user_attrs: Attribute[]
   datetime_start: Date
-  best_trial?: Trial
+  best_trial: Trial
   trials: Trial[]
+  intersection_search_space: SearchSpaceItem[]
+  union_search_space: SearchSpaceItem[]
+  union_user_attrs: AttributeSpec[]
+  has_intermediate_values: boolean
 }
 
-declare interface StudyDetails {
+type StudyDetails = {
   [study_id: string]: StudyDetail
 }

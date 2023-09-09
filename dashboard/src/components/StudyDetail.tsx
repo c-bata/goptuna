@@ -1,345 +1,147 @@
-import React, { FC, useEffect, useState } from "react"
+import React, { FC, useEffect, useMemo } from "react"
 import { useRecoilValue } from "recoil"
 import { Link, useParams } from "react-router-dom"
-import { createStyles, fade, makeStyles, Theme } from "@material-ui/core/styles"
 import {
-  AppBar,
-  Card,
-  Typography,
-  CardContent,
-  Container,
-  Grid,
-  Toolbar,
-  Paper,
   Box,
+  Card,
+  CardContent,
+  Typography,
+  useTheme,
   IconButton,
-  Select,
-  MenuItem,
-} from "@material-ui/core"
-import { Home, Cached } from "@material-ui/icons"
+} from "@mui/material"
+import ChevronRightIcon from "@mui/icons-material/ChevronRight"
+import HomeIcon from "@mui/icons-material/Home"
 
-import { DataGridColumn, DataGrid } from "./DataGrid"
-import { GraphParallelCoordinate } from "./GraphParallelCoordinate"
-import { GraphIntermediateValues } from "./GraphIntermediateValues"
-import { GraphSlice } from "./GraphSlice"
-import { GraphHistory } from "./GraphHistory"
 import { actionCreator } from "../action"
-import { studyDetailsState } from "../state"
+import {
+  reloadIntervalState,
+  useStudyDetailValue,
+  useStudyName,
+} from "../state"
+import { TrialTable } from "./TrialTable"
+import { AppDrawer, PageId } from "./AppDrawer"
+import { GraphParallelCoordinate } from "./GraphParallelCoordinate"
+import { Contour } from "./GraphContour"
+import { GraphSlice } from "./GraphSlice"
+import { GraphEdf } from "./GraphEdf"
+import { TrialList } from "./TrialList"
+import { StudyHistory } from "./StudyHistory"
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    paper: {
-      margin: theme.spacing(2),
-      padding: theme.spacing(2),
-    },
-    card: {
-      margin: theme.spacing(2),
-    },
-    reload: {
-      position: "relative",
-      borderRadius: theme.shape.borderRadius,
-      backgroundColor: fade(theme.palette.common.white, 0.15),
-      "&:hover": {
-        backgroundColor: fade(theme.palette.common.white, 0.25),
-      },
-      marginLeft: 0,
-      width: "100%",
-      [theme.breakpoints.up("sm")]: {
-        marginLeft: theme.spacing(1),
-        width: "auto",
-      },
-    },
-    reloadIcon: {
-      padding: theme.spacing(0, 2),
-      height: "100%",
-      position: "absolute",
-      pointerEvents: "none",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    reloadSelect: {
-      color: "inherit",
-      padding: theme.spacing(1, 1, 1, 0),
-      // vertical padding + font size from searchIcon
-      paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
-      transition: theme.transitions.create("width"),
-      width: "100%",
-      [theme.breakpoints.up("sm")]: {
-        width: "14ch",
-        "&:focus": {
-          width: "20ch",
-        },
-      },
-    },
-    grow: {
-      flexGrow: 1,
-    },
-  })
-)
+export const useURLVars = (): number => {
+  const { studyId } = useParams<{ studyId: string }>()
 
-interface ParamTypes {
-  studyId: string
+  return useMemo(() => parseInt(studyId, 10), [studyId])
 }
 
-export const useStudyDetailValue = (studyId: number): StudyDetail | null => {
-  const studyDetails = useRecoilValue<StudyDetails>(studyDetailsState)
-  return studyDetails[studyId] || null
-}
-
-export const StudyDetail: FC<{}> = () => {
-  const classes = useStyles()
+export const StudyDetail: FC<{
+  toggleColorMode: () => void
+  page: PageId
+}> = ({ toggleColorMode, page }) => {
+  const theme = useTheme()
   const action = actionCreator()
-  const { studyId } = useParams<ParamTypes>()
-  const studyIdNumber = parseInt(studyId, 10)
-  const studyDetail = useStudyDetailValue(studyIdNumber)
-  const [openReloadIntervalSelect, setOpenReloadIntervalSelect] = useState<
-    boolean
-  >(false)
-  const [reloadInterval, setReloadInterval] = useState<number>(10)
+  const studyId = useURLVars()
+  const studyDetail = useStudyDetailValue(studyId)
+  const reloadInterval = useRecoilValue<number>(reloadIntervalState)
+  const studyName = useStudyName(studyId)
+
+  const title =
+    studyName !== null ? `${studyName} (id=${studyId})` : `Study #${studyId}`
 
   useEffect(() => {
-    action.updateStudyDetail(studyIdNumber)
+    action.loadReloadInterval()
+    action.updateStudyDetail(studyId)
   }, [])
 
   useEffect(() => {
     if (reloadInterval < 0) {
       return
     }
+    let interval = reloadInterval * 1000
+
     const intervalId = setInterval(function () {
-      action.updateStudyDetail(studyIdNumber)
-    }, reloadInterval * 1000)
+      action.updateStudyDetail(studyId)
+    }, interval)
     return () => clearInterval(intervalId)
-  }, [reloadInterval])
+  }, [reloadInterval, studyDetail, page])
 
-  const title = studyDetail !== null ? studyDetail.name : `Study #${studyId}`
-  const trials: Trial[] = studyDetail !== null ? studyDetail.trials : []
-
-  return (
-    <div>
-      <AppBar position="static">
-        <Container>
-          <Toolbar>
-            <Typography variant="h6">{APP_BAR_TITLE}</Typography>
-            <div className={classes.grow} />
-            <div
-              className={classes.reload}
-              onClick={(e) => {
-                setOpenReloadIntervalSelect(!openReloadIntervalSelect)
-              }}
-            >
-              <div className={classes.reloadIcon}>
-                <Cached />
-              </div>
-              <Select
-                value={reloadInterval}
-                className={classes.reloadSelect}
-                open={openReloadIntervalSelect}
-                onOpen={() => {
-                  setOpenReloadIntervalSelect(true)
-                }}
-                onClose={() => {
-                  setOpenReloadIntervalSelect(false)
-                }}
-                onChange={(e) => {
-                  setReloadInterval(e.target.value as number)
-                }}
-              >
-                <MenuItem value={-1}>stop</MenuItem>
-                <MenuItem value={5}>5s</MenuItem>
-                <MenuItem value={10}>10s</MenuItem>
-                <MenuItem value={30}>30s</MenuItem>
-                <MenuItem value={60}>60s</MenuItem>
-              </Select>
-            </div>
-            <IconButton
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              component={Link}
-              to={URL_PREFIX + "/"}
-              color="inherit"
-            >
-              <Home />
-            </IconButton>
-          </Toolbar>
-        </Container>
-      </AppBar>
-      <Container>
-        <div>
-          <Paper className={classes.paper}>
-            <Typography variant="h6">{title}</Typography>
-          </Paper>
-          <Card className={classes.card}>
-            <CardContent>
-              <GraphHistory study={studyDetail} />
-            </CardContent>
-          </Card>
-          <Grid container direction="row">
-            <Grid item xs={6}>
-              <Card className={classes.card}>
-                <CardContent>
-                  <GraphParallelCoordinate trials={trials} />
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={6}>
-              <Card className={classes.card}>
-                <CardContent>
-                  <GraphIntermediateValues trials={trials} />
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-          <Card className={classes.card}>
-            <CardContent>
-              <GraphSlice trials={trials} />
-            </CardContent>
-          </Card>
-          <Card className={classes.card}>
-            <TrialTable trials={trials} />
-          </Card>
-        </div>
-      </Container>
-    </div>
-  )
-}
-
-const TrialTable: FC<{ trials: Trial[] }> = ({ trials = [] }) => {
-  const columns: DataGridColumn<Trial>[] = [
-    { field: "number", label: "Number", sortable: true, padding: "none" },
-    {
-      field: "state",
-      label: "State",
-      sortable: true,
-      filterable: true,
-      padding: "none",
-      toCellValue: (i) => trials[i].state.toString(),
-    },
-    { field: "value", label: "Value", sortable: true },
-    {
-      field: "datetime_start",
-      label: "Duration(sec)",
-      toCellValue: (i) => {
-        const startMs = trials[i].datetime_start?.getTime()
-        const completeMs = trials[i].datetime_complete?.getTime()
-        if (startMs !== undefined && completeMs !== undefined) {
-          return ((completeMs - startMs) / 1000).toString()
-        }
-        return null
-      },
-      sortable: true,
-      less: (firstEl, secondEl): number => {
-        const firstStartMs = firstEl.datetime_start?.getTime()
-        const firstCompleteMs = firstEl.datetime_complete?.getTime()
-        const firstDurationMs =
-          firstStartMs !== undefined && firstCompleteMs !== undefined
-            ? firstCompleteMs - firstStartMs
-            : undefined
-        const secondStartMs = secondEl.datetime_start?.getTime()
-        const secondCompleteMs = secondEl.datetime_complete?.getTime()
-        const secondDurationMs =
-          secondStartMs !== undefined && secondCompleteMs !== undefined
-            ? secondCompleteMs - secondStartMs
-            : undefined
-
-        if (firstDurationMs === secondDurationMs) {
-          return 0
-        } else if (
-          firstDurationMs !== undefined &&
-          secondDurationMs !== undefined
-        ) {
-          return firstDurationMs < secondDurationMs ? 1 : -1
-        } else if (firstDurationMs !== undefined) {
-          return -1
-        } else {
-          return 1
-        }
-      },
-    },
-    {
-      field: "params",
-      label: "Params",
-      toCellValue: (i) =>
-        trials[i].params.map((p) => p.name + ": " + p.value).join(", "),
-    },
-  ]
-  const collapseParamColumns: DataGridColumn<TrialParam>[] = [
-    { field: "name", label: "Name", sortable: true },
-    { field: "value", label: "Value", sortable: true },
-  ]
-  const collapseIntermediateValueColumns: DataGridColumn<
-    TrialIntermediateValue
-  >[] = [
-    { field: "step", label: "Step", sortable: true },
-    { field: "value", label: "Value", sortable: true },
-  ]
-  const collapseAttrColumns: DataGridColumn<Attribute>[] = [
-    { field: "key", label: "Key", sortable: true },
-    { field: "value", label: "Value", sortable: true },
-  ]
-
-  const collapseBody = (index: number) => {
-    return (
-      <Grid container direction="row">
-        <Grid item xs={6}>
-          <Box margin={1}>
-            <Typography variant="h6" gutterBottom component="div">
-              Parameters
-            </Typography>
-            <DataGrid<TrialParam>
-              columns={collapseParamColumns}
-              rows={trials[index].params}
-              keyField={"name"}
-              dense={true}
-              rowsPerPageOption={[5, 10, { label: "All", value: -1 }]}
-            />
-            <Typography variant="h6" gutterBottom component="div">
-              Trial user attributes
-            </Typography>
-            <DataGrid<Attribute>
-              columns={collapseAttrColumns}
-              rows={trials[index].user_attrs}
-              keyField={"key"}
-              dense={true}
-              rowsPerPageOption={[5, 10, { label: "All", value: -1 }]}
-            />
-          </Box>
-        </Grid>
-        <Grid item xs={6}>
-          <Box margin={1}>
-            <Typography variant="h6" gutterBottom component="div">
-              Intermediate values
-            </Typography>
-            <DataGrid<TrialIntermediateValue>
-              columns={collapseIntermediateValueColumns}
-              rows={trials[index].intermediate_values}
-              keyField={"step"}
-              dense={true}
-              rowsPerPageOption={[5, 10, { label: "All", value: -1 }]}
-            />
-            <Typography variant="h6" gutterBottom component="div">
-              Trial system attributes
-            </Typography>
-            <DataGrid<Attribute>
-              columns={collapseAttrColumns}
-              rows={trials[index].system_attrs}
-              keyField={"key"}
-              dense={true}
-              rowsPerPageOption={[5, 10, { label: "All", value: -1 }]}
-            />
-          </Box>
-        </Grid>
-      </Grid>
+  let content = null
+  if (page === "top") {
+    content = <StudyHistory studyId={studyId} />
+  } else if (page === "analytics") {
+    content = (
+      <Box sx={{ display: "flex", width: "100%", flexDirection: "column" }}>
+        <Typography variant="h5" sx={{ margin: theme.spacing(2) }}>
+          Hyperparameter Relationships
+        </Typography>
+        <Card sx={{ margin: theme.spacing(2) }}>
+          <CardContent>
+            <GraphSlice study={studyDetail} />
+          </CardContent>
+        </Card>
+        <Card sx={{ margin: theme.spacing(2) }}>
+          <CardContent>
+            <GraphParallelCoordinate study={studyDetail} />
+          </CardContent>
+        </Card>
+        <Card sx={{ margin: theme.spacing(2) }}>
+          <CardContent>
+            <Contour study={studyDetail} />
+          </CardContent>
+        </Card>
+        <Typography variant="h5" sx={{ margin: theme.spacing(2) }}>
+          Empirical Distribution of the Objective Value
+        </Typography>
+        <Card>
+          <CardContent>
+            <GraphEdf study={studyDetail} />
+          </CardContent>
+        </Card>
+      </Box>
     )
+  } else if (page === "trialTable") {
+    content = (
+      <Card sx={{ margin: theme.spacing(2) }}>
+        <CardContent>
+          <TrialTable studyDetail={studyDetail} initialRowsPerPage={50} />
+        </CardContent>
+      </Card>
+    )
+  } else if (page === "trialList") {
+    content = <TrialList studyDetail={studyDetail} />
   }
 
+  const toolbar = (
+    <>
+      <IconButton
+        component={Link}
+        to={URL_PREFIX + "/"}
+        sx={{ marginRight: theme.spacing(1) }}
+        color="inherit"
+        title="Return to the top page"
+      >
+        <HomeIcon />
+      </IconButton>
+      <ChevronRightIcon sx={{ marginRight: theme.spacing(1) }} />
+      <Typography
+        noWrap
+        component="div"
+        sx={{ fontWeight: theme.typography.fontWeightBold }}
+      >
+        {title}
+      </Typography>
+    </>
+  )
+
   return (
-    <DataGrid<Trial>
-      columns={columns}
-      rows={trials}
-      keyField={"trial_id"}
-      dense={true}
-      collapseBody={collapseBody}
-    />
+    <Box sx={{ display: "flex" }}>
+      <AppDrawer
+        studyId={studyId}
+        page={page}
+        toggleColorMode={toggleColorMode}
+        toolbar={toolbar}
+      >
+        {content}
+      </AppDrawer>
+    </Box>
   )
 }
