@@ -52,9 +52,7 @@ interface StudyDetailResponse {
   has_intermediate_values: boolean
 }
 
-export const getStudyDetailAPI = (
-  studyId: number,
-): Promise<StudyDetail> => {
+export const getStudyDetailAPI = (studyId: number): Promise<StudyDetail> => {
   return axiosInstance
     .get<StudyDetailResponse>(`/api/studies/${studyId}`, {})
     .then((res) => {
