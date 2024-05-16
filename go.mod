@@ -1,4 +1,4 @@
-module github.com/c-bata/goptuna
+module github.com/rdtharri/goptuna
 
 go 1.21
 
