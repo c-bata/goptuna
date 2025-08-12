@@ -25,9 +25,8 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Running go tests
-      env:
-        GO111MODULE: auto
       run: |
+        cd _examples && go mod download
         _examples/build.sh
         ./bin/cmaes
         ./bin/sobol
