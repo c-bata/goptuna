@@ -33,11 +33,11 @@ func getNumberOfSkippedPoints(n uint32) uint32 {
 func initDirectionNumbers(dim uint32) [][]uint32 {
 	v := make([][]uint32, dim)
 	for i := uint32(0); i < dim; i++ {
-		v[i] = make([]uint32, maxBit)
+		v[i] = make([]uint32, maxBit+1)
 	}
 
 	// First row of sobol state is all '1'.
-	for m := 0; m < maxBit; m++ {
+	for m := 0; m <= maxBit; m++ {
 		v[0][m] = 1 << (32 - m) // all m's = 1
 	}
 
